@@ -21,24 +21,16 @@ type Deployment struct {
 }
 
 type Instance struct {
-	ID                  int32        `json:"id"`
-	Name                string       `json:"name"`
-	UserID              string       `json:"user_id"`
-	Status              string       `json:"status"`
-	GkeClusterName      string       `json:"gke_cluster_name"`
-	GkeProjectID        string       `json:"gke_project_id"`
-	GkeZone             string       `json:"gke_zone"`
-	Namespace           string       `json:"namespace"`
-	Domain              string       `json:"domain"`
-	WorkerReplicas      int32        `json:"worker_replicas"`
-	MainCpuRequest      string       `json:"main_cpu_request"`
-	MainMemoryRequest   string       `json:"main_memory_request"`
-	WorkerCpuRequest    string       `json:"worker_cpu_request"`
-	WorkerMemoryRequest string       `json:"worker_memory_request"`
-	PostgresStorageSize string       `json:"postgres_storage_size"`
-	N8nStorageSize      string       `json:"n8n_storage_size"`
-	CreatedAt           sql.NullTime `json:"created_at"`
-	UpdatedAt           sql.NullTime `json:"updated_at"`
-	DeployedAt          sql.NullTime `json:"deployed_at"`
-	DeletedAt           sql.NullTime `json:"deleted_at"`
+	ID             int32        `json:"id"`
+	UserID         string       `json:"user_id"`
+	Status         string       `json:"status"`
+	GkeClusterName string       `json:"gke_cluster_name"`
+	GkeProjectID   string       `json:"gke_project_id"`
+	GkeZone        string       `json:"gke_zone"`
+	Namespace      string       `json:"namespace"`
+	Domain         string       `json:"domain"`
+	CreatedAt      sql.NullTime `json:"created_at"`
+	UpdatedAt      sql.NullTime `json:"updated_at"`
+	DeployedAt     sql.NullTime `json:"deployed_at"`
+	DeletedAt      sql.NullTime `json:"deleted_at"`
 }

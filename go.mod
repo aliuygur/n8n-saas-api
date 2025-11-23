@@ -7,6 +7,8 @@ toolchain go1.24.5
 require (
 	cloud.google.com/go/container v1.27.1
 	encore.dev v1.48.13
+	github.com/samber/lo v1.52.0
+	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.150.0
 	k8s.io/api v0.28.4
 	k8s.io/apimachinery v0.28.4
@@ -46,11 +48,10 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/oauth2 v0.13.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect

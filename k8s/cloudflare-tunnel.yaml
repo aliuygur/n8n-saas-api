@@ -1,20 +1,33 @@
 # Single Cloudflare Tunnel for all n8n instances
-# Deploy this once per cluster, not per customer
+# Deploy this once in cloudflare-tunnel namespace
 #
 # Prerequisites:
 # 1. Create tunnel: cloudflared tunnel create n8n-cluster-tunnel
 # 2. Get tunnel token from Cloudflare dashboard
-# 3. Create secret: kubectl create secret generic cloudflare-tunnel --from-literal=token=YOUR_TOKEN
+# 3. Create secret: kubectl create secret generic cloudflare-tunnel --from-literal=token=YOUR_TOKEN -n cloudflare-tunnel
 # 4. Create DNS records manually at Cloudflare panel for each customer domain
 
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudflare-tunnel
+  labels:
+    name: cloudflare-tunnel
+    component: tunnel
+    purpose: shared-infrastructure
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cloudflare-tunnel
+  namespace: cloudflare-tunnel
   labels:
-    app: tunnel
+    app: cloudflare-tunnel
+    component: shared-tunnel
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: cloudflare-tunnel
@@ -58,11 +71,15 @@ spec:
   progressDeadlineSeconds: 600
 ---
 # Create this secret manually with your tunnel token:
-# kubectl create secret generic cloudflare-tunnel --from-literal=token=YOUR_TUNNEL_TOKEN
+# kubectl create secret generic cloudflare-tunnel --from-literal=token=YOUR_TUNNEL_TOKEN -n cloudflare-tunnel
 apiVersion: v1
 kind: Secret
 metadata:
   name: cloudflare-tunnel
+  namespace: cloudflare-tunnel
+  labels:
+    app: cloudflare-tunnel
+    component: shared-tunnel
 type: Opaque
-# data:
-#   token: <base64-encoded-tunnel-token>
+data:
+  token: eyJhIjoiMGYyYTE2NjU1MWFhM2M1YWZhNjE5MzVlMTdhMTg4ZTUiLCJ0IjoiYTg0ODY4OTktY2MxMi00NDY2LWEwMzMtNmYwMWE2YTllNmQ3IiwicyI6Ill6QmpabUl4TUdVdFlqRXlZeTAwTkRSaUxXSXdNbVl0WkRRM1pUQXhPREJpTjJSbCJ9

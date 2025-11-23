@@ -104,12 +104,15 @@ func (s *Service) GetMetrics(ctx context.Context, req *MetricsRequest) (*Metrics
 		return nil, fmt.Errorf("failed to connect to cluster: %w", err)
 	}
 
-	metrics, err := s.gke.GetInstanceStatus(ctx, instance.Namespace)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics: %w", err)
+	// TODO: Implement GetInstanceStatus method for SQLite-based architecture
+	// For now, return basic status information
+	basicMetrics := map[string]interface{}{
+		"namespace":    instance.Namespace,
+		"status":       "running", // Assume running for now
+		"architecture": "sqlite_isolated",
 	}
 
-	metricsJSON, err := json.Marshal(metrics)
+	metricsJSON, err := json.Marshal(basicMetrics)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal metrics: %w", err)
 	}

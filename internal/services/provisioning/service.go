@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
 	"github.com/aliuygur/n8n-saas-api/internal/gke"
 
+	"encore.dev/rlog"
 	"encore.dev/storage/sqldb"
 )
 
@@ -16,9 +18,10 @@ var mainDB = sqldb.NewDatabase("main", sqldb.DatabaseConfig{
 
 //encore:service
 type Service struct {
-	db     *sql.DB
-	gke    *gke.Client
-	config Config
+	db         *sql.DB
+	gke        *gke.Client
+	cloudflare *cloudflare.Client
+	config     Config
 }
 
 type Config struct {
@@ -26,26 +29,43 @@ type Config struct {
 	DefaultZone        string
 	DefaultClusterName string
 	CredentialsJSON    []byte
+	UseSpotInstances   bool // Enable spot instances for cost savings (default: true)
 }
 
 // Encore magic service initialization function
 func initService() (*Service, error) {
 	// TODO: Configure these values through Encore secrets or environment variables
 	config := Config{
-		DefaultProjectID:   "your-gcp-project-id",
-		DefaultZone:        "us-central1-a",
-		DefaultClusterName: "n8n-cluster",
-		// CredentialsJSON will be loaded from Encore secrets
+		DefaultProjectID:   "rockads",
+		DefaultZone:        "europe-west1",
+		DefaultClusterName: "autopilot-cluster-1",
+		UseSpotInstances:   true, // Enable spot instances for 60-91% cost savings by default
 	}
 
-	gkeClient, err := gke.NewClient(config.DefaultProjectID, config.CredentialsJSON)
+	rlog.Debug("creds", "GCPCredentials", secrets.GCPCredentials)
+
+	gkeClient, err := gke.NewClient(config.DefaultProjectID, []byte(secrets.GCPCredentials))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GKE client: %w", err)
 	}
 
+	cloudflareConfig := cloudflare.Config{
+		APIToken:  secrets.CLOUDFLARE_API_TOKEN,
+		TunnelID:  "a8486899-cc12-4466-a033-6f01a6a9e6d7",
+		AccountID: "0f2a166551aa3c5afa61935e17a188e5",
+		ZoneID:    "e5e4c6fce9052cf8823c291c54d64b51", // Your zone ID as a variable
+	}
+	cloudflareClient := cloudflare.NewClient(cloudflareConfig)
+
 	return &Service{
-		db:     mainDB.Stdlib(),
-		gke:    gkeClient,
-		config: config,
+		db:         mainDB.Stdlib(),
+		gke:        gkeClient,
+		cloudflare: cloudflareClient,
+		config:     config,
 	}, nil
+}
+
+var secrets struct {
+	GCPCredentials       string
+	CLOUDFLARE_API_TOKEN string
 }

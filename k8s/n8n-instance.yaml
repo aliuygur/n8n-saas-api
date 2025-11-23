@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{NAMESPACE}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{INSTANCE_NAME}}-data
+  namespace: {{NAMESPACE}}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: premium-rwo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{INSTANCE_NAME}}
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{INSTANCE_NAME}}
+  template:
+    metadata:
+      labels:
+        app: {{INSTANCE_NAME}}
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:1.69.2
+        ports:
+        - containerPort: 5678
+        env:
+        - name: DB_TYPE
+          value: "sqlite"
+        - name: DB_SQLITE_DATABASE
+          value: "/home/node/.n8n/database.sqlite"
+        - name: N8N_ENCRYPTION_KEY
+          value: "{{ENCRYPTION_KEY}}"
+        - name: GENERIC_TIMEZONE
+          value: "UTC"
+        - name: NODE_ENV
+          value: "production"
+        - name: N8N_PORT
+          value: "5678"
+        - name: WEBHOOK_URL
+          value: "https://{{SUBDOMAIN}}.n8n.{{DOMAIN}}/"
+        - name: N8N_EDITOR_BASE_URL
+          value: "https://{{SUBDOMAIN}}.n8n.{{DOMAIN}}/"
+        - name: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
+          value: "true"
+        - name: N8N_DISABLE_UI
+          value: "false"
+        - name: N8N_LOG_LEVEL
+          value: "info"
+        - name: NODE_ENV
+          value: "production"
+        - name: N8N_METRICS
+          value: "true"
+        - name: N8N_DIAGNOSTICS_ENABLED
+          value: "false"
+        - name: N8N_VERSION_NOTIFICATIONS_ENABLED
+          value: "false"
+        - name: N8N_TEMPLATES_ENABLED
+          value: "false"
+        - name: N8N_PERSONALIZATION_ENABLED
+          value: "false"
+        - name: N8N_DEFAULT_BINARY_DATA_MODE
+          value: "filesystem"
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /home/node/.n8n
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: n8n-data
+        persistentVolumeClaim:
+          claimName: {{INSTANCE_NAME}}-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{INSTANCE_NAME}}
+  namespace: {{NAMESPACE}}
+spec:
+  selector:
+    app: {{INSTANCE_NAME}}
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5678
+  type: ClusterIP

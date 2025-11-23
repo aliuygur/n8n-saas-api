@@ -9,54 +9,47 @@ import (
 	"context"
 )
 
+const checkNamespaceExists = `-- name: CheckNamespaceExists :one
+SELECT EXISTS(SELECT 1 FROM instances WHERE namespace = $1 AND deleted_at IS NULL)
+`
+
+func (q *Queries) CheckNamespaceExists(ctx context.Context, namespace string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkNamespaceExists, namespace)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
-    name, user_id, gke_cluster_name, gke_project_id, gke_zone,
-    namespace, domain, worker_replicas, main_cpu_request, main_memory_request,
-    worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size
+    user_id, gke_cluster_name, gke_project_id, gke_zone,
+    namespace, domain
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-) RETURNING id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at
+    $1, $2, $3, $4, $5, $6
+) RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type CreateInstanceParams struct {
-	Name                string `json:"name"`
-	UserID              string `json:"user_id"`
-	GkeClusterName      string `json:"gke_cluster_name"`
-	GkeProjectID        string `json:"gke_project_id"`
-	GkeZone             string `json:"gke_zone"`
-	Namespace           string `json:"namespace"`
-	Domain              string `json:"domain"`
-	WorkerReplicas      int32  `json:"worker_replicas"`
-	MainCpuRequest      string `json:"main_cpu_request"`
-	MainMemoryRequest   string `json:"main_memory_request"`
-	WorkerCpuRequest    string `json:"worker_cpu_request"`
-	WorkerMemoryRequest string `json:"worker_memory_request"`
-	PostgresStorageSize string `json:"postgres_storage_size"`
-	N8nStorageSize      string `json:"n8n_storage_size"`
+	UserID         string `json:"user_id"`
+	GkeClusterName string `json:"gke_cluster_name"`
+	GkeProjectID   string `json:"gke_project_id"`
+	GkeZone        string `json:"gke_zone"`
+	Namespace      string `json:"namespace"`
+	Domain         string `json:"domain"`
 }
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
 	row := q.db.QueryRowContext(ctx, createInstance,
-		arg.Name,
 		arg.UserID,
 		arg.GkeClusterName,
 		arg.GkeProjectID,
 		arg.GkeZone,
 		arg.Namespace,
 		arg.Domain,
-		arg.WorkerReplicas,
-		arg.MainCpuRequest,
-		arg.MainMemoryRequest,
-		arg.WorkerCpuRequest,
-		arg.WorkerMemoryRequest,
-		arg.PostgresStorageSize,
-		arg.N8nStorageSize,
 	)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -64,13 +57,6 @@ func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) 
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -89,7 +75,7 @@ func (q *Queries) DeleteInstance(ctx context.Context, id int32) error {
 }
 
 const getInstance = `-- name: GetInstance :one
-SELECT id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstance(ctx context.Context, id int32) (Instance, error) {
@@ -97,7 +83,6 @@ func (q *Queries) GetInstance(ctx context.Context, id int32) (Instance, error) {
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -105,13 +90,6 @@ func (q *Queries) GetInstance(ctx context.Context, id int32) (Instance, error) {
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -120,16 +98,15 @@ func (q *Queries) GetInstance(ctx context.Context, id int32) (Instance, error) {
 	return i, err
 }
 
-const getInstanceByName = `-- name: GetInstanceByName :one
-SELECT id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE name = $1 AND deleted_at IS NULL
+const getInstanceByNamespace = `-- name: GetInstanceByNamespace :one
+SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE namespace = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetInstanceByName(ctx context.Context, name string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, getInstanceByName, name)
+func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error) {
+	row := q.db.QueryRowContext(ctx, getInstanceByNamespace, namespace)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -137,13 +114,6 @@ func (q *Queries) GetInstanceByName(ctx context.Context, name string) (Instance,
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -153,7 +123,7 @@ func (q *Queries) GetInstanceByName(ctx context.Context, name string) (Instance,
 }
 
 const listAllInstances = `-- name: ListAllInstances :many
-SELECT id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at FROM instances 
 WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -175,7 +145,6 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 		var i Instance
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
 			&i.UserID,
 			&i.Status,
 			&i.GkeClusterName,
@@ -183,13 +152,6 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 			&i.GkeZone,
 			&i.Namespace,
 			&i.Domain,
-			&i.WorkerReplicas,
-			&i.MainCpuRequest,
-			&i.MainMemoryRequest,
-			&i.WorkerCpuRequest,
-			&i.WorkerMemoryRequest,
-			&i.PostgresStorageSize,
-			&i.N8nStorageSize,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeployedAt,
@@ -209,7 +171,7 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 }
 
 const listInstancesByUser = `-- name: ListInstancesByUser :many
-SELECT id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at FROM instances 
 WHERE user_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 `
@@ -225,7 +187,6 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 		var i Instance
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
 			&i.UserID,
 			&i.Status,
 			&i.GkeClusterName,
@@ -233,13 +194,6 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 			&i.GkeZone,
 			&i.Namespace,
 			&i.Domain,
-			&i.WorkerReplicas,
-			&i.MainCpuRequest,
-			&i.MainMemoryRequest,
-			&i.WorkerCpuRequest,
-			&i.WorkerMemoryRequest,
-			&i.PostgresStorageSize,
-			&i.N8nStorageSize,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeployedAt,
@@ -262,7 +216,7 @@ const softDeleteInstance = `-- name: SoftDeleteInstance :one
 UPDATE instances 
 SET deleted_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at
 `
 
 func (q *Queries) SoftDeleteInstance(ctx context.Context, id int32) (Instance, error) {
@@ -270,7 +224,6 @@ func (q *Queries) SoftDeleteInstance(ctx context.Context, id int32) (Instance, e
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -278,13 +231,6 @@ func (q *Queries) SoftDeleteInstance(ctx context.Context, id int32) (Instance, e
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -297,7 +243,7 @@ const updateInstanceDeployed = `-- name: UpdateInstanceDeployed :one
 UPDATE instances 
 SET status = $2, deployed_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type UpdateInstanceDeployedParams struct {
@@ -310,7 +256,6 @@ func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstance
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -318,13 +263,6 @@ func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstance
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -333,36 +271,23 @@ func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstance
 	return i, err
 }
 
-const updateInstanceResources = `-- name: UpdateInstanceResources :one
+const updateInstanceNamespace = `-- name: UpdateInstanceNamespace :one
 UPDATE instances 
-SET worker_replicas = $2, main_cpu_request = $3, main_memory_request = $4,
-    worker_cpu_request = $5, worker_memory_request = $6, updated_at = NOW()
+SET namespace = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at
 `
 
-type UpdateInstanceResourcesParams struct {
-	ID                  int32  `json:"id"`
-	WorkerReplicas      int32  `json:"worker_replicas"`
-	MainCpuRequest      string `json:"main_cpu_request"`
-	MainMemoryRequest   string `json:"main_memory_request"`
-	WorkerCpuRequest    string `json:"worker_cpu_request"`
-	WorkerMemoryRequest string `json:"worker_memory_request"`
+type UpdateInstanceNamespaceParams struct {
+	ID        int32  `json:"id"`
+	Namespace string `json:"namespace"`
 }
 
-func (q *Queries) UpdateInstanceResources(ctx context.Context, arg UpdateInstanceResourcesParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, updateInstanceResources,
-		arg.ID,
-		arg.WorkerReplicas,
-		arg.MainCpuRequest,
-		arg.MainMemoryRequest,
-		arg.WorkerCpuRequest,
-		arg.WorkerMemoryRequest,
-	)
+func (q *Queries) UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error) {
+	row := q.db.QueryRowContext(ctx, updateInstanceNamespace, arg.ID, arg.Namespace)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -370,13 +295,6 @@ func (q *Queries) UpdateInstanceResources(ctx context.Context, arg UpdateInstanc
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,
@@ -389,7 +307,7 @@ const updateInstanceStatus = `-- name: UpdateInstanceStatus :one
 UPDATE instances 
 SET status = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, worker_replicas, main_cpu_request, main_memory_request, worker_cpu_request, worker_memory_request, postgres_storage_size, n8n_storage_size, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, domain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type UpdateInstanceStatusParams struct {
@@ -402,7 +320,6 @@ func (q *Queries) UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceSt
 	var i Instance
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
 		&i.UserID,
 		&i.Status,
 		&i.GkeClusterName,
@@ -410,13 +327,6 @@ func (q *Queries) UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceSt
 		&i.GkeZone,
 		&i.Namespace,
 		&i.Domain,
-		&i.WorkerReplicas,
-		&i.MainCpuRequest,
-		&i.MainMemoryRequest,
-		&i.WorkerCpuRequest,
-		&i.WorkerMemoryRequest,
-		&i.PostgresStorageSize,
-		&i.N8nStorageSize,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeployedAt,

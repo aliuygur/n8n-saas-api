@@ -9,13 +9,14 @@ import (
 )
 
 type Querier interface {
+	CheckNamespaceExists(ctx context.Context, namespace string) (bool, error)
 	CreateDeployment(ctx context.Context, arg CreateDeploymentParams) (Deployment, error)
 	CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error)
 	DeleteInstance(ctx context.Context, id int32) error
 	GetActiveDeployments(ctx context.Context) ([]Deployment, error)
 	GetDeployment(ctx context.Context, id int32) (Deployment, error)
 	GetInstance(ctx context.Context, id int32) (Instance, error)
-	GetInstanceByName(ctx context.Context, name string) (Instance, error)
+	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
 	ListDeploymentsByInstance(ctx context.Context, arg ListDeploymentsByInstanceParams) ([]Deployment, error)
 	ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error)
@@ -24,7 +25,7 @@ type Querier interface {
 	UpdateDeploymentFailed(ctx context.Context, arg UpdateDeploymentFailedParams) (Deployment, error)
 	UpdateDeploymentStatus(ctx context.Context, arg UpdateDeploymentStatusParams) (Deployment, error)
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
-	UpdateInstanceResources(ctx context.Context, arg UpdateInstanceResourcesParams) (Instance, error)
+	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
 	UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error)
 }
 
