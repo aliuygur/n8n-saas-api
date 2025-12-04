@@ -1,7 +1,7 @@
 -- name: CreateInstance :one
 INSERT INTO instances (
     user_id, gke_cluster_name, gke_project_id, gke_zone,
-    namespace, domain
+    namespace, subdomain
 ) VALUES (
     $1, $2, $3, $4, $5, $6
 ) RETURNING *;
@@ -43,6 +43,9 @@ RETURNING *;
 
 -- name: CheckNamespaceExists :one
 SELECT EXISTS(SELECT 1 FROM instances WHERE namespace = $1 AND deleted_at IS NULL);
+
+-- name: CheckSubdomainExists :one
+SELECT EXISTS(SELECT 1 FROM instances WHERE subdomain = $1 AND deleted_at IS NULL);
 
 -- name: SoftDeleteInstance :one
 UPDATE instances 

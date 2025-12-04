@@ -37,7 +37,6 @@ type N8NInstance struct {
 	MemoryLimit   string
 	StorageSize   string
 	EncryptionKey string
-	UseSpotNodes  bool // Enable spot instances for cost savings
 
 	BaseURL string
 }
@@ -266,60 +265,6 @@ func (c *Client) deployN8N(ctx context.Context, instance N8NInstance) error {
 				},
 			},
 		},
-	}
-
-	// Configure spot instances if enabled (60-91% cost savings)
-	if instance.UseSpotNodes {
-		// Use autopilot-spot compute class for GKE Autopilot
-		annotations["autopilot.gke.io/compute-class"] = "autopilot-spot"
-
-		// Add node selector for spot instances
-		podSpec.NodeSelector = map[string]string{
-			"cloud.google.com/gke-spot": "true",
-		}
-
-		// Add tolerations for spot instance preemption
-		podSpec.Tolerations = []corev1.Toleration{
-			{
-				Key:      "cloud.google.com/gke-spot",
-				Operator: corev1.TolerationOpEqual,
-				Value:    "true",
-				Effect:   corev1.TaintEffectNoSchedule,
-			},
-		}
-
-		// Add node affinity to prefer spot instances
-		podSpec.Affinity = &corev1.Affinity{
-			NodeAffinity: &corev1.NodeAffinity{
-				PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
-					{
-						Weight: 100,
-						Preference: corev1.NodeSelectorTerm{
-							MatchExpressions: []corev1.NodeSelectorRequirement{
-								{
-									Key:      "cloud.google.com/gke-spot",
-									Operator: corev1.NodeSelectorOpIn,
-									Values:   []string{"true"},
-								},
-							},
-						},
-					},
-				},
-				RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
-					NodeSelectorTerms: []corev1.NodeSelectorTerm{
-						{
-							MatchExpressions: []corev1.NodeSelectorRequirement{
-								{
-									Key:      "cloud.google.com/gke-spot",
-									Operator: corev1.NodeSelectorOpIn,
-									Values:   []string{"true"},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
 	}
 
 	deployment := &appsv1.Deployment{

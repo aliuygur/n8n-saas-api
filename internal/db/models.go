@@ -6,19 +6,8 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
+	"time"
 )
-
-type Deployment struct {
-	ID           int32           `json:"id"`
-	InstanceID   int32           `json:"instance_id"`
-	Operation    string          `json:"operation"`
-	Status       string          `json:"status"`
-	Details      json.RawMessage `json:"details"`
-	ErrorMessage string          `json:"error_message"`
-	StartedAt    sql.NullTime    `json:"started_at"`
-	CompletedAt  sql.NullTime    `json:"completed_at"`
-}
 
 type Instance struct {
 	ID             int32        `json:"id"`
@@ -28,9 +17,27 @@ type Instance struct {
 	GkeProjectID   string       `json:"gke_project_id"`
 	GkeZone        string       `json:"gke_zone"`
 	Namespace      string       `json:"namespace"`
-	Domain         string       `json:"domain"`
+	Subdomain      string       `json:"subdomain"`
 	CreatedAt      sql.NullTime `json:"created_at"`
 	UpdatedAt      sql.NullTime `json:"updated_at"`
 	DeployedAt     sql.NullTime `json:"deployed_at"`
 	DeletedAt      sql.NullTime `json:"deleted_at"`
+}
+
+type Session struct {
+	ID        int32        `json:"id"`
+	UserID    int32        `json:"user_id"`
+	Token     string       `json:"token"`
+	ExpiresAt time.Time    `json:"expires_at"`
+	CreatedAt sql.NullTime `json:"created_at"`
+}
+
+type User struct {
+	ID          int32        `json:"id"`
+	Email       string       `json:"email"`
+	Name        string       `json:"name"`
+	Picture     string       `json:"picture"`
+	CreatedAt   sql.NullTime `json:"created_at"`
+	UpdatedAt   sql.NullTime `json:"updated_at"`
+	LastLoginAt sql.NullTime `json:"last_login_at"`
 }

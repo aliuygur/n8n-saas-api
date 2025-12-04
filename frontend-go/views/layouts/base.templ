@@ -1,0 +1,45 @@
+package layouts
+
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views"
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views/components"
+
+templ Base(title string, user *views.User) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Instol</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					theme: {
+						extend: {
+							colors: {
+								primary: "#ea4b71",
+								secondary: "#ff6d5a",
+							},
+						},
+					},
+				};
+			</script>
+			<style>
+				.gradient-text {
+					background: linear-gradient(to right, #ea4b71, #ff6d5a);
+					-webkit-background-clip: text;
+					-webkit-text-fill-color: transparent;
+					background-clip: text;
+				}
+				.gradient-bg {
+					background: linear-gradient(to right, #ea4b71, #ff6d5a);
+				}
+			</style>
+		</head>
+		<body class="bg-gray-900 text-white">
+			@components.Navbar(user)
+			{ children... }
+			@components.Footer()
+		</body>
+	</html>
+}

@@ -238,18 +238,10 @@ func (s *Service) RestartComponent(ctx context.Context, req *RestartComponentReq
 		return fmt.Errorf("failed to connect to cluster: %w", err)
 	}
 
-	// Create deployment record
-	deployment, err := queries.CreateDeployment(ctx, db.CreateDeploymentParams{
-		InstanceID: instance.ID,
-		Operation:  "restart",
-		Details:    []byte(fmt.Sprintf(`{"component":"%s"}`, req.Component)),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create deployment record: %w", err)
+	// Restart component
+	if err := s.restartComponent(ctx, instance, req.Component); err != nil {
+		return fmt.Errorf("failed to restart component: %w", err)
 	}
-
-	// Start async restart
-	go s.restartComponentAsync(context.Background(), instance, deployment.ID, req.Component)
 
 	return nil
 }
@@ -435,8 +427,7 @@ func (s *Service) getResourceUsage(ctx context.Context, namespace string) (*Reso
 	return usage, nil
 }
 
-func (s *Service) restartComponentAsync(ctx context.Context, instance db.Instance, deploymentID int32, component string) {
-	queries := db.New(s.db)
+func (s *Service) restartComponent(ctx context.Context, instance db.Instance, component string) error {
 	k8sClient := s.gke.K8sClient()
 
 	log.Printf("Starting component restart: instance_id=%d component=%s", instance.ID, component)
@@ -452,15 +443,13 @@ func (s *Service) restartComponentAsync(ctx context.Context, instance db.Instanc
 	case "redis":
 		deploymentName = "redis"
 	default:
-		s.markDeploymentFailed(ctx, queries, deploymentID, "Invalid component name")
-		return
+		return fmt.Errorf("invalid component name: %s", component)
 	}
 
 	// Get deployment
 	deployment, err := k8sClient.AppsV1().Deployments(instance.Namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if err != nil {
-		s.markDeploymentFailed(ctx, queries, deploymentID, fmt.Sprintf("Failed to get deployment: %v", err))
-		return
+		return fmt.Errorf("failed to get deployment: %w", err)
 	}
 
 	// Restart by updating an annotation
@@ -471,15 +460,9 @@ func (s *Service) restartComponentAsync(ctx context.Context, instance db.Instanc
 
 	_, err = k8sClient.AppsV1().Deployments(instance.Namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
-		s.markDeploymentFailed(ctx, queries, deploymentID, fmt.Sprintf("Failed to restart deployment: %v", err))
-		return
-	}
-
-	// Mark deployment as completed
-	_, err = queries.UpdateDeploymentCompleted(ctx, deploymentID)
-	if err != nil {
-		log.Printf("Failed to mark deployment completed: %v", err)
+		return fmt.Errorf("failed to restart deployment: %w", err)
 	}
 
 	log.Printf("Component restart completed: instance_id=%d component=%s", instance.ID, component)
+	return nil
 }

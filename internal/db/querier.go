@@ -10,23 +10,26 @@ import (
 
 type Querier interface {
 	CheckNamespaceExists(ctx context.Context, namespace string) (bool, error)
-	CreateDeployment(ctx context.Context, arg CreateDeploymentParams) (Deployment, error)
+	CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error)
 	CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteExpiredSessions(ctx context.Context) error
 	DeleteInstance(ctx context.Context, id int32) error
-	GetActiveDeployments(ctx context.Context) ([]Deployment, error)
-	GetDeployment(ctx context.Context, id int32) (Deployment, error)
+	DeleteSession(ctx context.Context, token string) error
+	DeleteUserSessions(ctx context.Context, userID int32) error
 	GetInstance(ctx context.Context, id int32) (Instance, error)
 	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
+	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	GetUserByID(ctx context.Context, id int32) (User, error)
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
-	ListDeploymentsByInstance(ctx context.Context, arg ListDeploymentsByInstanceParams) ([]Deployment, error)
 	ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error)
 	SoftDeleteInstance(ctx context.Context, id int32) (Instance, error)
-	UpdateDeploymentCompleted(ctx context.Context, id int32) (Deployment, error)
-	UpdateDeploymentFailed(ctx context.Context, arg UpdateDeploymentFailedParams) (Deployment, error)
-	UpdateDeploymentStatus(ctx context.Context, arg UpdateDeploymentStatusParams) (Deployment, error)
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
 	UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error)
+	UpdateUserLastLogin(ctx context.Context, id int32) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -41,7 +41,7 @@ func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*In
 	response := &InstanceStatus{
 		ID:         int(instance.ID),
 		Status:     instance.Status,
-		Domain:     instance.Domain,
+		Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
 		Namespace:  instance.Namespace,
 		ServiceURL: fmt.Sprintf("n8n-main.%s.svc.cluster.local", instance.Namespace),
 		CreatedAt:  instance.CreatedAt.Time,

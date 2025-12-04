@@ -7,7 +7,6 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
 	"github.com/aliuygur/n8n-saas-api/internal/gke"
 
-	"encore.dev/rlog"
 	"encore.dev/storage/sqldb"
 )
 
@@ -29,7 +28,6 @@ type Config struct {
 	DefaultZone        string
 	DefaultClusterName string
 	CredentialsJSON    []byte
-	UseSpotInstances   bool // Enable spot instances for cost savings (default: true)
 }
 
 // Encore magic service initialization function
@@ -39,10 +37,7 @@ func initService() (*Service, error) {
 		DefaultProjectID:   "rockads",
 		DefaultZone:        "europe-west1",
 		DefaultClusterName: "autopilot-cluster-1",
-		UseSpotInstances:   true, // Enable spot instances for 60-91% cost savings by default
 	}
-
-	rlog.Debug("creds", "GCPCredentials", secrets.GCPCredentials)
 
 	gkeClient, err := gke.NewClient(config.DefaultProjectID, []byte(secrets.GCPCredentials))
 	if err != nil {

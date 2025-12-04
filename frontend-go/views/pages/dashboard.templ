@@ -1,0 +1,147 @@
+package pages
+
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views/layouts"
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views"
+
+templ Dashboard(user *views.User) {
+	@layouts.Base("Dashboard", user) {
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+			<div class="flex justify-between items-center mb-8">
+				<h1 class="text-3xl font-bold">My Instances</h1>
+				<button onclick="document.getElementById('createModal').classList.remove('hidden')" class="gradient-bg px-6 py-3 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-pink-500/30 transition">+ Create New Instance</button>
+			</div>
+			<div id="instance-list" hx-get="/api/instances?user_id=demo-user" hx-trigger="load" hx-indicator="#loadingInstances">
+				<div id="loadingInstances" class="text-center py-20">
+					<div class="inline-block w-12 h-12 border-4 border-gray-700 border-t-pink-500 rounded-full animate-spin"></div>
+					<p class="mt-4 text-gray-400">Loading instances...</p>
+				</div>
+			</div>
+		</div>
+		<!-- Create Instance Modal -->
+		<div id="createModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+			<div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 max-w-md w-full relative">
+				<button onclick="document.getElementById('createModal').classList.add('hidden'); location.reload();" class="absolute right-6 top-6 text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+				<div id="modalContent">
+					<h2 class="text-2xl font-bold mb-6">Create Your n8n Instance</h2>
+					<form hx-post="/api/instances" hx-target="#modalContent" hx-indicator="#loading" class="space-y-6">
+						<input type="hidden" name="user_id" value="demo-user"/>
+						<div>
+							<label class="block mb-2 font-semibold">Instance Name</label>
+							<input type="text" name="subdomain" placeholder="my-n8n-instance" required pattern="^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" class="w-full px-4 py-3 border border-gray-700 bg-gray-900 rounded-lg focus:outline-none focus:border-pink-500"/>
+							<small class="text-gray-400 text-sm mt-1 block">This will be part of your instance URL</small>
+						</div>
+						<button type="submit" class="w-full gradient-bg py-4 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-pink-500/30 transition">Create Instance</button>
+					</form>
+					<div id="loading" class="htmx-indicator text-center py-12 hidden">
+						<div class="inline-block w-16 h-16 border-4 border-gray-700 border-t-pink-500 rounded-full animate-spin mb-4"></div>
+						<p class="text-lg">Creating your instance...</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+type Instance struct {
+	ID        int
+	Subdomain string
+	Namespace string
+	Status    string
+	Domain    string
+	CreatedAt string
+}
+
+type InstanceList struct {
+	Instances []Instance
+}
+
+templ InstanceListComponent(instances []Instance) {
+	<div class="grid gap-6">
+		for _, instance := range instances {
+			<div class="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-pink-500/50 transition">
+				<div class="flex items-start justify-between">
+					<div class="flex-1">
+						<div class="flex items-center gap-3 mb-3">
+							<h3 class="text-xl font-semibold">{ instance.Subdomain }</h3>
+							<span class="flex items-center gap-2 text-sm">
+								<span
+									class={
+										"w-2 h-2 rounded-full",
+										templ.KV("bg-green-500", instance.Status == "running"),
+										templ.KV("bg-yellow-500", instance.Status == "pending"),
+										templ.KV("bg-red-500", instance.Status != "running" && instance.Status != "pending"),
+									}
+								></span>
+								{ instance.Status }
+							</span>
+						</div>
+						<div class="space-y-2 text-sm text-gray-400">
+							<div>
+								<strong>Domain:</strong>
+								<a href={ templ.URL("https://" + instance.Subdomain + ".instol.cloud") } target="_blank" class="text-pink-500 hover:underline">
+									{ instance.Subdomain }.instol.cloud
+								</a>
+							</div>
+							<div><strong>Namespace:</strong> { instance.Namespace }</div>
+							<div><strong>Created:</strong> { instance.CreatedAt }</div>
+						</div>
+					</div>
+					<div class="flex gap-2">
+						<a
+							href={ templ.URL("https://" + instance.Subdomain + ".instol.cloud") }
+							target="_blank"
+							class="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg font-medium transition"
+						>
+							Open
+						</a>
+						<button
+							hx-delete={ "/api/instances/" + templ.EscapeString(string(rune(instance.ID))) }
+							hx-confirm="Are you sure you want to delete this instance?"
+							hx-target="closest div.bg-gray-800"
+							hx-swap="outerHTML swap:1s"
+							class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg font-medium transition"
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ EmptyInstances() {
+	<div class="text-center py-20 bg-gray-800 rounded-xl border border-gray-700">
+		<div class="text-6xl mb-4">🚀</div>
+		<h2 class="text-2xl font-bold mb-2">No instances yet</h2>
+		<p class="text-gray-400 mb-6">Create your first n8n instance to get started</p>
+		<button onclick="document.getElementById('createModal').classList.remove('hidden')" class="gradient-bg px-8 py-3 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-pink-500/30 transition">Create Instance</button>
+	</div>
+}
+
+templ InstanceCreated(domain string) {
+	<div class="text-center py-8">
+		<div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+		<h3 class="text-2xl font-bold mb-3">Instance Created Successfully!</h3>
+		<p class="text-gray-400 mb-4">Your n8n instance is ready at:</p>
+		<div class="bg-gray-800 p-4 rounded-lg mb-6 font-mono text-pink-500 break-all">{ domain }</div>
+		<a href={ templ.URL("https://" + domain) } target="_blank" class="inline-block w-full gradient-bg py-3 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-pink-500/30 transition mb-3">Open Instance</a>
+		<button onclick="location.reload()" class="w-full border border-gray-700 py-3 rounded-lg font-semibold hover:border-pink-500 transition">Close</button>
+	</div>
+}
+
+templ InstanceError(message string) {
+	<div class="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 mb-4">
+		Failed to create instance: { message }
+	</div>
+	<h2 class="text-2xl font-bold mb-6">Create Your n8n Instance</h2>
+	<form hx-post="/api/instances" hx-target="#modalContent" hx-indicator="#loading" class="space-y-6">
+		<input type="hidden" name="user_id" value="demo-user"/>
+		<div>
+			<label class="block mb-2 font-semibold">Instance Name</label>
+			<input type="text" name="subdomain" placeholder="my-n8n-instance" required pattern="^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" class="w-full px-4 py-3 border border-gray-700 bg-gray-900 rounded-lg focus:outline-none focus:border-pink-500"/>
+			<small class="text-gray-400 text-sm mt-1 block">This will be part of your instance URL</small>
+		</div>
+		<button type="submit" class="w-full gradient-bg py-4 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-pink-500/30 transition">Create Instance</button>
+	</form>
+}

@@ -1,0 +1,32 @@
+package components
+
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views"
+
+templ Navbar(user *views.User) {
+	<nav class="bg-gray-900/95 backdrop-blur-lg py-4 sticky top-0 z-50 border-b border-gray-800">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex justify-between items-center">
+				<a href="/" class="flex items-center gap-3">
+					<svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+						<rect width="32" height="32" rx="8" fill="#EA4B71"></rect>
+						<path d="M10 12L16 18L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+						<path d="M10 18L16 24L22 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+					</svg>
+					<span class="text-xl font-bold">Instol</span>
+				</a>
+				<div class="flex gap-8 items-center">
+					if user == nil {
+						<a href="#features" class="text-gray-400 hover:text-white transition">Features</a>
+						<a href="#pricing" class="text-gray-400 hover:text-white transition">Pricing</a>
+						<a href="/login" class="text-gray-400 hover:text-white transition">Login</a>
+						<a href="/register" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg transition">Get Started</a>
+					} else {
+						<a href="/dashboard" class="text-gray-400 hover:text-white transition">Dashboard</a>
+						<span class="text-gray-400 text-sm">{ user.Email }</span>
+						<a href="/logout" class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:border-pink-500 transition">Logout</a>
+					}
+				</div>
+			</div>
+		</div>
+	</nav>
+}
