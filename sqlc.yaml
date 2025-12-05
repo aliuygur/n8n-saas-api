@@ -4,9 +4,11 @@ sql:
     queries: 
       - "internal/db/queries/instances.sql"
       - "internal/db/queries/users.sql"
+      - "internal/db/queries/subscriptions.sql"
     schema: 
       - "internal/services/provisioning/migrations/"
       - "internal/services/api/migrations/"
+      - "internal/services/subscription/migrations/"
     gen:
       go:
         package: "db"

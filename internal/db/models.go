@@ -32,6 +32,20 @@ type Session struct {
 	CreatedAt sql.NullTime `json:"created_at"`
 }
 
+type Subscription struct {
+	ID                  string         `json:"id"`
+	UserID              string         `json:"user_id"`
+	PolarCustomerID     sql.NullString `json:"polar_customer_id"`
+	PolarSubscriptionID sql.NullString `json:"polar_subscription_id"`
+	Status              string         `json:"status"`
+	TrialStartedAt      sql.NullTime   `json:"trial_started_at"`
+	TrialEndsAt         sql.NullTime   `json:"trial_ends_at"`
+	InstanceCount       int32          `json:"instance_count"`
+	BillingAnchorDate   sql.NullTime   `json:"billing_anchor_date"`
+	CreatedAt           sql.NullTime   `json:"created_at"`
+	UpdatedAt           sql.NullTime   `json:"updated_at"`
+}
+
 type User struct {
 	ID          string       `json:"id"`
 	Email       string       `json:"email"`
