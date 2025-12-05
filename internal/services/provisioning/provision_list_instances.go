@@ -46,7 +46,7 @@ func (s *Service) ListInstances(ctx context.Context, req *ListInstancesRequest) 
 	result := make([]*InstanceStatus, len(instances))
 	for i, instance := range instances {
 		result[i] = &InstanceStatus{
-			ID:         int(instance.ID),
+			ID:         instance.ID,
 			Status:     instance.Status,
 			Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
 			Namespace:  instance.Namespace,

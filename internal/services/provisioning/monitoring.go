@@ -17,7 +17,7 @@ import (
 
 // Logs API
 type LogsRequest struct {
-	InstanceID int    `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 	Component  string `json:"component"` // main, worker, postgres, redis
 	Lines      int    `json:"lines,omitempty"`
 	Follow     bool   `json:"follow,omitempty"`
@@ -38,7 +38,7 @@ type LogsResponse struct {
 func (s *Service) GetLogs(ctx context.Context, req *LogsRequest) (*LogsResponse, error) {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
@@ -77,11 +77,11 @@ func (s *Service) GetLogs(ctx context.Context, req *LogsRequest) (*LogsResponse,
 
 // Metrics API
 type MetricsRequest struct {
-	InstanceID int `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 }
 
 type MetricsResponse struct {
-	InstanceID int       `json:"instance_id"`
+	InstanceID string    `json:"instance_id"`
 	Timestamp  time.Time `json:"timestamp"`
 	Metrics    string    `json:"metrics"` // JSON string instead of interface{}
 }
@@ -90,7 +90,7 @@ type MetricsResponse struct {
 func (s *Service) GetMetrics(ctx context.Context, req *MetricsRequest) (*MetricsResponse, error) {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
@@ -118,7 +118,7 @@ func (s *Service) GetMetrics(ctx context.Context, req *MetricsRequest) (*Metrics
 	}
 
 	return &MetricsResponse{
-		InstanceID: int(instance.ID),
+		InstanceID: instance.ID,
 		Timestamp:  time.Now(),
 		Metrics:    string(metricsJSON),
 	}, nil
@@ -126,7 +126,7 @@ func (s *Service) GetMetrics(ctx context.Context, req *MetricsRequest) (*Metrics
 
 // Health API
 type HealthRequest struct {
-	InstanceID int `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 }
 
 type ComponentHealth struct {
@@ -136,7 +136,7 @@ type ComponentHealth struct {
 }
 
 type HealthStatus struct {
-	InstanceID  int                        `json:"instance_id"`
+	InstanceID  string                     `json:"instance_id"`
 	Overall     string                     `json:"overall"` // healthy, degraded, unhealthy
 	Components  map[string]ComponentHealth `json:"components"`
 	LastChecked time.Time                  `json:"last_checked"`
@@ -146,14 +146,14 @@ type HealthStatus struct {
 func (s *Service) GetHealth(ctx context.Context, req *HealthRequest) (*HealthStatus, error) {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
 
 	if instance.Status != "deployed" {
 		return &HealthStatus{
-			InstanceID:  int(instance.ID),
+			InstanceID:  instance.ID,
 			Overall:     "unhealthy",
 			Components:  map[string]ComponentHealth{},
 			LastChecked: time.Now(),
@@ -170,17 +170,17 @@ func (s *Service) GetHealth(ctx context.Context, req *HealthRequest) (*HealthSta
 		return nil, fmt.Errorf("failed to check health: %w", err)
 	}
 
-	health.InstanceID = int(instance.ID)
+	health.InstanceID = instance.ID
 	return health, nil
 }
 
 // Resource Usage API
 type ResourceUsageRequest struct {
-	InstanceID int `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 }
 
 type ResourceUsage struct {
-	InstanceID int       `json:"instance_id"`
+	InstanceID string    `json:"instance_id"`
 	Timestamp  time.Time `json:"timestamp"`
 	CPU        string    `json:"cpu"`     // JSON string instead of interface{}
 	Memory     string    `json:"memory"`  // JSON string instead of interface{}
@@ -191,7 +191,7 @@ type ResourceUsage struct {
 func (s *Service) GetResourceUsage(ctx context.Context, req *ResourceUsageRequest) (*ResourceUsage, error) {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
@@ -210,13 +210,13 @@ func (s *Service) GetResourceUsage(ctx context.Context, req *ResourceUsageReques
 		return nil, fmt.Errorf("failed to get resource usage: %w", err)
 	}
 
-	usage.InstanceID = int(instance.ID)
+	usage.InstanceID = instance.ID
 	return usage, nil
 }
 
 // Restart Component API
 type RestartComponentRequest struct {
-	InstanceID int    `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 	Component  string `json:"component"` // main, worker, postgres, redis
 }
 
@@ -224,7 +224,7 @@ type RestartComponentRequest struct {
 func (s *Service) RestartComponent(ctx context.Context, req *RestartComponentRequest) error {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return fmt.Errorf("instance not found: %w", err)
 	}
@@ -430,7 +430,7 @@ func (s *Service) getResourceUsage(ctx context.Context, namespace string) (*Reso
 func (s *Service) restartComponent(ctx context.Context, instance db.Instance, component string) error {
 	k8sClient := s.gke.K8sClient()
 
-	log.Printf("Starting component restart: instance_id=%d component=%s", instance.ID, component)
+	log.Printf("Starting component restart: instance_id=%s component=%s", instance.ID, component)
 
 	var deploymentName string
 	switch component {
@@ -463,6 +463,6 @@ func (s *Service) restartComponent(ctx context.Context, instance db.Instance, co
 		return fmt.Errorf("failed to restart deployment: %w", err)
 	}
 
-	log.Printf("Component restart completed: instance_id=%d component=%s", instance.ID, component)
+	log.Printf("Component restart completed: instance_id=%s component=%s", instance.ID, component)
 	return nil
 }

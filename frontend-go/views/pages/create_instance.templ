@@ -1,0 +1,163 @@
+package pages
+
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views/layouts"
+import "github.com/aliuygur/n8n-saas-api/frontend-go/views"
+
+templ CreateInstance(user *views.User) {
+	@layouts.Base("Create Instance", user) {
+		<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+			<!-- Header -->
+			<div class="mb-8">
+				<a href="/dashboard" class="inline-flex items-center text-gray-400 hover:text-white mb-4 transition">
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+					</svg>
+					Back to Dashboard
+				</a>
+				<h1 class="text-4xl font-bold mb-3">Create Your n8n Instance</h1>
+				<p class="text-gray-400 text-lg">Set up your workflow automation platform in minutes</p>
+			</div>
+
+			<!-- Free Trial Banner -->
+			<div class="bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/30 rounded-xl p-6 mb-8">
+				<div class="flex items-start gap-4">
+					<div class="text-4xl">🎉</div>
+					<div>
+						<h3 class="text-xl font-bold mb-2">3 Days Free Trial</h3>
+						<p class="text-gray-300">No credit card required. Start automating your workflows instantly!</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Form -->
+			<div class="bg-gray-800 border border-gray-700 rounded-2xl p-8">
+				<form hx-post="/api/instances" hx-target="#form-response" hx-indicator="#loading" class="space-y-8">
+					<!-- Subdomain Field -->
+					<div>
+						<label class="block mb-3 font-semibold text-lg">Instance Subdomain</label>
+						<div class="flex items-center">
+							<input 
+								type="text" 
+								name="subdomain" 
+								placeholder="my-automation" 
+								required 
+								pattern="^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" 
+								class="flex-1 px-4 py-3 border border-gray-700 bg-gray-900 rounded-l-lg focus:outline-none focus:border-pink-500 text-lg"
+							/>
+							<span class="bg-gray-700 border border-gray-700 border-l-0 rounded-r-lg px-4 py-3 text-gray-400">.instol.cloud</span>
+						</div>
+						<p class="text-gray-400 text-sm mt-2">Use lowercase letters, numbers, and hyphens only. Must start and end with a letter or number.</p>
+					</div>
+
+					<!-- Region Selection -->
+					<div>
+						<label class="block mb-3 font-semibold text-lg">Select Region</label>
+						<div class="grid gap-4">
+							<!-- US Central - Available -->
+							<label class="relative flex items-start p-4 border-2 border-gray-700 rounded-xl cursor-pointer hover:border-pink-500 transition group">
+								<input 
+									type="radio" 
+									name="region" 
+									value="us-central1" 
+									checked 
+									class="mt-1 mr-4 w-5 h-5 text-pink-500 focus:ring-pink-500 focus:ring-offset-gray-800"
+								/>
+								<div class="flex-1">
+									<div class="flex items-center justify-between mb-1">
+										<span class="font-semibold text-lg">US Central</span>
+										<span class="text-xs px-3 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30">Available</span>
+									</div>
+									<p class="text-gray-400 text-sm">United States - Iowa (us-central1)</p>
+									<p class="text-gray-500 text-xs mt-1">Best for North American users</p>
+								</div>
+							</label>
+
+							<!-- EU West - Coming Soon -->
+							<label class="relative flex items-start p-4 border-2 border-gray-700 rounded-xl opacity-60 cursor-not-allowed">
+								<input 
+									type="radio" 
+									name="region" 
+									value="eu-west1" 
+									disabled 
+									class="mt-1 mr-4 w-5 h-5 text-gray-500"
+								/>
+								<div class="flex-1">
+									<div class="flex items-center justify-between mb-1">
+										<span class="font-semibold text-lg">EU West</span>
+										<span class="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">Coming Soon</span>
+									</div>
+									<p class="text-gray-400 text-sm">Europe - Belgium (eu-west1)</p>
+									<p class="text-gray-500 text-xs mt-1">Best for European users</p>
+								</div>
+							</label>
+
+							<!-- Asia - Coming Soon -->
+							<label class="relative flex items-start p-4 border-2 border-gray-700 rounded-xl opacity-60 cursor-not-allowed">
+								<input 
+									type="radio" 
+									name="region" 
+									value="asia-east1" 
+									disabled 
+									class="mt-1 mr-4 w-5 h-5 text-gray-500"
+								/>
+								<div class="flex-1">
+									<div class="flex items-center justify-between mb-1">
+										<span class="font-semibold text-lg">Asia</span>
+										<span class="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">Coming Soon</span>
+									</div>
+									<p class="text-gray-400 text-sm">Asia - Taiwan (asia-east1)</p>
+									<p class="text-gray-500 text-xs mt-1">Best for Asia-Pacific users</p>
+								</div>
+							</label>
+						</div>
+					</div>
+
+					<!-- Submit Button -->
+					<div id="form-response">
+						<button 
+							type="submit" 
+							class="w-full gradient-bg py-4 rounded-lg font-semibold text-white text-lg hover:shadow-lg hover:shadow-pink-500/30 transition"
+						>
+							Create Instance
+						</button>
+					</div>
+
+					<!-- Loading State -->
+					<div id="loading" class="htmx-indicator text-center py-12 hidden">
+						<div class="inline-block w-16 h-16 border-4 border-gray-700 border-t-pink-500 rounded-full animate-spin mb-4"></div>
+						<p class="text-lg">Creating your instance...</p>
+						<p class="text-sm text-gray-400 mt-2">This may take a few moments</p>
+					</div>
+				</form>
+			</div>
+
+			<!-- Info Box -->
+			<div class="mt-8 bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+				<h3 class="font-semibold mb-3 flex items-center gap-2">
+					<svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					What happens next?
+				</h3>
+				<ul class="space-y-2 text-sm text-gray-400">
+					<li class="flex items-start gap-2">
+						<span class="text-pink-500 mt-0.5">•</span>
+						<span>Your instance will be provisioned on Google Kubernetes Engine</span>
+					</li>
+					<li class="flex items-start gap-2">
+						<span class="text-pink-500 mt-0.5">•</span>
+						<span>A secure subdomain will be configured with SSL</span>
+					</li>
+					<li class="flex items-start gap-2">
+						<span class="text-pink-500 mt-0.5">•</span>
+						<span>You'll be able to access your n8n instance within minutes</span>
+					</li>
+					<li class="flex items-start gap-2">
+						<span class="text-pink-500 mt-0.5">•</span>
+						<span>Start building powerful workflow automations immediately</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+	}
+}

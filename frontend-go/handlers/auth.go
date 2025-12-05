@@ -15,34 +15,23 @@ import (
 // Session represents a user session
 type Session struct {
 	UserID    string
+	APIToken  string // Backend API token
 	ExpiresAt time.Time
 }
 
 // AuthHandlers handles authentication-related requests
 type AuthHandlers struct {
-	users    map[string]*views.User // email -> User
-	sessions map[string]*Session    // sessionID -> Session
-	mu       sync.RWMutex
+	sessions  map[string]*Session // sessionID -> Session
+	apiClient APIClient
+	mu        sync.RWMutex
 }
 
 // NewAuthHandlers creates a new auth handlers instance
-func NewAuthHandlers() *AuthHandlers {
-	h := &AuthHandlers{
-		users:    make(map[string]*views.User),
-		sessions: make(map[string]*Session),
+func NewAuthHandlers(apiClient APIClient) *AuthHandlers {
+	return &AuthHandlers{
+		sessions:  make(map[string]*Session),
+		apiClient: apiClient,
 	}
-
-	// Add a demo user
-	h.users["demo@instol.cloud"] = &views.User{
-		ID:        "demo-user",
-		Email:     "demo@instol.cloud",
-		Password:  "demo123", // In production, use bcrypt
-		FirstName: "Demo",
-		LastName:  "User",
-		CreatedAt: time.Now(),
-	}
-
-	return h
 }
 
 func (h *AuthHandlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -53,121 +42,6 @@ func (h *AuthHandlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandlers) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if err := pages.Register().Render(r.Context(), w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func (h *AuthHandlers) HandleLoginPost(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	h.mu.RLock()
-	user, exists := h.users[email]
-	h.mu.RUnlock()
-
-	if !exists || user.Password != password {
-		w.Header().Set("Content-Type", "text/html")
-		if err := pages.LoginError("Invalid email or password").Render(r.Context(), w); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Create session
-	sessionID, err := generateSessionID()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	h.mu.Lock()
-	h.sessions[sessionID] = &Session{
-		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	h.mu.Unlock()
-
-	// Set cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   86400, // 24 hours
-	})
-
-	w.Header().Set("Content-Type", "text/html")
-	if err := pages.LoginSuccess().Render(r.Context(), w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func (h *AuthHandlers) HandleRegisterPost(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	firstName := r.FormValue("first_name")
-	lastName := r.FormValue("last_name")
-
-	h.mu.Lock()
-	if _, exists := h.users[email]; exists {
-		h.mu.Unlock()
-		w.Header().Set("Content-Type", "text/html")
-		if err := pages.RegisterError("Email already registered").Render(r.Context(), w); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Create user
-	userID, _ := generateSessionID()
-	user := &views.User{
-		ID:        userID,
-		Email:     email,
-		Password:  password, // In production, use bcrypt.GenerateFromPassword
-		FirstName: firstName,
-		LastName:  lastName,
-		CreatedAt: time.Now(),
-	}
-	h.users[email] = user
-	h.mu.Unlock()
-
-	// Create session
-	sessionID, err := generateSessionID()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	h.mu.Lock()
-	h.sessions[sessionID] = &Session{
-		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	h.mu.Unlock()
-
-	// Set cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   86400,
-	})
-
-	log.Printf("New user registered: %s", email)
-
-	w.Header().Set("Content-Type", "text/html")
-	if err := pages.RegisterSuccess().Render(r.Context(), w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -192,6 +66,66 @@ func (h *AuthHandlers) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+// HandleGoogleLogin redirects to Google OAuth
+func (h *AuthHandlers) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+	authURL, err := h.apiClient.GetGoogleLoginURL()
+	if err != nil {
+		log.Printf("Failed to get Google login URL: %v", err)
+		http.Error(w, "Failed to initiate Google login", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+}
+
+// HandleGoogleCallback handles the OAuth callback from Google
+func (h *AuthHandlers) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	state := r.URL.Query().Get("state")
+
+	if code == "" {
+		http.Redirect(w, r, "/login?error=no_code", http.StatusSeeOther)
+		return
+	}
+
+	// Exchange code for session token from backend API
+	result, err := h.apiClient.HandleGoogleCallback(code, state)
+	if err != nil {
+		log.Printf("Google callback failed: %v", err)
+		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
+		return
+	}
+
+	// Create session ID for browser cookie
+	sessionID, err := generateSessionID()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Store API token in server-side session
+	h.mu.Lock()
+	h.sessions[sessionID] = &Session{
+		UserID:    result.User.Email,
+		APIToken:  result.SessionToken,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7 days
+	}
+	h.mu.Unlock()
+
+	// Set session cookie for browser
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    sessionID,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,            // Set to true in production with HTTPS
+		MaxAge:   7 * 24 * 60 * 60, // 7 days
+	})
+
+	// Redirect to dashboard
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
 func (h *AuthHandlers) GetCurrentUser(r *http.Request) *views.User {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
@@ -206,26 +140,47 @@ func (h *AuthHandlers) GetCurrentUser(r *http.Request) *views.User {
 		return nil
 	}
 
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	for _, user := range h.users {
-		if user.ID == session.UserID {
-			return user
-		}
+	// Return a basic user object with the session's user ID (email)
+	// In a real app, you might fetch full user details from a database
+	return &views.User{
+		ID:    session.UserID,
+		Email: session.UserID,
 	}
-
-	return nil
 }
 
-func (h *AuthHandlers) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandlers) GetAPIToken(r *http.Request) string {
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		return ""
+	}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	session, exists := h.sessions[cookie.Value]
+	if !exists || session.ExpiresAt.Before(time.Now()) {
+		return ""
+	}
+
+	return session.APIToken
+}
+
+// RequireAuth is a middleware that protects routes requiring authentication
+func (h *AuthHandlers) RequireAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := h.GetCurrentUser(r)
 		if user == nil {
+			// For HTMX requests, return 401 instead of redirect
+			if r.Header.Get("HX-Request") == "true" {
+				w.Header().Set("HX-Redirect", "/login")
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		next(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func generateSessionID() (string, error) {

@@ -10,7 +10,7 @@ import (
 )
 
 type Instance struct {
-	ID             int32        `json:"id"`
+	ID             string       `json:"id"`
 	UserID         string       `json:"user_id"`
 	Status         string       `json:"status"`
 	GkeClusterName string       `json:"gke_cluster_name"`
@@ -25,15 +25,15 @@ type Instance struct {
 }
 
 type Session struct {
-	ID        int32        `json:"id"`
-	UserID    int32        `json:"user_id"`
+	ID        string       `json:"id"`
+	UserID    string       `json:"user_id"`
 	Token     string       `json:"token"`
 	ExpiresAt time.Time    `json:"expires_at"`
 	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type User struct {
-	ID          int32        `json:"id"`
+	ID          string       `json:"id"`
 	Email       string       `json:"email"`
 	Name        string       `json:"name"`
 	Picture     string       `json:"picture"`

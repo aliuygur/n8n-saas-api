@@ -80,7 +80,7 @@ const deleteInstance = `-- name: DeleteInstance :exec
 DELETE FROM instances WHERE id = $1
 `
 
-func (q *Queries) DeleteInstance(ctx context.Context, id int32) error {
+func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, deleteInstance, id)
 	return err
 }
@@ -89,7 +89,7 @@ const getInstance = `-- name: GetInstance :one
 SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetInstance(ctx context.Context, id int32) (Instance, error) {
+func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) {
 	row := q.db.QueryRowContext(ctx, getInstance, id)
 	var i Instance
 	err := row.Scan(
@@ -230,7 +230,7 @@ WHERE id = $1
 RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
-func (q *Queries) SoftDeleteInstance(ctx context.Context, id int32) (Instance, error) {
+func (q *Queries) SoftDeleteInstance(ctx context.Context, id string) (Instance, error) {
 	row := q.db.QueryRowContext(ctx, softDeleteInstance, id)
 	var i Instance
 	err := row.Scan(
@@ -258,7 +258,7 @@ RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, names
 `
 
 type UpdateInstanceDeployedParams struct {
-	ID     int32  `json:"id"`
+	ID     string `json:"id"`
 	Status string `json:"status"`
 }
 
@@ -290,7 +290,7 @@ RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, names
 `
 
 type UpdateInstanceNamespaceParams struct {
-	ID        int32  `json:"id"`
+	ID        string `json:"id"`
 	Namespace string `json:"namespace"`
 }
 
@@ -322,7 +322,7 @@ RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, names
 `
 
 type UpdateInstanceStatusParams struct {
-	ID     int32  `json:"id"`
+	ID     string `json:"id"`
 	Status string `json:"status"`
 }
 

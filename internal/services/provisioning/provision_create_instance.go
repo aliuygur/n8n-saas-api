@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"encore.dev/beta/errs"
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/gke"
@@ -16,7 +17,7 @@ type CreateInstanceRequest struct {
 }
 
 type CreateInstanceResponse struct {
-	InstanceID int    `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 	Status     string `json:"status"`
 	Domain     string `json:"domain"`
 }
@@ -43,7 +44,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 		return nil, fmt.Errorf("failed to check subdomain availability: %w", err)
 	}
 	if subdomainExists {
-		return nil, fmt.Errorf("subdomain '%s' is already taken", req.Subdomain)
+		return nil, errs.WrapCode(fmt.Errorf("subdomain '%s' is already taken", req.Subdomain), errs.AlreadyExists, "subdomain already taken")
 	}
 
 	// Generate unique namespace
@@ -77,7 +78,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 	}
 
 	return &CreateInstanceResponse{
-		InstanceID: int(instance.ID),
+		InstanceID: instance.ID,
 		Status:     instance.Status,
 		Domain:     domain,
 	}, nil

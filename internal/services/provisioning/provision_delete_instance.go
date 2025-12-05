@@ -10,14 +10,14 @@ import (
 
 // Delete Instance API types
 type DeleteInstanceRequest struct {
-	InstanceID int `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 }
 
 //encore:api private
 func (s *Service) DeleteInstance(ctx context.Context, req *DeleteInstanceRequest) error {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return fmt.Errorf("instance not found: %w", err)
 	}

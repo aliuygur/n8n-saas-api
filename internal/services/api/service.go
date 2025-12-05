@@ -29,9 +29,9 @@ type Config struct {
 func initService() (*Service, error) {
 	// TODO: Load these from Encore secrets
 	config := Config{
-		GoogleClientID:     "your-client-id.apps.googleusercontent.com",
-		GoogleClientSecret: "your-client-secret",
-		GoogleRedirectURL:  "http://localhost:4000/api/auth/google/callback",
+		GoogleClientID:     "YOUR_GOOGLE_CLIENT_ID",
+		GoogleClientSecret: "YOUR_GOOGLE_CLIENT_SECRET",
+		GoogleRedirectURL:  "http://localhost:8080/auth/google/callback",
 	}
 
 	oauth2Config := &oauth2.Config{

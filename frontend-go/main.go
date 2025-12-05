@@ -17,8 +17,8 @@ var content embed.FS
 func main() {
 	// Initialize handlers
 	apiClient := NewAPIClient()
-	authHandlers := handlers.NewAuthHandlers()
-	dashboardHandlers := handlers.NewDashboardHandlers(apiClient)
+	authHandlers := handlers.NewAuthHandlers(apiClient)
+	dashboardHandlers := handlers.NewDashboardHandlers(apiClient, authHandlers)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -28,21 +28,28 @@ func main() {
 	staticFS := http.FS(content)
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(staticFS)))
 
-	// Routes
+	// Public routes
 	r.Get("/", handlers.HandleHome())
 	r.Get("/login", authHandlers.HandleLogin)
-	r.Get("/register", authHandlers.HandleRegister)
-	r.Get("/dashboard", authHandlers.RequireAuth(dashboardHandlers.HandleDashboard(authHandlers.GetCurrentUser)))
-
-	// Auth endpoints
-	r.Post("/auth/login", authHandlers.HandleLoginPost)
-	r.Post("/auth/register", authHandlers.HandleRegisterPost)
 	r.Post("/logout", authHandlers.HandleLogout)
 
-	// HTMX endpoints (protected)
-	r.Post("/api/instances", authHandlers.RequireAuth(dashboardHandlers.HandleCreateInstance))
-	r.Get("/api/instances", authHandlers.RequireAuth(dashboardHandlers.HandleListInstances))
-	r.Delete("/api/instances/{id}", authHandlers.RequireAuth(dashboardHandlers.HandleDeleteInstance))
+	// Google OAuth routes
+	r.Get("/auth/google", authHandlers.HandleGoogleLogin)
+	r.Get("/auth/google/callback", authHandlers.HandleGoogleCallback)
+
+	// Protected routes group
+	r.Group(func(r chi.Router) {
+		r.Use(authHandlers.RequireAuth)
+
+		// Dashboard pages
+		r.Get("/dashboard", dashboardHandlers.HandleDashboard(authHandlers.GetCurrentUser))
+		r.Get("/create-instance", dashboardHandlers.HandleCreateInstancePage(authHandlers.GetCurrentUser))
+
+		// API endpoints
+		r.Post("/api/instances", dashboardHandlers.HandleCreateInstance)
+		r.Get("/api/instances", dashboardHandlers.HandleListInstances)
+		r.Delete("/api/instances/{id}", dashboardHandlers.HandleDeleteInstance)
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {

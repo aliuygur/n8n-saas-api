@@ -19,7 +19,7 @@ INSERT INTO sessions (
 `
 
 type CreateSessionParams struct {
-	UserID    int32     `json:"user_id"`
+	UserID    string    `json:"user_id"`
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
@@ -88,7 +88,7 @@ const deleteUserSessions = `-- name: DeleteUserSessions :exec
 DELETE FROM sessions WHERE user_id = $1
 `
 
-func (q *Queries) DeleteUserSessions(ctx context.Context, userID int32) error {
+func (q *Queries) DeleteUserSessions(ctx context.Context, userID string) error {
 	_, err := q.db.ExecContext(ctx, deleteUserSessions, userID)
 	return err
 }
@@ -148,7 +148,7 @@ const getUserByID = `-- name: GetUserByID :one
 SELECT id, email, name, picture, created_at, updated_at, last_login_at FROM users WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
@@ -170,7 +170,7 @@ WHERE id = $1
 RETURNING id, email, name, picture, created_at, updated_at, last_login_at
 `
 
-func (q *Queries) UpdateUserLastLogin(ctx context.Context, id int32) (User, error) {
+func (q *Queries) UpdateUserLastLogin(ctx context.Context, id string) (User, error) {
 	row := q.db.QueryRowContext(ctx, updateUserLastLogin, id)
 	var i User
 	err := row.Scan(

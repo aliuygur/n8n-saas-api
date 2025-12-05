@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,12 +11,14 @@ import (
 )
 
 type DashboardHandlers struct {
-	apiClient APIClient
+	apiClient    APIClient
+	authHandlers *AuthHandlers
 }
 
-func NewDashboardHandlers(apiClient APIClient) *DashboardHandlers {
+func NewDashboardHandlers(apiClient APIClient, authHandlers *AuthHandlers) *DashboardHandlers {
 	return &DashboardHandlers{
-		apiClient: apiClient,
+		apiClient:    apiClient,
+		authHandlers: authHandlers,
 	}
 }
 
@@ -31,42 +32,59 @@ func (h *DashboardHandlers) HandleDashboard(getCurrentUser func(*http.Request) *
 	}
 }
 
+func (h *DashboardHandlers) HandleCreateInstancePage(getCurrentUser func(*http.Request) *views.User) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := getCurrentUser(r)
+		if err := pages.CreateInstance(user).Render(r.Context(), w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 func (h *DashboardHandlers) HandleCreateInstance(w http.ResponseWriter, r *http.Request) {
+	token := h.authHandlers.GetAPIToken(r)
+	if token == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	subdomain := r.FormValue("subdomain")
-	userID := r.FormValue("user_id")
-	if userID == "" {
-		userID = "demo-user"
-	}
 
-	resp, err := h.apiClient.CreateInstance(CreateInstanceRequest{
-		UserID:    userID,
+	resp, err := h.apiClient.CreateInstance(token, CreateInstanceRequest{
 		Subdomain: subdomain,
 	})
 	if err != nil {
 		log.Printf("Error creating instance: %v", err)
 		w.Header().Set("Content-Type", "text/html")
-		if err := pages.InstanceError(err.Error()).Render(r.Context(), w); err != nil {
+		// Extract user-friendly error message
+		errMsg := err.Error()
+		if err := pages.InstanceError(errMsg).Render(r.Context(), w); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	domain := fmt.Sprintf("%s.instol.cloud", resp.Subdomain)
-	if err := pages.InstanceCreated(domain).Render(r.Context(), w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	log.Printf("Instance created successfully: %s", resp.Subdomain)
+
+	// Redirect to dashboard with success message
+	w.Header().Set("HX-Redirect", "/dashboard")
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *DashboardHandlers) HandleListInstances(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user_id")
+	token := h.authHandlers.GetAPIToken(r)
+	if token == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	resp, err := h.apiClient.ListInstances(userID)
+	resp, err := h.apiClient.ListInstances(token)
 	if err != nil {
 		log.Printf("Error listing instances: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -85,12 +103,21 @@ func (h *DashboardHandlers) HandleListInstances(w http.ResponseWriter, r *http.R
 	// Convert to pages.Instance type
 	instances := make([]pages.Instance, len(resp.Instances))
 	for i, inst := range resp.Instances {
+		// Extract subdomain from domain (format: https://subdomain.instol.cloud)
+		subdomain := ""
+		if len(inst.Domain) > 8 {
+			// Remove https:// and .instol.cloud to get subdomain
+			domain := inst.Domain[8:]             // Remove "https://"
+			if idx := len(domain) - 13; idx > 0 { // Remove ".instol.cloud"
+				subdomain = domain[:idx]
+			}
+		}
 		instances[i] = pages.Instance{
 			ID:        inst.ID,
-			Subdomain: inst.Subdomain,
-			Namespace: fmt.Sprintf("n8n-%s", inst.Subdomain),
+			Subdomain: subdomain,
+			Namespace: inst.Namespace,
 			Status:    inst.Status,
-			Domain:    fmt.Sprintf("%s.instol.cloud", inst.Subdomain),
+			Domain:    inst.Domain,
 			CreatedAt: inst.CreatedAt,
 		}
 	}
@@ -101,6 +128,12 @@ func (h *DashboardHandlers) HandleListInstances(w http.ResponseWriter, r *http.R
 }
 
 func (h *DashboardHandlers) HandleDeleteInstance(w http.ResponseWriter, r *http.Request) {
+	token := h.authHandlers.GetAPIToken(r)
+	if token == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -108,7 +141,7 @@ func (h *DashboardHandlers) HandleDeleteInstance(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := h.apiClient.DeleteInstance(id); err != nil {
+	if err := h.apiClient.DeleteInstance(token, id); err != nil {
 		log.Printf("Error deleting instance: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

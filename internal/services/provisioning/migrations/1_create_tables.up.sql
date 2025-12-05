@@ -1,7 +1,7 @@
 -- Create instances table to track n8n deployments
 CREATE TABLE instances (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR NOT NULL DEFAULT '',
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL DEFAULT gen_random_uuid(),
     status VARCHAR NOT NULL DEFAULT 'pending',
     gke_cluster_name VARCHAR NOT NULL DEFAULT '',
     gke_project_id VARCHAR NOT NULL DEFAULT '',

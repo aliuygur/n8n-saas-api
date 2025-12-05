@@ -2,9 +2,7 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,6 +12,7 @@ import (
 	"encore.dev/beta/auth"
 	"encore.dev/beta/errs"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/samber/lo"
 )
 
 // UserData represents the authenticated user's data
@@ -62,10 +61,7 @@ type GoogleLoginResponse struct {
 //encore:api public method=GET path=/auth/google/login
 func (s *Service) GoogleLogin(ctx context.Context) (*GoogleLoginResponse, error) {
 	// Generate a random state token for CSRF protection
-	state, err := generateRandomString(32)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate state: %w", err)
-	}
+	state := lo.RandomString(32, lo.LettersCharset)
 
 	// TODO: Store state in cache/session for validation in callback
 	// For now, we'll just generate the URL
@@ -151,10 +147,7 @@ func (s *Service) GoogleCallback(ctx context.Context, req *GoogleCallbackRequest
 	}
 
 	// Create session
-	sessionToken, err := generateRandomString(64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate session token: %w", err)
-	}
+	sessionToken := lo.RandomString(64, lo.LettersCharset)
 
 	expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 days
 	session, err := queries.CreateSession(ctx, db.CreateSessionParams{
@@ -216,8 +209,7 @@ type LogoutResponse struct {
 //
 //encore:api auth method=POST path=/auth/logout
 func (s *Service) Logout(ctx context.Context) (*LogoutResponse, error) {
-	// In Encore, we need to get the token from the request context
-	// For now, let's delete all sessions for the authenticated user
+	// Get authenticated user
 	userEmail, ok := auth.UserID()
 	if !ok {
 		return &LogoutResponse{Success: false}, nil
@@ -236,14 +228,4 @@ func (s *Service) Logout(ctx context.Context) (*LogoutResponse, error) {
 	}
 
 	return &LogoutResponse{Success: true}, nil
-}
-
-// Helper functions
-
-func generateRandomString(length int) (string, error) {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }

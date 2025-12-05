@@ -12,11 +12,12 @@ import (
 
 // Get Instance API types
 type GetInstanceRequest struct {
-	InstanceID int `json:"instance_id"`
+	InstanceID string `json:"instance_id"`
 }
 
 type InstanceStatus struct {
-	ID         int        `json:"id"`
+	ID         string     `json:"id"`
+	UserID     string     `json:"user_id"`
 	Status     string     `json:"status"`
 	Domain     string     `json:"domain"`
 	Namespace  string     `json:"namespace"`
@@ -30,7 +31,7 @@ type InstanceStatus struct {
 func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*InstanceStatus, error) {
 	queries := db.New(s.db)
 
-	instance, err := queries.GetInstance(ctx, int32(req.InstanceID))
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("instance not found")
@@ -39,7 +40,8 @@ func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*In
 	}
 
 	response := &InstanceStatus{
-		ID:         int(instance.ID),
+		ID:         instance.ID,
+		UserID:     instance.UserID,
 		Status:     instance.Status,
 		Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
 		Namespace:  instance.Namespace,
