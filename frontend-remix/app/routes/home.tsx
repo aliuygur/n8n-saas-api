@@ -1,4 +1,14 @@
 import type { Route } from "./+types/home";
+import { redirect } from "react-router";
+
+export function loader({ request }: Route.LoaderArgs) {
+  // Check if user is authenticated via JWT cookie
+  const cookieHeader = request.headers.get("Cookie");
+  if (cookieHeader && cookieHeader.includes("jwt=")) {
+    return redirect("/dashboard");
+  }
+  return null;
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -39,31 +49,57 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center py-16 md:py-24">
-          <div className="inline-block bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-indigo-500/20">
-            Workflow Automation Platform
-          </div>
-          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            One-Click Deployment
-            <br />
-            <span className="text-indigo-400">
-              on Google Cloud
-            </span>
-          </h2>
-          <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Deploy your workflow automation platform in minutes with automatic SSL and cloud infrastructure.
-          </p>
-          <a
-            href="/login"
-            className="inline-block bg-indigo-600 text-white text-lg px-8 py-4 rounded-lg hover:bg-indigo-500 transition-all font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30"
-          >
-            Deploy Your Instance Now
-          </a>
-          <p className="text-sm text-gray-500 mt-4">No credit card required • Free trial available</p>
+      <section className="relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Gradient orbs */}
+          <div className="absolute top-20 -left-20 w-96 h-96 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
+          <div className="absolute -bottom-20 right-10 w-[500px] h-[500px] bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-pink-500 rounded-full blur-3xl opacity-15"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-15"></div>
+          
+          {/* Dotted pattern overlay */}
+          <div className="absolute inset-0 opacity-40" style={{
+            backgroundImage: 'radial-gradient(circle, rgba(99, 102, 241, 0.4) 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+          }}></div>
+          
+          {/* Gradient fade */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/50 to-gray-950"></div>
         </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center py-16 md:py-24">
+            <div className="inline-block bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-indigo-500/20">
+              Self-Hosted n8n Platform
+            </div>
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              Deploy Your Own n8n
+              <br />
+              <span className="text-indigo-400">
+                in Minutes
+              </span>
+            </h2>
+            <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Self-hosted n8n workflow automation on Google Cloud with automatic SSL and cloud infrastructure.
+            </p>
+            
+            <a
+              href="/login"
+              className="inline-block bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-lg px-10 py-4 rounded-xl hover:from-indigo-500 hover:to-indigo-400 transition-all font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105"
+            >
+              Get Started →
+            </a>
+            
+            <p className="text-sm text-gray-400 mt-6">
+              <span className="text-green-400">3 days free trial</span>, then $9.99/month • No credit card required
+            </p>
+          </div>
+        </div>
+      </section>
 
-        {/* Features */}
+      {/* Features */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 py-16 md:py-20">
           <div className="bg-gray-900/50 rounded-xl p-8 border border-gray-800 backdrop-blur-sm hover:border-gray-700 transition-all">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">

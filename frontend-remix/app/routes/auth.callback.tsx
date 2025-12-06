@@ -16,8 +16,11 @@ export default function AuthCallback() {
     }
 
     if (token) {
-      // Store JWT token in localStorage
+      // Store JWT token in both localStorage and cookie
       localStorage.setItem("jwt_token", token);
+      
+      // Set JWT cookie for SSR authentication checks
+      document.cookie = `jwt=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
       
       // Redirect to dashboard
       navigate("/dashboard");

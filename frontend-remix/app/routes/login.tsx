@@ -1,5 +1,15 @@
 import type { Route } from "./+types/login";
+import { redirect } from "react-router";
 import { API_BASE_URL } from "~/lib/config";
+
+export function loader({ request }: Route.LoaderArgs) {
+  // Check if user is authenticated via JWT cookie
+  const cookieHeader = request.headers.get("Cookie");
+  if (cookieHeader && cookieHeader.includes("jwt=")) {
+    return redirect("/dashboard");
+  }
+  return null;
+}
 
 export function meta({}: Route.MetaArgs) {
   return [

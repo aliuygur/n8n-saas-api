@@ -14,10 +14,13 @@ export function setToken(token: string): void {
 export function removeToken(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('jwt_token');
+  // Also remove the cookie
+  document.cookie = 'jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
 export function isAuthenticated(): boolean {
-  return !!getToken();
+  const token = getToken();
+  return !!token;
 }
 
 export async function logout(): Promise<void> {
