@@ -12,6 +12,7 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/auth"
 	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 	"github.com/aliuygur/n8n-saas-api/internal/services/subscription"
+	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 )
 
 // CreateInstanceRequest represents the request to create a new instance
@@ -45,19 +46,11 @@ type CheckSubdomainResponse struct {
 func (s *Service) CheckSubdomainAvailability(ctx context.Context, req *CheckSubdomainRequest) (*CheckSubdomainResponse, error) {
 	rlog.Debug("Checking subdomain availability", "subdomain", req.Subdomain)
 
-	// Validate subdomain using provisioning service's validation
-	validationResp, err := provisioning.ValidateSubdomain(ctx, &provisioning.ValidateSubdomainRequest{
-		Subdomain: req.Subdomain,
-	})
-	if err != nil {
-		rlog.Error("Failed to validate subdomain", "error", err)
-		return nil, fmt.Errorf("failed to validate subdomain: %w", err)
-	}
-
-	if !validationResp.Valid {
+	// Validate subdomain
+	if err := domainutils.ValidateSubdomain(req.Subdomain); err != nil {
 		return &CheckSubdomainResponse{
 			Available:       false,
-			Message:         validationResp.ErrorMessage,
+			Message:         err.Error(),
 			ValidationError: true,
 		}, nil
 	}

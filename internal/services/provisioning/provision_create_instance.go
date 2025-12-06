@@ -8,6 +8,7 @@ import (
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/gke"
+	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 )
 
 // Create Instance API types
@@ -33,7 +34,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 	}
 
 	// Validate subdomain
-	if err := validateSubdomain(req.Subdomain); err != nil {
+	if err := domainutils.ValidateSubdomain(req.Subdomain); err != nil {
 		return nil, fmt.Errorf("invalid subdomain: %w", err)
 	}
 
