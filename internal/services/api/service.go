@@ -13,25 +13,31 @@ var apiDB = sqldb.NewDatabase("api", sqldb.DatabaseConfig{
 	Migrations: "./migrations",
 })
 
+// Service handles API endpoints for the React Router frontend
+//
 //encore:service
 type Service struct {
 	db           *sql.DB
 	oauth2Config *oauth2.Config
+	jwtSecret    []byte
 }
+
+var svc *Service
 
 type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
+	JWTSecret          string
 }
 
-// initService initializes the API service
 func initService() (*Service, error) {
 	// TODO: Load these from Encore secrets
 	config := Config{
 		GoogleClientID:     "YOUR_GOOGLE_CLIENT_ID",
 		GoogleClientSecret: "YOUR_GOOGLE_CLIENT_SECRET",
 		GoogleRedirectURL:  "http://localhost:8080/auth/google/callback",
+		JWTSecret:          "your-secret-key-change-this-in-production",
 	}
 
 	oauth2Config := &oauth2.Config{
@@ -45,16 +51,14 @@ func initService() (*Service, error) {
 		Endpoint: google.Endpoint,
 	}
 
-	return &Service{
-		db:           apiDB.Stdlib(),
-		oauth2Config: oauth2Config,
-	}, nil
-}
+	db := apiDB.Stdlib()
 
-// GoogleUserInfo represents the user info returned from Google
-type GoogleUserInfo struct {
-	ID      string `json:"id"`
-	Email   string `json:"email"`
-	Name    string `json:"name"`
-	Picture string `json:"picture"`
+	s := &Service{
+		db:           db,
+		oauth2Config: oauth2Config,
+		jwtSecret:    []byte(config.JWTSecret),
+	}
+
+	svc = s
+	return s, nil
 }

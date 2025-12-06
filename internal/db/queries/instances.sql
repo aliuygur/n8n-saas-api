@@ -12,6 +12,9 @@ SELECT * FROM instances WHERE id = $1 AND deleted_at IS NULL;
 -- name: GetInstanceByNamespace :one
 SELECT * FROM instances WHERE namespace = $1 AND deleted_at IS NULL;
 
+-- name: GetInstanceBySubdomain :one
+SELECT * FROM instances WHERE subdomain = $1 AND deleted_at IS NULL;
+
 -- name: ListInstancesByUser :many
 SELECT * FROM instances 
 WHERE user_id = $1 AND deleted_at IS NULL

@@ -1,12 +1,14 @@
 module github.com/aliuygur/n8n-saas-api
 
-go 1.22
+go 1.23.0
 
 toolchain go1.24.5
 
 require (
 	cloud.google.com/go/container v1.27.1
 	encore.dev v1.48.13
+	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/polarsource/polar-go v0.12.0
 	github.com/samber/lo v1.52.0
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.150.0
@@ -44,17 +46,17 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/polarsource/polar-go v0.12.0 // indirect
 	github.com/spyzhov/ajson v0.8.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/term v0.33.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/tools v0.35.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect

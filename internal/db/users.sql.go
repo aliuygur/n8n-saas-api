@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -42,13 +43,13 @@ INSERT INTO users (
     email, name, picture
 ) VALUES (
     $1, $2, $3
-) RETURNING id, email, name, picture, created_at, updated_at, last_login_at
+) RETURNING id, email, name, picture, created_at, last_login
 `
 
 type CreateUserParams struct {
-	Email   string `json:"email"`
-	Name    string `json:"name"`
-	Picture string `json:"picture"`
+	Email   string         `json:"email"`
+	Name    string         `json:"name"`
+	Picture sql.NullString `json:"picture"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -60,8 +61,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Name,
 		&i.Picture,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastLoginAt,
+		&i.LastLogin,
 	)
 	return i, err
 }
@@ -94,7 +94,7 @@ func (q *Queries) DeleteUserSessions(ctx context.Context, userID string) error {
 }
 
 const getSessionByToken = `-- name: GetSessionByToken :one
-SELECT s.id, s.user_id, s.token, s.expires_at, s.created_at, u.id, u.email, u.name, u.picture, u.created_at, u.updated_at, u.last_login_at
+SELECT s.id, s.user_id, s.token, s.expires_at, s.created_at, u.id, u.email, u.name, u.picture, u.created_at, u.last_login
 FROM sessions s
 JOIN users u ON s.user_id = u.id
 WHERE s.token = $1 AND s.expires_at > NOW()
@@ -119,14 +119,13 @@ func (q *Queries) GetSessionByToken(ctx context.Context, token string) (GetSessi
 		&i.User.Name,
 		&i.User.Picture,
 		&i.User.CreatedAt,
-		&i.User.UpdatedAt,
-		&i.User.LastLoginAt,
+		&i.User.LastLogin,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, name, picture, created_at, updated_at, last_login_at FROM users WHERE email = $1
+SELECT id, email, name, picture, created_at, last_login FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -138,14 +137,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Name,
 		&i.Picture,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastLoginAt,
+		&i.LastLogin,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, name, picture, created_at, updated_at, last_login_at FROM users WHERE id = $1
+SELECT id, email, name, picture, created_at, last_login FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -157,8 +155,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.Name,
 		&i.Picture,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastLoginAt,
+		&i.LastLogin,
 	)
 	return i, err
 }
@@ -167,7 +164,7 @@ const updateUserLastLogin = `-- name: UpdateUserLastLogin :one
 UPDATE users 
 SET last_login_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, email, name, picture, created_at, updated_at, last_login_at
+RETURNING id, email, name, picture, created_at, last_login
 `
 
 func (q *Queries) UpdateUserLastLogin(ctx context.Context, id string) (User, error) {
@@ -179,8 +176,7 @@ func (q *Queries) UpdateUserLastLogin(ctx context.Context, id string) (User, err
 		&i.Name,
 		&i.Picture,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastLoginAt,
+		&i.LastLogin,
 	)
 	return i, err
 }

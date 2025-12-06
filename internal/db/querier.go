@@ -23,6 +23,7 @@ type Querier interface {
 	GetExpiredTrials(ctx context.Context) ([]Subscription, error)
 	GetInstance(ctx context.Context, id string) (Instance, error)
 	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
+	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
 	GetSubscriptionByUserID(ctx context.Context, userID string) (Subscription, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)

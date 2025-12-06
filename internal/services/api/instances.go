@@ -2,47 +2,97 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
 
-	"encore.dev/beta/auth"
-	"encore.dev/beta/errs"
+	"encore.dev"
 	"encore.dev/rlog"
-	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/aliuygur/n8n-saas-api/internal/auth"
 	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 	"github.com/aliuygur/n8n-saas-api/internal/services/subscription"
 )
 
-// CreateInstance creates a new n8n instance for the authenticated user
-
+// CreateInstanceRequest represents the request to create a new instance
 type CreateInstanceRequest struct {
 	Subdomain string `json:"subdomain"`
 }
 
+// CreateInstanceResponse represents the response from creating an instance
 type CreateInstanceResponse struct {
-	InstanceID string `json:"instance_id"`
-	Status     string `json:"status"`
-	Domain     string `json:"domain"`
+	ID          string `json:"id"`
+	InstanceURL string `json:"instance_url"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
 }
 
-// CreateInstance creates a new n8n instance for the authenticated user
+// CheckSubdomainRequest represents the request to check subdomain availability
+type CheckSubdomainRequest struct {
+	Subdomain string `json:"subdomain"`
+}
+
+// CheckSubdomainResponse represents the response from checking subdomain availability
+type CheckSubdomainResponse struct {
+	Available       bool   `json:"available"`
+	Message         string `json:"message"`
+	ValidationError bool   `json:"validation_error"` // true if error is due to validation, false if subdomain exists
+}
+
+// CheckSubdomainAvailability checks if a subdomain is available
 //
-//encore:api auth method=POST path=/me/instances
-func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest) (*CreateInstanceResponse, error) {
-	// Get user ID from auth context
-	uid, ok := auth.UserID()
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-	userID := string(uid)
+//encore:api auth method=POST path=/api/instances/check-subdomain
+func (s *Service) CheckSubdomainAvailability(ctx context.Context, req *CheckSubdomainRequest) (*CheckSubdomainResponse, error) {
+	rlog.Debug("Checking subdomain availability", "subdomain", req.Subdomain)
 
-	rlog.Debug("Creating instance", "user_id", userID, "subdomain", req.Subdomain)
-
-	// Get user to retrieve user ID (UUID)
-	queries := db.New(s.db)
-	user, err := queries.GetUserByEmail(ctx, userID)
+	// Validate subdomain using provisioning service's validation
+	validationResp, err := provisioning.ValidateSubdomain(ctx, &provisioning.ValidateSubdomainRequest{
+		Subdomain: req.Subdomain,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		rlog.Error("Failed to validate subdomain", "error", err)
+		return nil, fmt.Errorf("failed to validate subdomain: %w", err)
 	}
+
+	if !validationResp.Valid {
+		return &CheckSubdomainResponse{
+			Available:       false,
+			Message:         validationResp.ErrorMessage,
+			ValidationError: true,
+		}, nil
+	}
+
+	// Check if subdomain already exists
+	exists, err := provisioning.CheckSubdomainExists(ctx, &provisioning.CheckSubdomainExistsRequest{
+		Subdomain: req.Subdomain,
+	})
+	if err != nil {
+		rlog.Error("Failed to check subdomain", "error", err)
+		return nil, fmt.Errorf("failed to check subdomain availability: %w", err)
+	}
+
+	if exists.Exists {
+		return &CheckSubdomainResponse{
+			Available:       false,
+			Message:         "This subdomain is already taken",
+			ValidationError: false,
+		}, nil
+	}
+
+	return &CheckSubdomainResponse{
+		Available:       true,
+		Message:         "Subdomain is available",
+		ValidationError: false,
+	}, nil
+}
+
+// CreateInstance creates a new n8n instance
+//
+//encore:api auth method=POST path=/api/instances
+func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest) (*CreateInstanceResponse, error) {
+	user := auth.MustGetUser()
+
+	rlog.Debug("Creating instance", "user_id", user.ID, "subdomain", req.Subdomain)
 
 	// Check subscription status
 	subStatus, err := subscription.GetSubscriptionStatus(ctx, &subscription.GetSubscriptionStatusRequest{
@@ -69,7 +119,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 			UserID: user.ID,
 		})
 		if err != nil {
-			// This will return appropriate error messages for trial limits, expired subscriptions, etc.
+			rlog.Error("Error validating instance creation", "error", err)
 			return nil, err
 		}
 	}
@@ -81,7 +131,6 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 	})
 	if err != nil {
 		rlog.Error("Failed to create instance", "error", err)
-		// Preserve the error as-is to maintain error codes
 		return nil, err
 	}
 
@@ -96,125 +145,54 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 		}
 	}
 
+	rlog.Info("Instance created successfully", "subdomain", req.Subdomain, "instance_id", provResp.InstanceID, "domain", provResp.Domain)
+
 	return &CreateInstanceResponse{
-		InstanceID: provResp.InstanceID,
-		Status:     provResp.Status,
-		Domain:     provResp.Domain,
+		ID:          provResp.InstanceID,
+		InstanceURL: provResp.Domain,
+		Status:      provResp.Status,
+		CreatedAt:   time.Now().Format(time.RFC3339),
 	}, nil
 }
 
-// GetInstance retrieves a specific instance by ID
-
-type InstanceResponse struct {
-	ID         string `json:"id"`
-	Status     string `json:"status"`
-	Domain     string `json:"domain"`
-	Namespace  string `json:"namespace"`
-	ServiceURL string `json:"service_url"`
-	CreatedAt  string `json:"created_at"`
-	DeployedAt string `json:"deployed_at,omitempty"`
-	Details    string `json:"details,omitempty"`
+// Instance represents an n8n instance
+type Instance struct {
+	ID          string `json:"id"`
+	InstanceURL string `json:"instance_url"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
 }
 
-//encore:api auth method=GET path=/me/instances/:id
-func (s *Service) GetInstance(ctx context.Context, id string) (*InstanceResponse, error) {
-	// Get user ID from auth context
-	uid, ok := auth.UserID()
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-	userID := string(uid)
-
-	rlog.Debug("Getting instance", "user_id", userID, "instance_id", id)
-
-	// Call provisioning service
-	provResp, err := provisioning.GetInstance(ctx, &provisioning.GetInstanceRequest{
-		InstanceID: id,
-	})
-	if err != nil {
-		rlog.Error("Failed to get instance", "error", err)
-		return nil, fmt.Errorf("failed to get instance: %w", err)
-	}
-
-	// Verify the instance belongs to the authenticated user
-	if provResp.UserID != userID {
-		rlog.Warn("Unauthorized instance access attempt", "user_id", userID, "instance_id", id, "owner_id", provResp.UserID)
-		return nil, &errs.Error{
-			Code:    errs.PermissionDenied,
-			Message: "you do not have permission to access this instance",
-		}
-	}
-
-	// Convert timestamps to strings
-	createdAt := provResp.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
-	deployedAt := ""
-	if provResp.DeployedAt != nil {
-		deployedAt = provResp.DeployedAt.Format("2006-01-02T15:04:05Z07:00")
-	}
-
-	return &InstanceResponse{
-		ID:         provResp.ID,
-		Status:     provResp.Status,
-		Domain:     provResp.Domain,
-		Namespace:  provResp.Namespace,
-		ServiceURL: provResp.ServiceURL,
-		CreatedAt:  createdAt,
-		DeployedAt: deployedAt,
-		Details:    provResp.Details,
-	}, nil
-}
-
-// ListInstances retrieves all instances for the authenticated user
-
-type ListInstancesRequest struct {
-	Limit  int `query:"limit,omitempty"`
-	Offset int `query:"offset,omitempty"`
-}
-
+// ListInstancesResponse represents the response from listing instances
 type ListInstancesResponse struct {
-	Instances []*InstanceResponse `json:"instances"`
+	Instances []Instance `json:"instances"`
 }
 
-//encore:api auth method=GET path=/me/instances
-func (s *Service) ListInstances(ctx context.Context, req *ListInstancesRequest) (*ListInstancesResponse, error) {
-	// Get user ID from auth context
-	uid, ok := auth.UserID()
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-	userID := string(uid)
+// ListInstances returns all instances for the authenticated user
+//
+//encore:api auth method=GET path=/api/instances
+func (s *Service) ListInstances(ctx context.Context) (*ListInstancesResponse, error) {
+	user := auth.MustGetUser()
 
-	rlog.Debug("Listing instances", "user_id", userID, "limit", req.Limit, "offset", req.Offset)
+	rlog.Debug("Listing instances", "user_id", user.ID)
 
 	// Call provisioning service
 	provResp, err := provisioning.ListInstances(ctx, &provisioning.ListInstancesRequest{
-		UserID: userID,
-		Limit:  req.Limit,
-		Offset: req.Offset,
+		UserID: user.ID,
 	})
 	if err != nil {
 		rlog.Error("Failed to list instances", "error", err)
 		return nil, fmt.Errorf("failed to list instances: %w", err)
 	}
 
-	// Convert response
-	instances := make([]*InstanceResponse, len(provResp.Instances))
+	// Convert to API response format
+	instances := make([]Instance, len(provResp.Instances))
 	for i, inst := range provResp.Instances {
-		createdAt := inst.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
-		deployedAt := ""
-		if inst.DeployedAt != nil {
-			deployedAt = inst.DeployedAt.Format("2006-01-02T15:04:05Z07:00")
-		}
-
-		instances[i] = &InstanceResponse{
-			ID:         inst.ID,
-			Status:     inst.Status,
-			Domain:     inst.Domain,
-			Namespace:  inst.Namespace,
-			ServiceURL: inst.ServiceURL,
-			CreatedAt:  createdAt,
-			DeployedAt: deployedAt,
-			Details:    inst.Details,
+		instances[i] = Instance{
+			ID:          inst.ID,
+			InstanceURL: inst.Domain,
+			Status:      inst.Status,
+			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
 		}
 	}
 
@@ -223,46 +201,78 @@ func (s *Service) ListInstances(ctx context.Context, req *ListInstancesRequest) 
 	}, nil
 }
 
-// DeleteInstance deletes an existing instance
-
-type DeleteInstanceResponse struct {
-	Message string `json:"message"`
+// GetInstanceResponse represents a single instance response
+type GetInstanceResponse struct {
+	ID          string `json:"id"`
+	InstanceURL string `json:"instance_url"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
 }
 
-//encore:api auth method=DELETE path=/me/instances/:id
-func (s *Service) DeleteInstance(ctx context.Context, id string) (*DeleteInstanceResponse, error) {
-	// Get user ID from auth context
-	uid, ok := auth.UserID()
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-	userID := string(uid)
+// GetInstance returns a specific instance
+//
+//encore:api auth method=GET path=/api/instances/:id
+func (s *Service) GetInstance(ctx context.Context, id string) (*GetInstanceResponse, error) {
+	user := auth.MustGetUser()
 
-	rlog.Debug("Deleting instance", "user_id", userID, "instance_id", id)
+	rlog.Debug("Getting instance", "user_id", user.ID, "instance_id", id)
 
-	// Get user to retrieve user ID (UUID)
-	queries := db.New(s.db)
-	user, err := queries.GetUserByEmail(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	// First, verify the instance belongs to this user
+	// Call provisioning service
 	instance, err := provisioning.GetInstance(ctx, &provisioning.GetInstanceRequest{
 		InstanceID: id,
 	})
 	if err != nil {
 		rlog.Error("Failed to get instance", "error", err)
-		return nil, fmt.Errorf("failed to verify instance ownership: %w", err)
+		return nil, fmt.Errorf("failed to get instance: %w", err)
 	}
 
-	// Verify the instance belongs to the authenticated user
+	// Verify ownership
 	if instance.UserID != user.ID {
-		rlog.Warn("Unauthorized instance deletion attempt", "user_id", user.ID, "instance_id", id, "owner_id", instance.UserID)
-		return nil, &errs.Error{
-			Code:    errs.PermissionDenied,
-			Message: "you do not have permission to delete this instance",
-		}
+		rlog.Warn("Unauthorized instance access attempt", "user_id", user.ID, "instance_id", id, "owner_id", instance.UserID)
+		return nil, fmt.Errorf("you do not have permission to access this instance")
+	}
+
+	return &GetInstanceResponse{
+		ID:          instance.ID,
+		InstanceURL: instance.Domain,
+		Status:      instance.Status,
+		CreatedAt:   instance.CreatedAt.Format(time.RFC3339),
+	}, nil
+}
+
+// DeleteInstance deletes an instance
+//
+//encore:api auth raw method=DELETE path=/api/instances/:id
+func (s *Service) DeleteInstance(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	instanceID := encore.CurrentRequest().PathParams.Get("id")
+
+	user := auth.MustGetUser()
+
+	rlog.Debug("Deleting instance", "user_id", user.ID, "instance_id", instanceID)
+
+	// Validate instance ID
+	if instanceID == "" {
+		rlog.Error("Empty instance ID received")
+		http.Error(w, "instance ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// First, verify the instance belongs to this user
+	instance, err := provisioning.GetInstance(ctx, &provisioning.GetInstanceRequest{
+		InstanceID: instanceID,
+	})
+	if err != nil {
+		rlog.Error("Failed to get instance", "error", err)
+		http.Error(w, fmt.Sprintf("failed to verify instance ownership: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Verify ownership
+	if instance.UserID != user.ID {
+		rlog.Warn("Unauthorized instance deletion attempt", "user_id", user.ID, "instance_id", instanceID, "owner_id", instance.UserID)
+		http.Error(w, "you do not have permission to delete this instance", http.StatusForbidden)
+		return
 	}
 
 	// Call provisioning service to delete
@@ -271,7 +281,8 @@ func (s *Service) DeleteInstance(ctx context.Context, id string) (*DeleteInstanc
 	})
 	if err != nil {
 		rlog.Error("Failed to delete instance", "error", err)
-		return nil, fmt.Errorf("failed to delete instance: %w", err)
+		http.Error(w, fmt.Sprintf("failed to delete instance: %v", err), http.StatusInternalServerError)
+		return
 	}
 
 	// Decrement instance count in subscription
@@ -283,7 +294,9 @@ func (s *Service) DeleteInstance(ctx context.Context, id string) (*DeleteInstanc
 		// Don't fail the deletion, just log the error
 	}
 
-	return &DeleteInstanceResponse{
-		Message: "Instance successfully deleted",
-	}, nil
+	rlog.Info("Instance deleted successfully", "instance_id", instanceID, "user_id", user.ID)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }

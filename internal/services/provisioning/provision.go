@@ -2,6 +2,8 @@ package provisioning
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -9,6 +11,67 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/samber/lo"
 )
+
+// ValidateSubdomainRequest represents a request to validate subdomain
+type ValidateSubdomainRequest struct {
+	Subdomain string
+}
+
+// ValidateSubdomainResponse represents the response
+type ValidateSubdomainResponse struct {
+	Valid        bool
+	ErrorMessage string
+}
+
+// ValidateSubdomain validates a subdomain's format and availability rules
+//
+//encore:api private
+func (s *Service) ValidateSubdomain(ctx context.Context, req *ValidateSubdomainRequest) (*ValidateSubdomainResponse, error) {
+	err := validateSubdomain(req.Subdomain)
+	if err != nil {
+		return &ValidateSubdomainResponse{
+			Valid:        false,
+			ErrorMessage: err.Error(),
+		}, nil
+	}
+
+	return &ValidateSubdomainResponse{
+		Valid: true,
+	}, nil
+}
+
+// CheckSubdomainExistsRequest represents a request to check if subdomain exists
+type CheckSubdomainExistsRequest struct {
+	Subdomain string
+}
+
+// CheckSubdomainExistsResponse represents the response
+type CheckSubdomainExistsResponse struct {
+	Exists bool
+}
+
+// CheckSubdomainExists checks if a subdomain already exists in the database
+//
+//encore:api private
+func (s *Service) CheckSubdomainExists(ctx context.Context, req *CheckSubdomainExistsRequest) (*CheckSubdomainExistsResponse, error) {
+	// Check if subdomain exists in database
+	queries := db.New(s.db)
+	_, err := queries.GetInstanceBySubdomain(ctx, req.Subdomain)
+	if err != nil {
+		// If not found (no rows), subdomain is available
+		if errors.Is(err, sql.ErrNoRows) {
+			return &CheckSubdomainExistsResponse{
+				Exists: false,
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to check subdomain: %w", err)
+	}
+
+	// If we got here, instance was found, so subdomain exists
+	return &CheckSubdomainExistsResponse{
+		Exists: true,
+	}, nil
+}
 
 // Reserved subdomains that cannot be used
 var reservedSubdomains = map[string]bool{

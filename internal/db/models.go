@@ -25,11 +25,11 @@ type Instance struct {
 }
 
 type Session struct {
-	ID        string       `json:"id"`
-	UserID    string       `json:"user_id"`
-	Token     string       `json:"token"`
-	ExpiresAt time.Time    `json:"expires_at"`
-	CreatedAt sql.NullTime `json:"created_at"`
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Subscription struct {
@@ -47,11 +47,10 @@ type Subscription struct {
 }
 
 type User struct {
-	ID          string       `json:"id"`
-	Email       string       `json:"email"`
-	Name        string       `json:"name"`
-	Picture     string       `json:"picture"`
-	CreatedAt   sql.NullTime `json:"created_at"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	LastLoginAt sql.NullTime `json:"last_login_at"`
+	ID        string         `json:"id"`
+	Email     string         `json:"email"`
+	Name      string         `json:"name"`
+	Picture   sql.NullString `json:"picture"`
+	CreatedAt time.Time      `json:"created_at"`
+	LastLogin sql.NullTime   `json:"last_login"`
 }

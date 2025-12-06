@@ -133,6 +133,30 @@ func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) 
 	return i, err
 }
 
+const getInstanceBySubdomain = `-- name: GetInstanceBySubdomain :one
+SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE subdomain = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error) {
+	row := q.db.QueryRowContext(ctx, getInstanceBySubdomain, subdomain)
+	var i Instance
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Status,
+		&i.GkeClusterName,
+		&i.GkeProjectID,
+		&i.GkeZone,
+		&i.Namespace,
+		&i.Subdomain,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeployedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const listAllInstances = `-- name: ListAllInstances :many
 SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
 WHERE deleted_at IS NULL

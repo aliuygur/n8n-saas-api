@@ -1,190 +1,98 @@
 # API Service
 
-The API service provides authentication and user management endpoints for the n8n-host frontend application.
+This is the backend API service for the n8n-host platform. It acts as an intermediary between the React Router frontend and other backend services like provisioning and subscription.
 
-## Features
+## Architecture
 
-- **Google OAuth Authentication**: Login with Google accounts
-- **Session Management**: Secure session-based authentication
-- **User Profile**: Retrieve current user information
+The API service provides RESTful endpoints for:
+
+- **Authentication**: Google OAuth login, logout, session management
+- **Instance Management**: Create, list, get, and delete n8n instances
+- **User Management**: Get current user information
 
 ## Endpoints
 
 ### Authentication
 
-#### `GET /api/auth/google/login`
-Initiates the Google OAuth flow.
+- `GET /auth/google` - Initiate Google OAuth login flow
+- `GET /auth/google/callback` - Handle Google OAuth callback
+- `POST /api/auth/logout` - Logout user and clear session
+- `GET /api/auth/me` - Get current authenticated user (requires auth)
 
-**Response:**
-```json
-{
-  "auth_url": "https://accounts.google.com/o/oauth2/auth?..."
-}
-```
+### Instance Management
 
-#### `POST /api/auth/google/callback`
-Handles the OAuth callback from Google.
+- `POST /api/instances` - Create a new n8n instance (requires auth)
+  - Request: `{ "subdomain": "myworkflow" }`
+  - Response: `{ "id": "...", "subdomain": "...", "domain": "...", "status": "...", "created_at": "..." }`
 
-**Request:**
-```json
-{
-  "code": "oauth_code_from_google",
-  "state": "state_token"
-}
-```
+- `GET /api/instances` - List all instances for the authenticated user (requires auth)
+  - Response: `{ "instances": [...] }`
 
-**Response:**
-```json
-{
-  "session_token": "session_token_string",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "John Doe",
-    "picture": "https://..."
-  },
-  "expires_at": "2024-12-11T00:00:00Z"
-}
-```
+- `GET /api/instances/:id` - Get a specific instance (requires auth)
+  - Response: `{ "id": "...", "subdomain": "...", "domain": "...", "status": "...", "created_at": "..." }`
 
-#### `GET /api/auth/me`
-Returns the current user's information.
+- `DELETE /api/instances/:id` - Delete an instance (requires auth)
+  - Response: `{ "success": true }`
 
-**Headers:**
-- `Authorization`: Session token
+## Service Communication
 
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "John Doe",
-    "picture": "https://..."
-  }
-}
-```
+The API service communicates with:
 
-#### `POST /api/auth/logout`
-Invalidates the current session.
+- **Provisioning Service**: For creating, listing, and deleting n8n instances
+- **Subscription Service**: For managing user subscriptions, trials, and instance limits
 
-**Headers:**
-- `Authorization`: Session token
+## Database
 
-**Response:**
-```json
-{
-  "success": true
-}
-```
+The API service has its own database (`api`) with the following tables:
 
-### Health Check
+- `users`: User accounts from Google OAuth
+- `sessions`: User session tokens for authentication
 
-#### `GET /api/health`
-Returns the health status of the service.
+## Authentication Flow
 
-**Response:**
-```json
-{
-  "status": "ok",
-  "service": "api"
-}
-```
+1. User clicks "Login with Google" on frontend (React Router)
+2. Frontend redirects to `/auth/google`
+3. API service redirects to Google OAuth
+4. Google redirects back to `/auth/google/callback`
+5. API service:
+   - Exchanges code for user info
+   - Creates/updates user in database
+   - Creates session token
+   - Sets session cookie
+   - Redirects to frontend dashboard
 
-## Database Schema
+6. Frontend makes authenticated requests with session cookie
+7. API service validates session via `AuthHandler`
+8. Authenticated requests can access protected endpoints
 
-### Users Table
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR NOT NULL,
-    google_id VARCHAR NOT NULL,
-    name VARCHAR NOT NULL,
-    picture VARCHAR NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    last_login_at TIMESTAMP
-);
-```
+## CORS Configuration
 
-### Sessions Table
-```sql
-CREATE TABLE sessions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    token VARCHAR NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
+The API is configured to accept requests from the React Router frontend running on `http://localhost:5173` (Vite dev server).
 
-## Configuration
+## Environment Variables
 
-The service requires the following configuration values (stored in Encore secrets or environment variables):
-
+Configuration is loaded from Encore secrets (TODO):
 - `GoogleClientID`: Google OAuth client ID
 - `GoogleClientSecret`: Google OAuth client secret
-- `GoogleRedirectURL`: OAuth callback URL (e.g., `http://localhost:4000/api/auth/google/callback`)
+- `GoogleRedirectURL`: OAuth callback URL
 
-### Setting up Google OAuth
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the Google+ API
-4. Go to "Credentials" and create OAuth 2.0 credentials
-5. Add authorized redirect URIs:
-   - Development: `http://localhost:4000/api/auth/google/callback`
-   - Production: `https://yourdomain.com/api/auth/google/callback`
-6. Copy the Client ID and Client Secret
-7. Update the configuration in `service.go` or use Encore secrets
-
-### Example: Setting Encore Secrets
+## Running the Service
 
 ```bash
-encore secret set --type dev GoogleClientID
-encore secret set --type dev GoogleClientSecret
-encore secret set --type dev GoogleRedirectURL
+# Start Encore services (from project root)
+encore run
+
+# The API service will be available at http://localhost:4000
 ```
 
-## Usage with Frontend
+## Frontend Integration
 
-1. **Initiate Login**: Call `GET /api/auth/google/login` to get the Google OAuth URL
-2. **Redirect User**: Redirect the user to the `auth_url` returned
-3. **Handle Callback**: Google redirects back to your frontend with a code
-4. **Exchange Code**: Call `POST /api/auth/google/callback` with the code
-5. **Store Token**: Save the `session_token` in localStorage or a cookie
-6. **Authenticated Requests**: Include the token in the `Authorization` header for protected endpoints
+The React Router frontend (in `frontend-remix/`) makes requests to this API service. Update the base URL in the frontend to point to the correct port (4000 for Encore services).
 
 ## Development
 
-### Running the Service
-
-```bash
-encore run
-```
-
-The API will be available at `http://localhost:4000`
-
-### Database Migrations
-
-Migrations are automatically applied by Encore when the service starts.
-
-To create new migrations:
-1. Add SQL files to `internal/services/api/migrations/`
-2. Follow the naming convention: `{number}_{description}.up.sql` and `{number}_{description}.down.sql`
-
-### Generating Database Code
-
-After modifying SQL queries in `internal/db/queries/users.sql`:
-
-```bash
-sqlc generate
-```
-
-## Security Notes
-
-- Session tokens are randomly generated 64-character strings
-- Sessions expire after 7 days
-- HTTPS should be used in production
-- CSRF protection via state tokens in OAuth flow (TODO: implement state validation)
-- Store Google Client Secret securely using Encore secrets
+When developing:
+1. Run the Encore backend: `encore run`
+2. Run the React Router frontend: `cd frontend-remix && npm run dev`
+3. Frontend will be at `http://localhost:5173`
+4. Backend API will be at `http://localhost:4000`

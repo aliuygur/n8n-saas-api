@@ -1,9 +1,0 @@
-# Generated templ files
-*_templ.go
-
-# Binary
-frontend-go
-
-# IDE
-.vscode/
-.idea/
