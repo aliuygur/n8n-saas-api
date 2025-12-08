@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+const acquireUserLock = `-- name: AcquireUserLock :exec
+SELECT pg_advisory_lock(hashtext($1))
+`
+
+func (q *Queries) AcquireUserLock(ctx context.Context, hashtext string) error {
+	_, err := q.db.ExecContext(ctx, acquireUserLock, hashtext)
+	return err
+}
+
 const createSession = `-- name: CreateSession :one
 INSERT INTO sessions (
     user_id, token, expires_at
@@ -156,6 +165,15 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const releaseUserLock = `-- name: ReleaseUserLock :exec
+SELECT pg_advisory_unlock(hashtext($1))
+`
+
+func (q *Queries) ReleaseUserLock(ctx context.Context, hashtext string) error {
+	_, err := q.db.ExecContext(ctx, releaseUserLock, hashtext)
+	return err
 }
 
 const updateUserLastLogin = `-- name: UpdateUserLastLogin :one

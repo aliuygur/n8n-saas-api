@@ -33,6 +33,11 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 	}
 	user := auth.MustGetUser()
 
+	// Acquire database advisory lock to prevent concurrent instance creation across all instances
+	// This will block if another request from the same user is in progress
+	lo.Must0(s.db.AcquireUserLock(r.Context(), user.ID))
+	defer lo.Must0(s.db.ReleaseUserLock(r.Context(), user.ID))
+
 	subdomain := r.FormValue("subdomain")
 
 	rlog.Debug("Creating instance", "user_id", user.ID, "subdomain", subdomain)

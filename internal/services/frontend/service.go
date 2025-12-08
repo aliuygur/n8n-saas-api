@@ -8,6 +8,7 @@ import (
 	"encore.dev/storage/sqldb"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -71,6 +72,13 @@ func (s *Service) ServeStatic(w http.ResponseWriter, r *http.Request) {
 	// Serve from embedded static files
 	fs := http.FileServer(http.Dir("./internal/services/frontend/static"))
 	http.StripPrefix("/static/", fs).ServeHTTP(w, r)
+}
+
+// withUserLock executes a function while holding an advisory lock for the given user ID
+func (s *Service) withUserLock(r *http.Request, userID string, fn func() error) error {
+	lo.Must0(s.db.AcquireUserLock(r.Context(), userID))
+	defer lo.Must0(s.db.ReleaseUserLock(r.Context(), userID))
+	return fn()
 }
 
 // handleError renders error page

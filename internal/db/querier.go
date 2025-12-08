@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	AcquireUserLock(ctx context.Context, hashtext string) error
 	CheckNamespaceExists(ctx context.Context, namespace string) (bool, error)
 	CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error)
 	CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error)
@@ -32,6 +33,7 @@ type Querier interface {
 	IncrementSubscriptionSeatsByID(ctx context.Context, id string) error
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
 	ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error)
+	ReleaseUserLock(ctx context.Context, hashtext string) error
 	SoftDeleteInstance(ctx context.Context, id string) (Instance, error)
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
