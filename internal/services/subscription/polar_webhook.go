@@ -18,10 +18,6 @@ import (
 	"github.com/polarsource/polar-go/models/components"
 )
 
-// Webhook secret configuration
-var webhookSecrets struct {
-	PolarWebhookSecret string
-}
 
 // WebhookEvent represents the standard webhook payload structure
 type WebhookEvent struct {
@@ -115,7 +111,7 @@ func (s *Service) verifyWebhookSignature(headers http.Header, body []byte) error
 	signedContent := fmt.Sprintf("%s.%s.%s", webhookID, webhookTimestamp, string(body))
 
 	// Base64 decode the webhook secret
-	secret, err := base64.StdEncoding.DecodeString(webhookSecrets.PolarWebhookSecret)
+	secret, err := base64.StdEncoding.DecodeString(secrets.PolarWebhookSecret)
 	if err != nil {
 		return fmt.Errorf("failed to decode webhook secret: %w", err)
 	}

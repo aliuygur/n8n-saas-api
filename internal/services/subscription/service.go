@@ -24,9 +24,15 @@ type Config struct {
 	PricePerInstance int64 // in cents
 }
 
+// TODO: Set secrets via Encore:
+//   encore secret set PolarAccessToken --dev
+//   encore secret set PolarProductID --dev
+//   encore secret set PolarWebhookSecret --dev
+// Get the webhook secret from Polar dashboard > Settings > Webhooks
 var secrets struct {
-	PolarAccessToken string
-	PolarProductID   string
+	PolarAccessToken   string
+	PolarProductID     string
+	PolarWebhookSecret string
 }
 
 // initService initializes the subscription service
