@@ -33,24 +33,23 @@ type Session struct {
 }
 
 type Subscription struct {
-	ID                  string         `json:"id"`
-	UserID              string         `json:"user_id"`
-	PolarCustomerID     sql.NullString `json:"polar_customer_id"`
-	PolarSubscriptionID sql.NullString `json:"polar_subscription_id"`
-	Status              string         `json:"status"`
-	TrialStartedAt      sql.NullTime   `json:"trial_started_at"`
-	TrialEndsAt         sql.NullTime   `json:"trial_ends_at"`
-	InstanceCount       int32          `json:"instance_count"`
-	BillingAnchorDate   sql.NullTime   `json:"billing_anchor_date"`
-	CreatedAt           sql.NullTime   `json:"created_at"`
-	UpdatedAt           sql.NullTime   `json:"updated_at"`
+	ID                  string       `json:"id"`
+	UserID              string       `json:"user_id"`
+	PolarProductID      string       `json:"polar_product_id"`
+	PolarCustomerID     string       `json:"polar_customer_id"`
+	PolarSubscriptionID string       `json:"polar_subscription_id"`
+	Seats               int32        `json:"seats"`
+	Status              string       `json:"status"`
+	TrialEndsAt         sql.NullTime `json:"trial_ends_at"`
+	CreatedAt           time.Time    `json:"created_at"`
+	UpdatedAt           time.Time    `json:"updated_at"`
 }
 
 type User struct {
-	ID        string         `json:"id"`
-	Email     string         `json:"email"`
-	Name      string         `json:"name"`
-	Picture   sql.NullString `json:"picture"`
-	CreatedAt time.Time      `json:"created_at"`
-	LastLogin sql.NullTime   `json:"last_login"`
+	ID          string       `json:"id"`
+	Email       string       `json:"email"`
+	Name        string       `json:"name"`
+	CreatedAt   time.Time    `json:"created_at"`
+	LastLoginAt sql.NullTime `json:"last_login_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
 }

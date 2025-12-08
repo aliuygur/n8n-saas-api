@@ -15,7 +15,7 @@ type GetInstanceRequest struct {
 	InstanceID string `json:"instance_id"`
 }
 
-type InstanceStatus struct {
+type Instance struct {
 	ID         string     `json:"id"`
 	UserID     string     `json:"user_id"`
 	Status     string     `json:"status"`
@@ -28,7 +28,7 @@ type InstanceStatus struct {
 }
 
 //encore:api private
-func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*InstanceStatus, error) {
+func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*Instance, error) {
 	queries := db.New(s.db)
 
 	instance, err := queries.GetInstance(ctx, req.InstanceID)
@@ -39,7 +39,7 @@ func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*In
 		return nil, fmt.Errorf("failed to get instance: %w", err)
 	}
 
-	response := &InstanceStatus{
+	response := &Instance{
 		ID:         instance.ID,
 		UserID:     instance.UserID,
 		Status:     instance.Status,

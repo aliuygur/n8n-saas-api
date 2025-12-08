@@ -1,21 +1,22 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create subscriptions table
 CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    polar_customer_id VARCHAR DEFAULT '',
-    polar_subscription_id VARCHAR DEFAULT '',
+    polar_product_id VARCHAR NOT NULL DEFAULT '',
+    polar_customer_id VARCHAR NOT NULL DEFAULT '',
+    polar_subscription_id VARCHAR NOT NULL DEFAULT '',
+    seats INTEGER NOT NULL DEFAULT 0,
     status VARCHAR NOT NULL DEFAULT 'trial',
-    trial_started_at TIMESTAMP,
     trial_ends_at TIMESTAMP,
-    instance_count INTEGER NOT NULL DEFAULT 0,
-    billing_anchor_date TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX subscriptions_user_id_key ON subscriptions(user_id);
+-- unique index on user_id and polar_product_id
+CREATE UNIQUE INDEX idx_subscriptions_user_id_polar_product_id ON subscriptions(user_id, polar_product_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX idx_subscriptions_trial_ends_at ON subscriptions(trial_ends_at);
-CREATE INDEX idx_subscriptions_polar_subscription_id ON subscriptions(polar_subscription_id);
 
 -- Subscription status can be: 'trial', 'active', 'expired', 'canceled', 'past_due'

@@ -42,9 +42,3 @@ func initService() (*Service, error) {
 		polarClient: polarClient,
 	}, nil
 }
-
-// Constants
-const (
-	PricePerInstance   = 1000 // $10.00 in cents
-	TrialDurationHours = 72   // 3 days
-)

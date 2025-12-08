@@ -1,7 +1,10 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create instances table to track n8n deployments
 CREATE TABLE instances (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'pending',
     gke_cluster_name VARCHAR NOT NULL DEFAULT '',
     gke_project_id VARCHAR NOT NULL DEFAULT '',
@@ -13,6 +16,7 @@ CREATE TABLE instances (
     deployed_at TIMESTAMP,
     deleted_at TIMESTAMP
 );
+
 
 CREATE INDEX idx_instances_user_id ON instances(user_id);
 CREATE INDEX idx_instances_status ON instances(status);

@@ -7,6 +7,7 @@ toolchain go1.24.5
 require (
 	cloud.google.com/go/container v1.27.1
 	encore.dev v1.48.13
+	github.com/a-h/templ v0.3.960
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/polarsource/polar-go v0.12.0
 	github.com/samber/lo v1.52.0
@@ -56,7 +57,6 @@ require (
 	golang.org/x/term v0.33.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.35.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect

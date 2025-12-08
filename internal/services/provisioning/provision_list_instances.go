@@ -15,7 +15,7 @@ type ListInstancesRequest struct {
 }
 
 type ListInstancesResponse struct {
-	Instances []*InstanceStatus `json:"instances"`
+	Instances []*Instance `json:"instances"`
 }
 
 //encore:api private
@@ -43,9 +43,9 @@ func (s *Service) ListInstances(ctx context.Context, req *ListInstancesRequest) 
 		return nil, fmt.Errorf("failed to list instances: %w", err)
 	}
 
-	result := make([]*InstanceStatus, len(instances))
+	result := make([]*Instance, len(instances))
 	for i, instance := range instances {
-		result[i] = &InstanceStatus{
+		result[i] = &Instance{
 			ID:         instance.ID,
 			Status:     instance.Status,
 			Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),

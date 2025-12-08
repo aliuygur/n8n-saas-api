@@ -2,10 +2,7 @@ package subscription
 
 import (
 	"context"
-	"database/sql"
-	"encoding/json"
 	"fmt"
-	"time"
 
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
@@ -16,6 +13,8 @@ import (
 // CreateCheckoutRequest represents the request to create a checkout session
 type CreateCheckoutRequest struct {
 	UserID     string `json:"user_id"`
+	Seats      int64  `json:"seats,omitempty"`
+	UserEmail  string `json:"user_email,omitempty"`
 	SuccessURL string `json:"success_url"`
 	ReturnURL  string `json:"return_url,omitempty"`
 }
@@ -30,37 +29,17 @@ type CreateCheckoutResponse struct {
 //
 //encore:api private
 func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest) (*CreateCheckoutResponse, error) {
-	queries := db.New(s.db)
 
-	// Get subscription
-	subscription, err := queries.GetSubscriptionByUserID(ctx, req.UserID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no subscription found for user")
-		}
-		return nil, fmt.Errorf("failed to get subscription: %w", err)
+	if req.Seats <= 0 {
+		req.Seats = 1
 	}
-
-	// Only allow checkout for trial or expired subscriptions
-	if subscription.Status != "trial" && subscription.Status != "expired" {
-		return nil, fmt.Errorf("subscription is already active")
-	}
-
-	// Get user email for Polar customer
-	user, err := queries.GetUserByID(ctx, req.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	// Create checkout session with Polar
-	// The quantity is the current instance count (at least 1 for trial users)
-	quantity := max(subscription.InstanceCount, 1)
 
 	checkoutCreate := components.CheckoutCreate{
-		Products:      []string{secrets.PolarProductID},
-		CustomerEmail: polargo.Pointer(user.Email),
-		CustomerName:  polargo.Pointer(user.Name),
-		SuccessURL:    polargo.Pointer(req.SuccessURL),
+		// Seats:              polargo.Pointer(req.Seats),
+		Products:           []string{secrets.PolarProductID},
+		ExternalCustomerID: polargo.Pointer(req.UserID),
+		CustomerEmail:      polargo.Pointer(req.UserEmail),
+		SuccessURL:         polargo.Pointer(req.SuccessURL),
 	}
 
 	if req.ReturnURL != "" {
@@ -69,8 +48,7 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 
 	rlog.Info("Creating Polar checkout session",
 		"user_id", req.UserID,
-		"email", user.Email,
-		"quantity", quantity,
+		"email", req.UserEmail,
 	)
 
 	resp, err := s.polarClient.Checkouts.Create(ctx, checkoutCreate)
@@ -94,183 +72,73 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 	}, nil
 }
 
-// WebhookRequest represents incoming webhook from Polar
-// Using json.RawMessage to handle dynamic webhook payloads
-type WebhookRequest struct {
-	Event string          `json:"event"`
-	Data  json.RawMessage `json:"data"`
+type HandleCheckoutCallbackRequest struct {
+	CheckoutID string `json:"checkout_id"`
 }
 
-// WebhookResponse represents the webhook acknowledgment
-type WebhookResponse struct {
-	Success bool `json:"success"`
+type HandleCheckoutCallbackResponse struct {
+	SubscriptionID string `json:"subscription_id,omitempty"`
 }
 
-// HandleWebhook processes Polar webhook events
-//
-//encore:api public method=POST path=/subscription/webhook
-func (s *Service) HandleWebhook(ctx context.Context, req *WebhookRequest) (*WebhookResponse, error) {
-	rlog.Info("Received Polar webhook", "event", req.Event)
-
-	// Parse the webhook data
-	var data map[string]interface{}
-	if err := json.Unmarshal(req.Data, &data); err != nil {
-		rlog.Error("Failed to parse webhook data", "error", err)
-		return &WebhookResponse{Success: false}, err
+//encore:api private
+func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckoutCallbackRequest) (*HandleCheckoutCallbackResponse, error) {
+	// Fetch checkout details
+	checkout, err := s.polarClient.Checkouts.Get(ctx, req.CheckoutID)
+	if err != nil {
+		rlog.Error("Failed to fetch checkout details", "error", err, "checkout_id", req.CheckoutID)
+		return nil, fmt.Errorf("failed to fetch checkout details: %w", err)
 	}
 
-	switch req.Event {
-	case "checkout.session.completed", "checkout.completed":
-		return s.handleCheckoutCompleted(ctx, data)
-	case "subscription.created":
-		return s.handleSubscriptionCreated(ctx, data)
-	case "subscription.updated":
-		return s.handleSubscriptionUpdated(ctx, data)
-	case "subscription.canceled", "subscription.cancelled":
-		return s.handleSubscriptionCanceled(ctx, data)
-	default:
-		rlog.Info("Unhandled webhook event", "event", req.Event)
-		return &WebhookResponse{Success: true}, nil
-	}
-}
-
-// handleCheckoutCompleted processes successful checkout completion
-func (s *Service) handleCheckoutCompleted(ctx context.Context, data map[string]interface{}) (*WebhookResponse, error) {
-	// Extract metadata
-	metadata, ok := data["metadata"].(map[string]interface{})
-	if !ok {
-		rlog.Warn("No metadata in checkout completion webhook")
-		return &WebhookResponse{Success: false}, fmt.Errorf("missing metadata")
-	}
-
-	userID, ok := metadata["user_id"].(string)
-	if !ok {
-		rlog.Warn("No user_id in metadata")
-		return &WebhookResponse{Success: false}, fmt.Errorf("missing user_id")
-	}
-
-	// Extract customer and subscription IDs
-	polarCustomerID := ""
-	if customerID, ok := data["customer_id"].(string); ok {
-		polarCustomerID = customerID
-	}
-
-	polarSubscriptionID := ""
-	if subscriptionID, ok := data["subscription_id"].(string); ok {
-		polarSubscriptionID = subscriptionID
-	}
-
-	rlog.Info("Processing checkout completion",
-		"user_id", userID,
-		"polar_customer_id", polarCustomerID,
-		"polar_subscription_id", polarSubscriptionID,
+	rlog.Info("Processing checkout callback",
+		"checkout_id", req.CheckoutID,
+		"status", checkout.Checkout.Status,
 	)
 
-	// Update subscription to active
+	if checkout.Checkout.Status != components.CheckoutStatusSucceeded {
+		return nil, fmt.Errorf("checkout not completed successfully: status=%s", checkout.Checkout.Status)
+	}
+
+	// create subscription if not exists
 	queries := db.New(s.db)
 
-	// Update status
-	err := queries.UpdateSubscriptionStatus(ctx, db.UpdateSubscriptionStatusParams{
-		UserID: userID,
-		Status: "active",
-	})
-	if err != nil {
-		rlog.Error("Failed to update subscription status", "error", err)
-		return &WebhookResponse{Success: false}, err
+	subscriptionRow, err := queries.GetSubscriptionByUserID(ctx, *checkout.Checkout.ExternalCustomerID)
+	if err != nil && !db.IsNotFoundError(err) {
+		rlog.Error("Failed to get subscription by user ID", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
-	// Update Polar info
-	billingAnchor := time.Now()
-	err = queries.UpdateSubscriptionPolarInfo(ctx, db.UpdateSubscriptionPolarInfoParams{
-		UserID:              userID,
-		PolarCustomerID:     sql.NullString{String: polarCustomerID, Valid: polarCustomerID != ""},
-		PolarSubscriptionID: sql.NullString{String: polarSubscriptionID, Valid: polarSubscriptionID != ""},
-		BillingAnchorDate:   sql.NullTime{Time: billingAnchor, Valid: true},
-	})
-	if err != nil {
-		rlog.Error("Failed to update Polar info", "error", err)
-		return &WebhookResponse{Success: false}, err
+	var res HandleCheckoutCallbackResponse
+
+	if db.IsNotFoundError(err) {
+		// Create new subscription
+		sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+			UserID:          *checkout.Checkout.ExternalCustomerID,
+			PolarCustomerID: *checkout.Checkout.CustomerID,
+			// PolarSubscriptionID: *checkout.Checkout.SubscriptionID,
+			PolarProductID: *checkout.Checkout.ProductID,
+			Status:         StatusActive,
+		})
+		if err != nil {
+			rlog.Error("Failed to create subscription after checkout", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+			return nil, fmt.Errorf("failed to create subscription: %w", err)
+		}
+
+		rlog.Info("Subscription created successfully after checkout", "user_id", *checkout.Checkout.ExternalCustomerID)
+		res.SubscriptionID = sub.ID
+	} else {
+		res.SubscriptionID = subscriptionRow.ID
+		// Update existing subscription to active
+		err = queries.UpdateSubscriptionStatus(ctx, db.UpdateSubscriptionStatusParams{
+			ID:     subscriptionRow.ID,
+			Status: StatusActive,
+		})
+		if err != nil {
+			rlog.Error("Failed to update subscription status after checkout", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+			return nil, fmt.Errorf("failed to update subscription status: %w", err)
+		}
+
+		rlog.Info("Subscription status updated to active after checkout", "user_id", *checkout.Checkout.ExternalCustomerID)
 	}
 
-	rlog.Info("Subscription activated successfully", "user_id", userID)
-
-	return &WebhookResponse{Success: true}, nil
-}
-
-// handleSubscriptionCreated processes new subscription creation
-func (s *Service) handleSubscriptionCreated(ctx context.Context, data map[string]interface{}) (*WebhookResponse, error) {
-	rlog.Info("Subscription created event received")
-	// This is usually handled by checkout completion
-	return &WebhookResponse{Success: true}, nil
-}
-
-// handleSubscriptionUpdated processes subscription updates
-func (s *Service) handleSubscriptionUpdated(ctx context.Context, data map[string]any) (*WebhookResponse, error) {
-	rlog.Info("Subscription updated event received")
-
-	// Extract subscription ID and status
-	subscriptionID, ok := data["id"].(string)
-	if !ok {
-		return &WebhookResponse{Success: false}, fmt.Errorf("missing subscription id")
-	}
-
-	status, ok := data["status"].(string)
-	if !ok {
-		rlog.Warn("No status in subscription update")
-		return &WebhookResponse{Success: true}, nil
-	}
-
-	rlog.Info("Subscription status updated",
-		"subscription_id", subscriptionID,
-		"status", status,
-	)
-
-	// Map Polar status to our status
-	// Polar statuses: active, canceled, incomplete, incomplete_expired, past_due, trialing, unpaid
-	var ourStatus string
-	switch status {
-	case "active", "trialing":
-		ourStatus = "active"
-	case "past_due", "unpaid":
-		ourStatus = "past_due"
-	case "canceled", "incomplete_expired":
-		ourStatus = "canceled"
-	default:
-		ourStatus = status
-	}
-
-	// Find subscription by Polar ID and update status
-	queries := db.New(s.db)
-	err := queries.UpdateSubscriptionStatusByPolarID(ctx, db.UpdateSubscriptionStatusByPolarIDParams{
-		PolarSubscriptionID: sql.NullString{String: subscriptionID, Valid: true},
-		Status:              ourStatus,
-	})
-	if err != nil {
-		rlog.Error("Failed to update subscription status", "error", err)
-		return &WebhookResponse{Success: false}, err
-	}
-
-	rlog.Info("Subscription status updated successfully",
-		"polar_subscription_id", subscriptionID,
-		"new_status", ourStatus,
-	)
-
-	return &WebhookResponse{Success: true}, nil
-}
-
-// handleSubscriptionCanceled processes subscription cancellation
-func (s *Service) handleSubscriptionCanceled(ctx context.Context, data map[string]interface{}) (*WebhookResponse, error) {
-	subscriptionID, ok := data["id"].(string)
-	if !ok {
-		return &WebhookResponse{Success: false}, fmt.Errorf("missing subscription id")
-	}
-
-	rlog.Info("Subscription canceled",
-		"subscription_id", subscriptionID,
-	)
-
-	// TODO: Update subscription status to canceled
-	// Need query to find by polar_subscription_id
-
-	return &WebhookResponse{Success: true}, nil
+	return &res, nil
 }

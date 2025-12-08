@@ -1,0 +1,3 @@
+-- Drop tables
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
