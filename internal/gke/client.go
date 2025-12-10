@@ -89,10 +89,10 @@ func (c *Client) ConnectToCluster(ctx context.Context, clusterName, zone string)
 		return fmt.Errorf("failed to decode cluster CA certificate: %w", err)
 	}
 
-	// Get credentials
-	creds, err := google.FindDefaultCredentials(ctx)
+	// Get credentials from the stored credentialsJSON
+	creds, err := google.CredentialsFromJSON(ctx, c.credentialsJSON, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
-		return fmt.Errorf("failed to find default credentials: %w", err)
+		return fmt.Errorf("failed to create credentials from JSON: %w", err)
 	}
 
 	// Create the rest config
@@ -104,8 +104,7 @@ func (c *Client) ConnectToCluster(ctx context.Context, clusterName, zone string)
 	}
 
 	// Create token source
-	tokenSource := creds.TokenSource
-	token, err := tokenSource.Token()
+	token, err := creds.TokenSource.Token()
 	if err != nil {
 		return fmt.Errorf("failed to get token: %w", err)
 	}

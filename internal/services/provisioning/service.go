@@ -34,12 +34,12 @@ type Config struct {
 func initService() (*Service, error) {
 	// TODO: Configure these values through Encore secrets or environment variables
 	config := Config{
-		DefaultProjectID:   "rockads",
-		DefaultZone:        "europe-west1",
-		DefaultClusterName: "autopilot-cluster-1",
+		DefaultProjectID:   "instol",
+		DefaultZone:        "us-central1",
+		DefaultClusterName: "instol",
 	}
 
-	gkeClient, err := gke.NewClient(config.DefaultProjectID, []byte(secrets.GCPCredentials))
+	gkeClient, err := gke.NewClient(config.DefaultProjectID, []byte(secrets.GCP_GKE_CREDS))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GKE client: %w", err)
 	}
@@ -61,6 +61,6 @@ func initService() (*Service, error) {
 }
 
 var secrets struct {
-	GCPCredentials       string
+	GCP_GKE_CREDS        string
 	CLOUDFLARE_API_TOKEN string
 }
