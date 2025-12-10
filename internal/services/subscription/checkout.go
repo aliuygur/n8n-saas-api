@@ -132,6 +132,17 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 		"user_id", userID,
 	)
 
+	// Validate Polar checkout data
+	if checkout.Checkout.CustomerID == nil || checkout.Checkout.SubscriptionID == nil || checkout.Checkout.ProductID == nil {
+		rlog.Error("Missing Polar data in checkout",
+			"checkout_id", req.CheckoutID,
+			"customer_id", checkout.Checkout.CustomerID,
+			"subscription_id", checkout.Checkout.SubscriptionID,
+			"product_id", checkout.Checkout.ProductID,
+		)
+		return nil, fmt.Errorf("missing required Polar data in checkout")
+	}
+
 	// Create active subscription for this instance
 	queries := db.New(s.db)
 	sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
