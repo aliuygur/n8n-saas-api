@@ -61,7 +61,7 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		UserID:     user.ID,
 		InstanceID: instanceResp.InstanceID,
 		UserEmail:  user.Email,
-		SuccessURL: "https://instol.cloud/checkout/success",
+		SuccessURL: "https://instol.cloud/checkout/success?checkout_id={CHECKOUT_ID}",
 		ReturnURL:  "https://instol.cloud/dashboard",
 	})
 	if err != nil {

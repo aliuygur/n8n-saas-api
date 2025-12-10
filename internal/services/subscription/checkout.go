@@ -118,17 +118,9 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 		"status", checkout.Checkout.Status,
 	)
 
-	// Get the pending instance by ID
-	queries := db.New(s.db)
-	instance, err := queries.GetInstance(ctx, instanceID)
-	if err != nil {
-		rlog.Error("Failed to get instance", "error", err, "instance_id", instanceID)
-		return nil, fmt.Errorf("failed to get instance: %w", err)
-	}
-
 	// Deploy the pending instance
 	provisionResp, err := provisioning.DeployPendingInstance(ctx, &provisioning.DeployPendingInstanceRequest{
-		Subdomain: instance.Subdomain,
+		InstanceID: instanceID,
 	})
 	if err != nil {
 		rlog.Error("Failed to deploy pending instance", "error", err, "instance_id", instanceID)
@@ -141,6 +133,7 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 	)
 
 	// Create active subscription for this instance
+	queries := db.New(s.db)
 	sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
 		UserID:              userID,
 		InstanceID:          provisionResp.InstanceID,

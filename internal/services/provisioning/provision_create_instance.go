@@ -159,9 +159,9 @@ func (s *Service) deployInstance(ctx context.Context, instance db.Instance, encr
 	return nil
 }
 
-// DeployPendingInstanceRequest deploys an existing pending instance by subdomain
+// DeployPendingInstanceRequest deploys an existing pending instance by ID
 type DeployPendingInstanceRequest struct {
-	Subdomain string `json:"subdomain"`
+	InstanceID string `json:"instance_id"`
 }
 
 type DeployPendingInstanceResponse struct {
@@ -170,18 +170,18 @@ type DeployPendingInstanceResponse struct {
 	Domain     string `json:"domain"`
 }
 
-// DeployPendingInstance deploys an existing pending instance by subdomain
+// DeployPendingInstance deploys an existing pending instance by ID
 //
 //encore:api private
 func (s *Service) DeployPendingInstance(ctx context.Context, req *DeployPendingInstanceRequest) (*DeployPendingInstanceResponse, error) {
-	if req.Subdomain == "" {
-		return nil, fmt.Errorf("subdomain is required")
+	if req.InstanceID == "" {
+		return nil, fmt.Errorf("instance_id is required")
 	}
 
 	queries := db.New(s.db)
 
-	// Get instance by subdomain
-	instance, err := queries.GetInstanceBySubdomain(ctx, req.Subdomain)
+	// Get instance by ID
+	instance, err := queries.GetInstance(ctx, req.InstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get instance: %w", err)
 	}
