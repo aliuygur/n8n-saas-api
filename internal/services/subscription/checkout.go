@@ -13,7 +13,7 @@ import (
 // CreateCheckoutRequest represents the request to create a checkout session
 type CreateCheckoutRequest struct {
 	UserID     string `json:"user_id"`
-	Seats      int64  `json:"seats,omitempty"`
+	InstanceID string `json:"instance_id"`
 	UserEmail  string `json:"user_email,omitempty"`
 	SuccessURL string `json:"success_url"`
 	ReturnURL  string `json:"return_url,omitempty"`
@@ -30,16 +30,15 @@ type CreateCheckoutResponse struct {
 //encore:api private
 func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest) (*CreateCheckoutResponse, error) {
 
-	if req.Seats <= 0 {
-		req.Seats = 1
-	}
-
 	checkoutCreate := components.CheckoutCreate{
-		// Seats:              polargo.Pointer(req.Seats),
 		Products:           []string{secrets.PolarProductID},
 		ExternalCustomerID: polargo.Pointer(req.UserID),
 		CustomerEmail:      polargo.Pointer(req.UserEmail),
 		SuccessURL:         polargo.Pointer(req.SuccessURL),
+		// Store instance_id in metadata so it's available in checkout response
+		Metadata: map[string]components.CheckoutCreateMetadata{
+			"instance_id": components.CreateCheckoutCreateMetadataStr(req.InstanceID),
+		},
 	}
 
 	if req.ReturnURL != "" {
@@ -48,6 +47,7 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 
 	rlog.Info("Creating Polar checkout session",
 		"user_id", req.UserID,
+		"instance_id", req.InstanceID,
 		"email", req.UserEmail,
 	)
 
@@ -89,41 +89,58 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 		return nil, fmt.Errorf("failed to fetch checkout details: %w", err)
 	}
 
-	rlog.Info("Processing checkout callback",
-		"checkout_id", req.CheckoutID,
-		"status", checkout.Checkout.Status,
-	)
-
 	if checkout.Checkout.Status != components.CheckoutStatusSucceeded {
 		return nil, fmt.Errorf("checkout not completed successfully: status=%s", checkout.Checkout.Status)
 	}
 
-	// create subscription if not exists
+	// Extract instance_id from checkout metadata
+	instanceID := ""
+	if checkout.Checkout.Metadata != nil {
+		if metadata, ok := checkout.Checkout.Metadata["instance_id"]; ok {
+			if metadata.Str != nil {
+				instanceID = *metadata.Str
+			}
+		}
+	}
+
+	if instanceID == "" {
+		rlog.Error("instance_id not found in checkout metadata", "checkout_id", req.CheckoutID)
+		return nil, fmt.Errorf("instance_id not found in checkout metadata")
+	}
+
+	rlog.Info("Processing checkout callback",
+		"checkout_id", req.CheckoutID,
+		"instance_id", instanceID,
+		"status", checkout.Checkout.Status,
+	)
+
+	// Check if subscription already exists for this instance
 	queries := db.New(s.db)
 
-	subscriptionRow, err := queries.GetSubscriptionByUserID(ctx, *checkout.Checkout.ExternalCustomerID)
+	subscriptionRow, err := queries.GetSubscriptionByInstanceID(ctx, instanceID)
 	if err != nil && !db.IsNotFoundError(err) {
-		rlog.Error("Failed to get subscription by user ID", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+		rlog.Error("Failed to get subscription by instance ID", "error", err, "instance_id", instanceID)
 		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
 	var res HandleCheckoutCallbackResponse
 
 	if db.IsNotFoundError(err) {
-		// Create new subscription
+		// Create new active subscription for this instance
 		sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-			UserID:          *checkout.Checkout.ExternalCustomerID,
-			PolarCustomerID: *checkout.Checkout.CustomerID,
-			// PolarSubscriptionID: *checkout.Checkout.SubscriptionID,
-			PolarProductID: *checkout.Checkout.ProductID,
-			Status:         StatusActive,
+			UserID:              *checkout.Checkout.ExternalCustomerID,
+			InstanceID:          instanceID,
+			PolarCustomerID:     *checkout.Checkout.CustomerID,
+			PolarSubscriptionID: *checkout.Checkout.SubscriptionID,
+			PolarProductID:      *checkout.Checkout.ProductID,
+			Status:              StatusActive,
 		})
 		if err != nil {
-			rlog.Error("Failed to create subscription after checkout", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+			rlog.Error("Failed to create subscription after checkout", "error", err, "instance_id", instanceID)
 			return nil, fmt.Errorf("failed to create subscription: %w", err)
 		}
 
-		rlog.Info("Subscription created successfully after checkout", "user_id", *checkout.Checkout.ExternalCustomerID)
+		rlog.Info("Subscription created successfully after checkout", "instance_id", instanceID, "subscription_id", sub.ID)
 		res.SubscriptionID = sub.ID
 	} else {
 		res.SubscriptionID = subscriptionRow.ID
@@ -133,11 +150,11 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 			Status: StatusActive,
 		})
 		if err != nil {
-			rlog.Error("Failed to update subscription status after checkout", "error", err, "user_id", *checkout.Checkout.ExternalCustomerID)
+			rlog.Error("Failed to update subscription status after checkout", "error", err, "instance_id", instanceID)
 			return nil, fmt.Errorf("failed to update subscription status: %w", err)
 		}
 
-		rlog.Info("Subscription status updated to active after checkout", "user_id", *checkout.Checkout.ExternalCustomerID)
+		rlog.Info("Subscription status updated to active after checkout", "instance_id", instanceID)
 	}
 
 	return &res, nil

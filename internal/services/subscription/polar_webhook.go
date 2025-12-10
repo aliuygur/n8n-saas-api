@@ -137,7 +137,9 @@ func (s *Service) verifyWebhookSignature(headers http.Header, body []byte) error
 }
 
 // handleSubscriptionCreated handles the subscription.created event
-// Note: Status might not be "active" yet as payment may still be processing
+// Note: This event is triggered when a Polar subscription is created via checkout
+// We don't automatically create a subscription here because it's already created
+// by the checkout callback handler which knows the instance_id
 func (s *Service) handleSubscriptionCreated(ctx context.Context, data json.RawMessage) error {
 	var subscription components.Subscription
 	if err := json.Unmarshal(data, &subscription); err != nil {
@@ -145,70 +147,33 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, data json.RawMe
 	}
 
 	rlog.Info("Processing subscription.created",
-		"subscription_id", subscription.ID,
+		"polar_subscription_id", subscription.ID,
 		"customer_id", subscription.CustomerID,
 		"status", subscription.Status,
 	)
 
+	// The subscription should already be created by the checkout callback
+	// This event is just for logging and verification
 	queries := db.New(s.db)
 
-	// Get the external customer ID (user ID in our system)
-	externalID := subscription.Customer.ExternalID
-	if externalID == nil || *externalID == "" {
-		return fmt.Errorf("external customer ID is required but not provided")
-	}
-	userID := *externalID
+	// Try to find existing subscription by polar subscription ID
+	// If found, update status; if not found, log warning (checkout callback should have created it)
+	status := mapPolarStatusToInternal(subscription.Status)
 
-	// Check if subscription already exists (idempotency)
-	existingSub, err := queries.GetSubscriptionByUserID(ctx, userID)
-	if err != nil && !db.IsNotFoundError(err) {
-		return fmt.Errorf("failed to check existing subscription: %w", err)
-	}
-
-	if !db.IsNotFoundError(err) {
-		rlog.Info("Subscription already exists, updating Polar info",
-			"subscription_id", subscription.ID,
-			"user_id", userID,
+	if err := queries.UpdateSubscriptionStatusByPolarID(ctx, db.UpdateSubscriptionStatusByPolarIDParams{
+		PolarSubscriptionID: subscription.ID,
+		Status:              status,
+	}); err != nil {
+		rlog.Warn("Could not update subscription from webhook - may not exist yet",
+			"polar_subscription_id", subscription.ID,
+			"error", err,
 		)
-
-		// Update the existing subscription with Polar IDs
-		if err := queries.UpdateSubscriptionPolarInfo(ctx, db.UpdateSubscriptionPolarInfoParams{
-			UserID:              userID,
-			PolarCustomerID:     subscription.CustomerID,
-			PolarSubscriptionID: subscription.ID,
-			PolarProductID:      subscription.ProductID,
-		}); err != nil {
-			return fmt.Errorf("failed to update subscription Polar info: %w", err)
-		}
-
-		rlog.Info("Updated existing subscription with Polar IDs", "subscription_id", existingSub.ID)
+		// Don't return error as checkout callback might not have happened yet
 		return nil
 	}
 
-	// Create new subscription
-	status := mapPolarStatusToInternal(subscription.Status)
-
-	// Get seats from subscription if available, default to 1
-	seats := int32(1)
-	if subscription.Seats != nil {
-		seats = int32(*subscription.Seats)
-	}
-
-	_, err = queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-		UserID:              userID,
-		Seats:               seats,
-		PolarProductID:      subscription.ProductID,
-		PolarCustomerID:     subscription.CustomerID,
-		PolarSubscriptionID: subscription.ID,
-		Status:              status,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create subscription: %w", err)
-	}
-
-	rlog.Info("Subscription created successfully",
-		"subscription_id", subscription.ID,
-		"user_id", userID,
+	rlog.Info("Subscription status updated from webhook",
+		"polar_subscription_id", subscription.ID,
 		"status", status,
 	)
 

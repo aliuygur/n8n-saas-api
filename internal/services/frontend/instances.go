@@ -42,22 +42,7 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 
 	rlog.Debug("Creating instance", "user_id", user.ID, "subdomain", subdomain)
 
-	// Check subscription status
-	subs, err := subscription.GetSubscriptionByUserID(r.Context(), &subscription.GetSubscriptionByUserIDRequest{
-		UserID: user.ID,
-	})
-	if err != nil {
-		rlog.Error("Failed to get subscription status", "error", err)
-		lo.Must0(components.CreateInstanceError(err.Error()).Render(r.Context(), w))
-		return
-	}
-
-	if !subs.CanCreateInstance() {
-		lo.Must0(components.CreateInstanceError("You need an active subscription to create an instance.").Render(r.Context(), w))
-		return
-	}
-
-	// Call provisioning service
+	// Call provisioning service to create the instance first
 	provResp, err := provisioning.CreateInstance(r.Context(), &provisioning.CreateInstanceRequest{
 		UserID:    user.ID,
 		Subdomain: subdomain,
@@ -68,27 +53,15 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// its first instance, create trial subscription
-	if subs.Status == subscription.StatusNone {
-		if sub, err := subscription.CreateTrialSubscription(r.Context(), &subscription.CreateTrialSubscriptionRequest{
-			UserID: user.ID,
-		}); err != nil {
-			rlog.Error("Failed to create trial subscription", "error", err)
-			lo.Must0(components.CreateInstanceError("Failed to create trial subscription").Render(r.Context(), w))
-			return
-		} else {
-			subs = sub
-		}
-
-	} else {
-		// Increment seat count in subscription
-		if err := subscription.IncrementSeats(r.Context(), &subscription.IncrementSeatsRequest{
-			SubscriptionID: subs.ID,
-		}); err != nil {
-			rlog.Error("Failed to increment seats", "error", err)
-			lo.Must0(components.CreateInstanceError("Failed to increment seats").Render(r.Context(), w))
-			return
-		}
+	// Create a trial subscription for this new instance
+	_, err = subscription.CreateTrialSubscription(r.Context(), &subscription.CreateTrialSubscriptionRequest{
+		UserID:     user.ID,
+		InstanceID: provResp.InstanceID,
+	})
+	if err != nil {
+		rlog.Error("Failed to create trial subscription", "error", err)
+		lo.Must0(components.CreateInstanceError("Failed to create trial subscription").Render(r.Context(), w))
+		return
 	}
 
 	rlog.Info("Instance created successfully", "instance_id", provResp.InstanceID, "domain", provResp.Domain, "user_id", user.ID)
@@ -158,7 +131,13 @@ func (s *Service) DeleteInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Decrement instance count in subscription
+	// Delete the subscription associated with this instance
+	if err := subscription.DeleteSubscriptionByInstanceID(r.Context(), &subscription.DeleteSubscriptionByInstanceIDRequest{
+		InstanceID: instanceID,
+	}); err != nil {
+		rlog.Error("Failed to delete subscription", "error", err)
+		// Don't fail the request if subscription deletion fails
+	}
 
 	rlog.Info("Instance deleted successfully", "instance_id", instanceID, "user_id", user.ID)
 

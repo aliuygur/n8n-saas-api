@@ -35,10 +35,10 @@ type Session struct {
 type Subscription struct {
 	ID                  string       `json:"id"`
 	UserID              string       `json:"user_id"`
+	InstanceID          string       `json:"instance_id"`
 	PolarProductID      string       `json:"polar_product_id"`
 	PolarCustomerID     string       `json:"polar_customer_id"`
 	PolarSubscriptionID string       `json:"polar_subscription_id"`
-	Seats               int32        `json:"seats"`
 	Status              string       `json:"status"`
 	TrialEndsAt         sql.NullTime `json:"trial_ends_at"`
 	CreatedAt           time.Time    `json:"created_at"`
