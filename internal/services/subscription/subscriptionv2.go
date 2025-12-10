@@ -49,8 +49,12 @@ type GetAllSubscriptionsByUserIDRequest struct {
 	UserID string
 }
 
+type GetAllSubscriptionsByUserIDResponse struct {
+	Subscriptions []Subscription `json:"subscriptions"`
+}
+
 //encore:api private
-func (s *Service) GetAllSubscriptionsByUserID(ctx context.Context, req *GetAllSubscriptionsByUserIDRequest) ([]Subscription, error) {
+func (s *Service) GetAllSubscriptionsByUserID(ctx context.Context, req *GetAllSubscriptionsByUserIDRequest) (*GetAllSubscriptionsByUserIDResponse, error) {
 	queries := db.New(s.db)
 
 	subscriptionRows, err := queries.GetAllSubscriptionsByUserID(ctx, req.UserID)
@@ -59,7 +63,9 @@ func (s *Service) GetAllSubscriptionsByUserID(ctx context.Context, req *GetAllSu
 	}
 
 	if len(subscriptionRows) == 0 {
-		return []Subscription{}, nil
+		return &GetAllSubscriptionsByUserIDResponse{
+			Subscriptions: []Subscription{},
+		}, nil
 	}
 
 	subscriptions := make([]Subscription, len(subscriptionRows))
@@ -80,7 +86,9 @@ func (s *Service) GetAllSubscriptionsByUserID(ctx context.Context, req *GetAllSu
 		}
 	}
 
-	return subscriptions, nil
+	return &GetAllSubscriptionsByUserIDResponse{
+		Subscriptions: subscriptions,
+	}, nil
 }
 
 type GetSubscriptionByInstanceIDRequest struct {

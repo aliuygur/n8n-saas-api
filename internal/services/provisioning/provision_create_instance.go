@@ -13,14 +13,17 @@ import (
 
 // Create Instance API types
 type CreateInstanceRequest struct {
-	UserID    string `json:"user_id"`
-	Subdomain string `json:"subdomain"`
+	UserID        string `json:"user_id"`
+	Subdomain     string `json:"subdomain"`
+	DeployNow     bool   `json:"deploy_now"`      // If true, deploy immediately. If false, just create DB record
+	EncryptionKey string `json:"encryption_key,omitempty"` // Optional: provide encryption key for existing instance
 }
 
 type CreateInstanceResponse struct {
 	InstanceID string `json:"instance_id"`
 	Status     string `json:"status"`
 	Domain     string `json:"domain"`
+	Namespace  string `json:"namespace,omitempty"`
 }
 
 //encore:api private
@@ -54,12 +57,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 		return nil, fmt.Errorf("failed to generate unique namespace: %w", err)
 	}
 
-	// Generate secure credentials
-	encryptionKey, err := generateSecureKey(32)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate encryption key: %w", err)
-	}
-
+	// Create instance record in database
 	instance, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
 		UserID:         req.UserID,
 		GkeClusterName: s.config.DefaultClusterName,
@@ -72,8 +70,29 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 		return nil, fmt.Errorf("failed to create instance record: %w", err)
 	}
 
-	// Start deployment
 	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
+
+	// If DeployNow is false, just return the pending instance
+	if !req.DeployNow {
+		rlog.Info("Pending instance created", "instance_id", instance.ID, "subdomain", req.Subdomain)
+		return &CreateInstanceResponse{
+			InstanceID: instance.ID,
+			Status:     instance.Status,
+			Domain:     domain,
+			Namespace:  instance.Namespace,
+		}, nil
+	}
+
+	// Use provided encryption key or generate a new one
+	encryptionKey := req.EncryptionKey
+	if encryptionKey == "" {
+		encryptionKey, err = generateSecureKey(32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate encryption key: %w", err)
+		}
+	}
+
+	// Deploy the instance
 	if err := s.deployInstance(ctx, instance, encryptionKey); err != nil {
 		return nil, fmt.Errorf("failed to deploy instance: %w", err)
 	}
@@ -82,6 +101,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 		InstanceID: instance.ID,
 		Status:     instance.Status,
 		Domain:     domain,
+		Namespace:  instance.Namespace,
 	}, nil
 }
 
@@ -137,4 +157,51 @@ func (s *Service) deployInstance(ctx context.Context, instance db.Instance, encr
 
 	rlog.Info("Deployment completed successfully", "instance_id", instance.ID, "namespace", instance.Namespace)
 	return nil
+}
+
+// DeployPendingInstanceRequest deploys an existing pending instance by subdomain
+type DeployPendingInstanceRequest struct {
+	Subdomain string `json:"subdomain"`
+}
+
+type DeployPendingInstanceResponse struct {
+	InstanceID string `json:"instance_id"`
+	Status     string `json:"status"`
+	Domain     string `json:"domain"`
+}
+
+// DeployPendingInstance deploys an existing pending instance by subdomain
+//
+//encore:api private
+func (s *Service) DeployPendingInstance(ctx context.Context, req *DeployPendingInstanceRequest) (*DeployPendingInstanceResponse, error) {
+	if req.Subdomain == "" {
+		return nil, fmt.Errorf("subdomain is required")
+	}
+
+	queries := db.New(s.db)
+
+	// Get instance by subdomain
+	instance, err := queries.GetInstanceBySubdomain(ctx, req.Subdomain)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get instance: %w", err)
+	}
+
+	// Generate secure credentials
+	encryptionKey, err := generateSecureKey(32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate encryption key: %w", err)
+	}
+
+	// Deploy the instance
+	if err := s.deployInstance(ctx, instance, encryptionKey); err != nil {
+		return nil, fmt.Errorf("failed to deploy instance: %w", err)
+	}
+
+	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
+
+	return &DeployPendingInstanceResponse{
+		InstanceID: instance.ID,
+		Status:     "deployed",
+		Domain:     domain,
+	}, nil
 }

@@ -40,33 +40,40 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 
 	subdomain := r.FormValue("subdomain")
 
-	rlog.Debug("Creating instance", "user_id", user.ID, "subdomain", subdomain)
+	rlog.Debug("Creating pending instance", "user_id", user.ID, "subdomain", subdomain)
 
-	// Call provisioning service to create the instance first
-	provResp, err := provisioning.CreateInstance(r.Context(), &provisioning.CreateInstanceRequest{
+	// First, create pending instance to reserve the subdomain
+	instanceResp, err := provisioning.CreateInstance(r.Context(), &provisioning.CreateInstanceRequest{
 		UserID:    user.ID,
 		Subdomain: subdomain,
+		DeployNow: false, // Just create the record, don't deploy yet
 	})
 	if err != nil {
-		rlog.Error("Failed to create instance", "error", err)
+		rlog.Error("Failed to create pending instance", "error", err)
 		lo.Must0(components.CreateInstanceError(err.Error()).Render(r.Context(), w))
 		return
 	}
 
-	// Create a trial subscription for this new instance
-	_, err = subscription.CreateTrialSubscription(r.Context(), &subscription.CreateTrialSubscriptionRequest{
+	rlog.Debug("Pending instance created, creating checkout session", "user_id", user.ID, "instance_id", instanceResp.InstanceID)
+
+	// Create checkout session for the subscription
+	checkoutResp, err := subscription.CreateCheckout(r.Context(), &subscription.CreateCheckoutRequest{
 		UserID:     user.ID,
-		InstanceID: provResp.InstanceID,
+		InstanceID: instanceResp.InstanceID,
+		UserEmail:  user.Email,
+		SuccessURL: "https://instol.cloud/checkout/success",
+		ReturnURL:  "https://instol.cloud/dashboard",
 	})
 	if err != nil {
-		rlog.Error("Failed to create trial subscription", "error", err)
-		lo.Must0(components.CreateInstanceError("Failed to create trial subscription").Render(r.Context(), w))
+		rlog.Error("Failed to create checkout session", "error", err)
+		lo.Must0(components.CreateInstanceError(err.Error()).Render(r.Context(), w))
 		return
 	}
 
-	rlog.Info("Instance created successfully", "instance_id", provResp.InstanceID, "domain", provResp.Domain, "user_id", user.ID)
+	rlog.Info("Checkout session created", "checkout_id", checkoutResp.CheckoutID, "user_id", user.ID)
 
-	w.Header().Set("HX-Redirect", "/dashboard")
+	// Redirect to Polar checkout page
+	w.Header().Set("HX-Redirect", checkoutResp.CheckoutURL)
 	w.WriteHeader(http.StatusOK)
 }
 

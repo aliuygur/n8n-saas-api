@@ -6,6 +6,7 @@ import (
 
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 	polargo "github.com/polarsource/polar-go"
 	"github.com/polarsource/polar-go/models/components"
 )
@@ -35,7 +36,7 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 		ExternalCustomerID: polargo.Pointer(req.UserID),
 		CustomerEmail:      polargo.Pointer(req.UserEmail),
 		SuccessURL:         polargo.Pointer(req.SuccessURL),
-		// Store instance_id in metadata so it's available in checkout response
+		// Store instance_id in metadata so we can deploy it after payment
 		Metadata: map[string]components.CheckoutCreateMetadata{
 			"instance_id": components.CreateCheckoutCreateMetadataStr(req.InstanceID),
 		},
@@ -108,54 +109,57 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 		return nil, fmt.Errorf("instance_id not found in checkout metadata")
 	}
 
+	userID := *checkout.Checkout.ExternalCustomerID
+
 	rlog.Info("Processing checkout callback",
 		"checkout_id", req.CheckoutID,
 		"instance_id", instanceID,
+		"user_id", userID,
 		"status", checkout.Checkout.Status,
 	)
 
-	// Check if subscription already exists for this instance
+	// Get the pending instance by ID
 	queries := db.New(s.db)
-
-	subscriptionRow, err := queries.GetSubscriptionByInstanceID(ctx, instanceID)
-	if err != nil && !db.IsNotFoundError(err) {
-		rlog.Error("Failed to get subscription by instance ID", "error", err, "instance_id", instanceID)
-		return nil, fmt.Errorf("failed to get subscription: %w", err)
+	instance, err := queries.GetInstance(ctx, instanceID)
+	if err != nil {
+		rlog.Error("Failed to get instance", "error", err, "instance_id", instanceID)
+		return nil, fmt.Errorf("failed to get instance: %w", err)
 	}
 
-	var res HandleCheckoutCallbackResponse
-
-	if db.IsNotFoundError(err) {
-		// Create new active subscription for this instance
-		sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-			UserID:              *checkout.Checkout.ExternalCustomerID,
-			InstanceID:          instanceID,
-			PolarCustomerID:     *checkout.Checkout.CustomerID,
-			PolarSubscriptionID: *checkout.Checkout.SubscriptionID,
-			PolarProductID:      *checkout.Checkout.ProductID,
-			Status:              StatusActive,
-		})
-		if err != nil {
-			rlog.Error("Failed to create subscription after checkout", "error", err, "instance_id", instanceID)
-			return nil, fmt.Errorf("failed to create subscription: %w", err)
-		}
-
-		rlog.Info("Subscription created successfully after checkout", "instance_id", instanceID, "subscription_id", sub.ID)
-		res.SubscriptionID = sub.ID
-	} else {
-		res.SubscriptionID = subscriptionRow.ID
-		// Update existing subscription to active
-		err = queries.UpdateSubscriptionStatus(ctx, db.UpdateSubscriptionStatusParams{
-			ID:     subscriptionRow.ID,
-			Status: StatusActive,
-		})
-		if err != nil {
-			rlog.Error("Failed to update subscription status after checkout", "error", err, "instance_id", instanceID)
-			return nil, fmt.Errorf("failed to update subscription status: %w", err)
-		}
-
-		rlog.Info("Subscription status updated to active after checkout", "instance_id", instanceID)
+	// Deploy the pending instance
+	provisionResp, err := provisioning.DeployPendingInstance(ctx, &provisioning.DeployPendingInstanceRequest{
+		Subdomain: instance.Subdomain,
+	})
+	if err != nil {
+		rlog.Error("Failed to deploy pending instance", "error", err, "instance_id", instanceID)
+		return nil, fmt.Errorf("failed to deploy instance: %w", err)
 	}
 
-	return &res, nil
+	rlog.Info("Instance provisioned successfully",
+		"instance_id", provisionResp.InstanceID,
+		"user_id", userID,
+	)
+
+	// Create active subscription for this instance
+	sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+		UserID:              userID,
+		InstanceID:          provisionResp.InstanceID,
+		PolarCustomerID:     *checkout.Checkout.CustomerID,
+		PolarSubscriptionID: *checkout.Checkout.SubscriptionID,
+		PolarProductID:      *checkout.Checkout.ProductID,
+		Status:              StatusActive,
+	})
+	if err != nil {
+		rlog.Error("Failed to create subscription after checkout", "error", err, "instance_id", provisionResp.InstanceID)
+		return nil, fmt.Errorf("failed to create subscription: %w", err)
+	}
+
+	rlog.Info("Subscription created successfully after checkout",
+		"instance_id", provisionResp.InstanceID,
+		"subscription_id", sub.ID,
+	)
+
+	return &HandleCheckoutCallbackResponse{
+		SubscriptionID: sub.ID,
+	}, nil
 }
