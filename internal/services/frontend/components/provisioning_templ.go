@@ -43,28 +43,15 @@ func ProvisioningStatusPage(checkoutID string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-gray-950\"><nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">instol.cloud</h1></a></div></div></nav><main class=\"max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12\"><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\" hx-get=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-gray-950\"><nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">instol.cloud</h1></a></div></div></nav><main class=\"max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12\"><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><div class=\"text-center mb-8\"><div class=\"inline-flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-4\"><svg class=\"w-8 h-8 text-indigo-500 animate-spin\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div><h2 class=\"text-3xl font-bold text-white mb-2\">Payment Successful!</h2><p class=\"text-gray-400\">Your instance is being provisioned...</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("/api/provisioning-status?checkout_id=" + checkoutID)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 23, Col: 66}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			templ_7745c5c3_Err = ProvisioningPending(checkoutID).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" hx-trigger=\"load, every 3s\" hx-target=\"#status-container\" hx-swap=\"innerHTML\"><div class=\"text-center mb-8\"><div class=\"inline-flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-4\"><svg class=\"w-8 h-8 text-indigo-500 animate-spin\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div><h2 class=\"text-3xl font-bold text-white mb-2\">Payment Successful!</h2><p class=\"text-gray-400\">Your instance is being provisioned...</p></div><div id=\"status-container\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = ProvisioningPending().Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div></main></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></main></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -78,7 +65,7 @@ func ProvisioningStatusPage(checkoutID string) templ.Component {
 	})
 }
 
-func ProvisioningPending() templ.Component {
+func ProvisioningPending(checkoutID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -94,12 +81,25 @@ func ProvisioningPending() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-6 h-6 text-indigo-400 animate-pulse\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-lg font-semibold text-white mb-2\">Provisioning in Progress</h3><p class=\"text-gray-300 mb-4\">We're setting up your n8n instance on Google Cloud Platform. This usually takes 2-3 minutes.</p><div class=\"space-y-3\"><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin\"></div><span class=\"text-gray-300\">Creating Kubernetes namespace...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Deploying n8n instance...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Configuring SSL certificate...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Setting up secure tunnel...</span></div></div></div></div></div><div class=\"bg-blue-500/10 border border-blue-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><p class=\"text-sm text-blue-300\">You can close this page. We'll send you an email when your instance is ready!</p></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"status-container\" hx-get=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("/api/provisioning-status?checkout_id=" + checkoutID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 42, Col: 63}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" hx-trigger=\"every 3s\" hx-swap=\"outerHTML\" class=\"space-y-6\"><div class=\"bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-6 h-6 text-indigo-400 animate-pulse\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-lg font-semibold text-white mb-2\">Provisioning in Progress</h3><p class=\"text-gray-300 mb-4\">We're setting up your n8n instance on Google Cloud Platform. This usually takes 2-3 minutes.</p><div class=\"space-y-3\"><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin\"></div><span class=\"text-gray-300\">Creating Kubernetes namespace...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Deploying n8n instance...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Configuring SSL certificate...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Setting up secure tunnel...</span></div></div></div></div></div><div class=\"bg-blue-500/10 border border-blue-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><p class=\"text-sm text-blue-300\">You can close this page. We'll send you an email when your instance is ready!</p></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -128,14 +128,14 @@ func ProvisioningComplete(instance *provisioning.Instance) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-green-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Instance Ready! 🎉</h3><p class=\"text-gray-300 mb-4\">Your n8n instance has been successfully deployed and is ready to use.</p><div class=\"bg-gray-950 rounded-lg p-4 mb-4\"><p class=\"text-sm text-gray-400 mb-2\">Your instance URL:</p><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"status-container\" class=\"space-y-6\"><div class=\"bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-green-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Instance Ready! 🎉</h3><p class=\"text-gray-300 mb-4\">Your n8n instance has been successfully deployed and is ready to use.</p><div class=\"bg-gray-950 rounded-lg p-4 mb-4\"><p class=\"text-sm text-gray-400 mb-2\">Your instance URL:</p><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 templ.SafeURL
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 108, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 106, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -148,7 +148,7 @@ func ProvisioningComplete(instance *provisioning.Instance) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(instance.GetInstanceURL())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 112, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 110, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -161,7 +161,7 @@ func ProvisioningComplete(instance *provisioning.Instance) templ.Component {
 		var templ_7745c5c3_Var8 templ.SafeURL
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 117, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 115, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -196,7 +196,7 @@ func ProvisioningFailed(errorMsg string) templ.Component {
 			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Provisioning Failed</h3><p class=\"text-gray-300 mb-4\">We encountered an error while setting up your instance. Don't worry, you won't be charged.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div id=\"status-container\" class=\"space-y-6\"><div class=\"bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Provisioning Failed</h3><p class=\"text-gray-300 mb-4\">We encountered an error while setting up your instance. Don't worry, you won't be charged.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -208,7 +208,7 @@ func ProvisioningFailed(errorMsg string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 174, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 172, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

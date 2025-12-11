@@ -49,7 +49,7 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 	switch checkoutStatus.Session.Status {
 	case "pending":
 		// Still processing
-		lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
+		lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
 
 	case "completed":
 		// Get instance to show URL
@@ -64,20 +64,18 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if instance.Status == "deployed" {
-			// Stop polling by removing hx-trigger attribute
-			w.Header().Set("HX-Trigger", "stopPolling")
+			// Polling will stop automatically because ProvisioningComplete doesn't have hx-trigger
 			lo.Must0(components.ProvisioningComplete(instance).Render(r.Context(), w))
 		} else {
-			// Still deploying
-			lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
+			// Still deploying - keep polling
+			lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
 		}
 
 	case "failed":
-		// Stop polling
-		w.Header().Set("HX-Trigger", "stopPolling")
+		// Polling will stop automatically because ProvisioningFailed doesn't have hx-trigger
 		lo.Must0(components.ProvisioningFailed("Provisioning failed. Please try again.").Render(r.Context(), w))
 
 	default:
-		lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
+		lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
 	}
 }

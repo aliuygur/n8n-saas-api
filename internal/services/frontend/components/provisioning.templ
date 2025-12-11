@@ -18,13 +18,7 @@ templ ProvisioningStatusPage(checkoutID string) {
 				</div>
 			</nav>
 			<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-				<div
-					class="bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm"
-					hx-get={ "/api/provisioning-status?checkout_id=" + checkoutID }
-					hx-trigger="load, every 3s"
-					hx-target="#status-container"
-					hx-swap="innerHTML"
-				>
+				<div class="bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm">
 					<div class="text-center mb-8">
 						<div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-4">
 							<svg class="w-8 h-8 text-indigo-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,17 +29,21 @@ templ ProvisioningStatusPage(checkoutID string) {
 						<h2 class="text-3xl font-bold text-white mb-2">Payment Successful!</h2>
 						<p class="text-gray-400">Your instance is being provisioned...</p>
 					</div>
-					<div id="status-container">
-						@ProvisioningPending()
-					</div>
+					@ProvisioningPending(checkoutID)
 				</div>
 			</main>
 		</div>
 	}
 }
 
-templ ProvisioningPending() {
-	<div class="space-y-6">
+templ ProvisioningPending(checkoutID string) {
+	<div
+		id="status-container"
+		hx-get={ "/api/provisioning-status?checkout_id=" + checkoutID }
+		hx-trigger="every 3s"
+		hx-swap="outerHTML"
+		class="space-y-6"
+	>
 		<div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-6">
 			<div class="flex items-start gap-4">
 				<div class="flex-shrink-0">
@@ -91,7 +89,7 @@ templ ProvisioningPending() {
 }
 
 templ ProvisioningComplete(instance *provisioning.Instance) {
-	<div class="space-y-6">
+	<div id="status-container" class="space-y-6">
 		<div class="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-6">
 			<div class="flex items-start gap-4">
 				<div class="flex-shrink-0">
@@ -157,7 +155,7 @@ templ ProvisioningComplete(instance *provisioning.Instance) {
 }
 
 templ ProvisioningFailed(errorMsg string) {
-	<div class="space-y-6">
+	<div id="status-container" class="space-y-6">
 		<div class="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6">
 			<div class="flex items-start gap-4">
 				<div class="flex-shrink-0">
