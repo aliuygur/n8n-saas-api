@@ -12,7 +12,7 @@ run: build
 
 # Run with live reload (requires air: go install github.com/air-verse/air@latest)
 dev:
-	templ generate --watch --proxy="http://localhost:8080" --cmd="go run cmd/server/main.go"
+	templ generate --watch --proxybind="127.0.0.1" --proxyport="8080" --proxy="http://127.0.0.1:8081"  --cmd="go run cmd/server/main.go"
 
 # Clean build artifacts
 clean:

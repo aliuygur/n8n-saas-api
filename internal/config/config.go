@@ -20,12 +20,20 @@ type Config struct {
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Port string
-	Host string
+	Port       string
+	Host       string
+	APIBaseURL string // External API base URL (e.g., https://api.example.com)
 }
 
 // BaseURL returns the base URL for the application
+// If APIBaseURL is configured, it returns that, otherwise constructs from host:port
 func (s *ServerConfig) BaseURL() string {
+	// Use configured API base URL if available
+	if s.APIBaseURL != "" {
+		return s.APIBaseURL
+	}
+
+	// Fall back to host:port
 	host := s.Host
 	// Handle 0.0.0.0 or empty host - use localhost for URLs
 	if host == "0.0.0.0" || host == "" {
@@ -82,8 +90,9 @@ func Load() (*Config, error) {
 
 	config := &Config{
 		Server: ServerConfig{
-			Port: getEnv("PORT", "8080"),
-			Host: getEnv("HOST", "localhost"),
+			Port:       getEnv("PORT", "8080"),
+			Host:       getEnv("HOST", "localhost"),
+			APIBaseURL: getEnv("API_BASE_URL", ""),
 		},
 		Database: DatabaseConfig{
 			URL: getEnv("DATABASE_URL", ""),

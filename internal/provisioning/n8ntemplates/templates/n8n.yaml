@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: PLACEHOLDER_NAMESPACE
+  labels:
+    name: PLACEHOLDER_NAMESPACE
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-main-data
+  namespace: PLACEHOLDER_NAMESPACE
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: PLACEHOLDER_STORAGE_SIZE
+  storageClassName: premium-rwo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-main
+  namespace: PLACEHOLDER_NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n-main
+  template:
+    metadata:
+      labels:
+        app: n8n-main
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: "gen2"
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: n8n
+        image: n8nio/n8n:latest
+        ports:
+        - containerPort: 5678
+        env:
+        - name: N8N_USER_FOLDER
+          value: "/data"
+        - name: N8N_ENCRYPTION_KEY
+          value: "PLACEHOLDER_ENCRYPTION_KEY"
+        - name: GENERIC_TIMEZONE
+          value: "UTC"
+        - name: NODE_ENV
+          value: "production"
+        - name: N8N_EDITOR_BASE_URL
+          value: "PLACEHOLDER_BASE_URL"
+        - name: DB_TYPE
+          value: "sqlite"
+        - name: DB_SQLITE_DATABASE
+          value: "/data/database.sqlite"
+        - name: DB_SQLITE_VACUUM_ON_STARTUP
+          value: "true"
+        - name: EXECUTIONS_DATA_MAX_AGE
+          value: "168"
+        - name: N8N_LOG_LEVEL
+          value: "warn"
+        - name: NODE_FUNCTION_ALLOW_BUILTIN
+          value: "*"
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /data
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        resources:
+          requests:
+            cpu: PLACEHOLDER_CPU_REQUEST
+            memory: PLACEHOLDER_MEMORY_REQUEST
+          limits:
+            cpu: PLACEHOLDER_CPU_LIMIT
+            memory: PLACEHOLDER_MEMORY_LIMIT
+      volumes:
+      - name: n8n-data
+        persistentVolumeClaim:
+          claimName: n8n-main-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-main
+  namespace: PLACEHOLDER_NAMESPACE
+spec:
+  selector:
+    app: n8n-main
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5678

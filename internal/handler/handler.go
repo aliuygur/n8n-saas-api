@@ -2,13 +2,12 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"log/slog"
 
 	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
-	"github.com/aliuygur/n8n-saas-api/internal/gke"
+	"github.com/aliuygur/n8n-saas-api/internal/provisioning"
 	polargo "github.com/polarsource/polar-go"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -17,7 +16,7 @@ import (
 // Handler holds all dependencies for HTTP handlers
 type Handler struct {
 	db                 *db.Queries
-	gke                *gke.Client
+	provisioning       *provisioning.Client
 	cloudflare         *cloudflare.Client
 	polarClient        *polargo.Polar
 	oauth2Config       *oauth2.Config
@@ -32,13 +31,9 @@ func New(cfg *config.Config, database *sql.DB, logger *slog.Logger) (*Handler, e
 	// Initialize database queries
 	queries := db.New(database)
 
-	// Decode base64-encoded GCP credentials
-	decodedCreds, err := base64.StdEncoding.DecodeString(cfg.GCP.Credentials)
-	if err != nil {
-		return nil, err
-	}
-	// Initialize GKE client
-	gkeClient, err := gke.NewClient(cfg.GCP.ProjectID, decodedCreds)
+	// Initialize provisioning client
+	// Tries in-cluster config first, then falls back to kubeconfig
+	provisioningClient, err := provisioning.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +67,7 @@ func New(cfg *config.Config, database *sql.DB, logger *slog.Logger) (*Handler, e
 
 	return &Handler{
 		db:                 queries,
-		gke:                gkeClient,
+		provisioning:       provisioningClient,
 		cloudflare:         cloudflareClient,
 		polarClient:        polarClient,
 		oauth2Config:       oauth2Config,

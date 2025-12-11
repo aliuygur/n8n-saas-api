@@ -1,3 +1,5 @@
+//go:build ignore
+
 package gke
 
 import (
@@ -8,14 +10,11 @@ import (
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
-	"github.com/samber/lo"
+	"github.com/aliuygur/n8n-saas-api/internal/kubeapply"
+	"github.com/aliuygur/n8n-saas-api/internal/n8ntemplates"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -24,6 +23,7 @@ import (
 type Client struct {
 	containerClient *container.ClusterManagerClient
 	k8sClient       *kubernetes.Clientset
+	restConfig      *rest.Config
 	projectID       string
 	credentialsJSON []byte
 }
@@ -118,204 +118,39 @@ func (c *Client) ConnectToCluster(ctx context.Context, clusterName, zone string)
 	}
 
 	c.k8sClient = clientset
+	c.restConfig = config // Store the rest config for kubeapply
 	return nil
 }
 
 func (c *Client) DeployN8NInstance(ctx context.Context, instance N8NInstance) error {
-	if c.k8sClient == nil {
+	if c.restConfig == nil {
 		return fmt.Errorf("kubernetes client not connected")
 	}
 
-	// Create namespace
-	if err := c.createNamespace(ctx, instance.Namespace); err != nil {
-		return fmt.Errorf("failed to create namespace: %w", err)
+	// Map gke.N8NInstance to n8ntemplates.Config
+	templateConfig := n8ntemplates.Config{
+		Namespace:     instance.Namespace,
+		EncryptionKey: instance.EncryptionKey,
+		BaseURL:       instance.BaseURL,
+		CPURequest:    instance.CPURequest,
+		MemoryRequest: instance.MemoryRequest,
+		CPULimit:      instance.CPULimit,
+		MemoryLimit:   instance.MemoryLimit,
+		StorageSize:   instance.StorageSize,
 	}
 
-	// Create PVC for SQLite database
-	if err := c.createPVC(ctx, instance); err != nil {
-		return fmt.Errorf("failed to create PVC: %w", err)
+	// Render templates using n8ntemplates package
+	yaml, err := n8ntemplates.Render(templateConfig)
+	if err != nil {
+		return fmt.Errorf("failed to render templates: %w", err)
 	}
 
-	// Deploy N8N instance with SQLite
-	if err := c.deployN8N(ctx, instance); err != nil {
-		return fmt.Errorf("failed to deploy N8N: %w", err)
+	// Apply YAML using kubeapply package
+	if err := kubeapply.ApplyYAMLString(ctx, c.restConfig, yaml); err != nil {
+		return fmt.Errorf("failed to apply YAML: %w", err)
 	}
-
-	// Create service
-	if err := c.createService(ctx, instance); err != nil {
-		return fmt.Errorf("failed to create service: %w", err)
-	}
-
-	// Note: No ingress or certificates needed since we use Cloudflare tunnel for external access
 
 	return nil
-}
-
-func (c *Client) createNamespace(ctx context.Context, namespace string) error {
-	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: namespace,
-			Labels: map[string]string{
-				"name": namespace,
-			},
-		},
-	}
-
-	_, err := c.k8sClient.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
-	// Ignore error if namespace already exists
-	if err != nil && strings.Contains(err.Error(), "already exists") {
-		return nil
-	}
-	return err
-}
-func (c *Client) createPVC(ctx context.Context, instance N8NInstance) error {
-	pvc := &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      N8NMainName + "-data",
-			Namespace: instance.Namespace,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{
-				corev1.ReadWriteOnce,
-			},
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceStorage: resource.MustParse(instance.StorageSize),
-				},
-			},
-			StorageClassName: lo.ToPtr("premium-rwo"),
-		},
-	}
-
-	_, err := c.k8sClient.CoreV1().PersistentVolumeClaims(instance.Namespace).Create(ctx, pvc, metav1.CreateOptions{})
-	return err
-}
-
-func (c *Client) deployN8N(ctx context.Context, instance N8NInstance) error {
-	// Build pod annotations
-	annotations := map[string]string{
-		"cluster-autoscaler.kubernetes.io/safe-to-evict": "true",
-		"run.googleapis.com/cpu-throttling":              "false",
-		"run.googleapis.com/execution-environment":       "gen2",
-	}
-
-	// Build pod spec
-	podSpec := corev1.PodSpec{
-		SecurityContext: &corev1.PodSecurityContext{
-			FSGroup: lo.ToPtr(int64(1000)),
-		},
-		Containers: []corev1.Container{
-			{
-				Name:  "n8n",
-				Image: "n8nio/n8n:latest",
-				Env: []corev1.EnvVar{
-					{Name: "N8N_USER_FOLDER", Value: "/data"},
-					{Name: "N8N_ENCRYPTION_KEY", Value: instance.EncryptionKey},
-					{Name: "GENERIC_TIMEZONE", Value: "UTC"},
-					{Name: "NODE_ENV", Value: "production"},
-					{Name: "N8N_EDITOR_BASE_URL", Value: instance.BaseURL},
-
-					// Database
-					{Name: "DB_TYPE", Value: "sqlite"},
-					{Name: "DB_SQLITE_DATABASE", Value: "/data/database.sqlite"},
-					{Name: "DB_SQLITE_VACUUM_ON_STARTUP", Value: "true"},
-
-					// Executions
-					{Name: "EXECUTIONS_DATA_MAX_AGE", Value: "168"}, // 7 days
-
-					// Logs
-					{Name: "N8N_LOG_LEVEL", Value: "warn"},
-
-					// Nodes
-					{Name: "NODE_FUNCTION_ALLOW_BUILTIN", Value: "*"},
-				},
-				Ports: []corev1.ContainerPort{
-					{ContainerPort: 5678},
-				},
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						Name:      "n8n-data",
-						MountPath: "/data",
-					},
-				},
-				SecurityContext: &corev1.SecurityContext{
-					RunAsUser:  lo.ToPtr(int64(1000)), // Run as node user
-					RunAsGroup: lo.ToPtr(int64(1000)),
-				},
-				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse(instance.CPURequest),
-						corev1.ResourceMemory: resource.MustParse(instance.MemoryRequest),
-					},
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse(instance.CPULimit),
-						corev1.ResourceMemory: resource.MustParse(instance.MemoryLimit),
-					},
-				},
-			},
-		},
-		Volumes: []corev1.Volume{
-			{
-				Name: "n8n-data",
-				VolumeSource: corev1.VolumeSource{
-					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-						ClaimName: N8NMainName + "-data",
-					},
-				},
-			},
-		},
-	}
-
-	deployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      N8NMainName,
-			Namespace: instance.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: lo.ToPtr(int32(1)),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": N8NMainName,
-				},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app": N8NMainName,
-					},
-					Annotations: annotations,
-				},
-				Spec: podSpec,
-			},
-		},
-	}
-
-	_, err := c.k8sClient.AppsV1().Deployments(instance.Namespace).Create(ctx, deployment, metav1.CreateOptions{})
-	return err
-}
-
-func (c *Client) createService(ctx context.Context, instance N8NInstance) error {
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      N8NMainName,
-			Namespace: instance.Namespace,
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": N8NMainName,
-			},
-			Type: corev1.ServiceTypeClusterIP,
-			Ports: []corev1.ServicePort{
-				{
-					Port:       80,
-					TargetPort: intstr.FromInt(5678),
-				},
-			},
-		},
-	}
-
-	_, err := c.k8sClient.CoreV1().Services(instance.Namespace).Create(ctx, service, metav1.CreateOptions{})
-	return err
 }
 
 // NamespaceExists checks if a namespace exists in the cluster

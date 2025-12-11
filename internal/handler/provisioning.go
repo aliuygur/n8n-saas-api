@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/db"
-	"github.com/aliuygur/n8n-saas-api/internal/gke"
+	"github.com/aliuygur/n8n-saas-api/internal/provisioning"
 	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 	"github.com/samber/lo"
 )
@@ -223,15 +223,10 @@ func (h *Handler) deleteInstanceInternal(ctx context.Context, instanceID string)
 		return fmt.Errorf("failed to get instance: %w", err)
 	}
 
-	// Delete from GKE
-	if err := h.gke.ConnectToCluster(ctx, instance.GkeClusterName, instance.GkeZone); err != nil {
-		h.logger.Error("Failed to connect to cluster", slog.Any("error", err))
-		// Continue with database deletion even if GKE deletion fails
-	} else {
-		if err := h.gke.DeleteN8NInstance(ctx, instance.Namespace); err != nil {
-			h.logger.Error("Failed to delete namespace", slog.Any("error", err))
-			// Continue with database deletion even if GKE deletion fails
-		}
+	// Delete from Kubernetes
+	if err := h.provisioning.DeleteN8NInstance(ctx, instance.Namespace); err != nil {
+		h.logger.Error("Failed to delete namespace", slog.Any("error", err))
+		// Continue with database deletion even if K8s deletion fails
 	}
 
 	// Delete Cloudflare DNS record
@@ -285,18 +280,13 @@ func (h *Handler) generateUniqueNamespace(ctx context.Context, userID string) (s
 	return "", fmt.Errorf("failed to generate unique namespace after %d attempts", maxAttempts)
 }
 
-// deployInstance deploys an instance to GKE
+// deployInstance deploys an instance to Kubernetes
 func (h *Handler) deployInstance(ctx context.Context, instance db.Instance, encryptionKey string) error {
 	h.logger.Info("Starting deployment", slog.String("instance_id", instance.ID))
 
-	// Connect to GKE cluster
-	if err := h.gke.ConnectToCluster(ctx, h.config.GCP.ClusterName, h.config.GCP.Zone); err != nil {
-		return fmt.Errorf("failed to connect to cluster: %w", err)
-	}
-
 	// Deploy n8n instance
 	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
-	n8nInstance := gke.N8NInstance{
+	n8nInstance := provisioning.N8NInstance{
 		Namespace:     instance.Namespace,
 		CPURequest:    "150m",
 		MemoryRequest: "512Mi",
@@ -307,7 +297,7 @@ func (h *Handler) deployInstance(ctx context.Context, instance db.Instance, encr
 		BaseURL:       domain,
 	}
 
-	if err := h.gke.DeployN8NInstance(ctx, n8nInstance); err != nil {
+	if err := h.provisioning.DeployN8NInstance(ctx, n8nInstance); err != nil {
 		return fmt.Errorf("failed to deploy n8n: %w", err)
 	}
 
