@@ -15,6 +15,7 @@ import (
 
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 	"github.com/polarsource/polar-go/models/components"
 )
 
@@ -59,6 +60,8 @@ func (s *Service) PolarWebhook(w http.ResponseWriter, r *http.Request) {
 	var handlerErr error
 
 	switch event.Type {
+	case "checkout.updated":
+		handlerErr = s.handleCheckoutUpdated(ctx, event.Data)
 	case "subscription.created":
 		handlerErr = s.handleSubscriptionCreated(ctx, event.Data)
 	case "subscription.updated":
@@ -136,10 +139,109 @@ func (s *Service) verifyWebhookSignature(headers http.Header, body []byte) error
 	return fmt.Errorf("signature verification failed")
 }
 
+// handleCheckoutUpdated handles the checkout.updated event
+// This is triggered when a checkout is completed successfully
+func (s *Service) handleCheckoutUpdated(ctx context.Context, data json.RawMessage) error {
+	var checkout components.Checkout
+	if err := json.Unmarshal(data, &checkout); err != nil {
+		return fmt.Errorf("failed to unmarshal checkout data: %w", err)
+	}
+
+	rlog.Info("Processing checkout.updated",
+		"checkout_id", checkout.ID,
+		"status", checkout.Status,
+	)
+
+	// Only process succeeded checkouts
+	if checkout.Status != components.CheckoutStatusSucceeded {
+		rlog.Info("Checkout not succeeded, ignoring", "checkout_id", checkout.ID, "status", checkout.Status)
+		return nil
+	}
+
+	queries := db.New(s.db)
+
+	// Fetch checkout session from database
+	checkoutSession, err := queries.GetCheckoutSessionByPolarID(ctx, checkout.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch checkout session: %w", err)
+	}
+
+	// Check if already processed
+	if checkoutSession.Status == "completed" {
+		rlog.Info("Checkout already processed, skipping", "checkout_id", checkout.ID)
+		return nil
+	}
+
+	userID := *checkout.ExternalCustomerID
+
+	rlog.Info("Creating instance from checkout webhook",
+		"checkout_id", checkout.ID,
+		"subdomain", checkoutSession.Subdomain,
+		"user_id", userID,
+	)
+
+	// Create and deploy the instance
+	provisionResp, err := provisioning.CreateInstance(ctx, &provisioning.CreateInstanceRequest{
+		UserID:    userID,
+		Subdomain: checkoutSession.Subdomain,
+		DeployNow: true,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create instance: %w", err)
+	}
+
+	rlog.Info("Instance created and deployed successfully",
+		"instance_id", provisionResp.InstanceID,
+		"user_id", userID,
+		"subdomain", checkoutSession.Subdomain,
+	)
+
+	// Validate Polar checkout data
+	if checkout.CustomerID == nil || checkout.SubscriptionID == nil || checkout.ProductID == nil {
+		rlog.Error("Missing Polar data in checkout",
+			"checkout_id", checkout.ID,
+			"customer_id", checkout.CustomerID,
+			"subscription_id", checkout.SubscriptionID,
+			"product_id", checkout.ProductID,
+		)
+		return fmt.Errorf("missing required Polar data in checkout")
+	}
+
+	// Create active subscription for this instance
+	sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+		UserID:              userID,
+		InstanceID:          provisionResp.InstanceID,
+		PolarCustomerID:     *checkout.CustomerID,
+		PolarSubscriptionID: *checkout.SubscriptionID,
+		PolarProductID:      *checkout.ProductID,
+		Status:              StatusActive,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create subscription: %w", err)
+	}
+
+	// Update checkout session status to completed
+	err = queries.UpdateCheckoutSessionStatus(ctx, db.UpdateCheckoutSessionStatusParams{
+		ID:     checkoutSession.ID,
+		Status: "completed",
+	})
+	if err != nil {
+		rlog.Error("Failed to update checkout session status", "error", err, "checkout_session_id", checkoutSession.ID)
+		// Not a critical error, continue
+	}
+
+	rlog.Info("Subscription created successfully from checkout webhook",
+		"instance_id", provisionResp.InstanceID,
+		"subscription_id", sub.ID,
+	)
+
+	return nil
+}
+
 // handleSubscriptionCreated handles the subscription.created event
 // Note: This event is triggered when a Polar subscription is created via checkout
 // We don't automatically create a subscription here because it's already created
-// by the checkout callback handler which knows the instance_id
+// by the checkout webhook handler which knows the instance_id
 func (s *Service) handleSubscriptionCreated(ctx context.Context, data json.RawMessage) error {
 	var subscription components.Subscription
 	if err := json.Unmarshal(data, &subscription); err != nil {

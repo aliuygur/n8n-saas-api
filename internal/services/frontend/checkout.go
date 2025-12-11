@@ -4,21 +4,15 @@ import (
 	"net/http"
 
 	"encore.dev/rlog"
-	"github.com/aliuygur/n8n-saas-api/internal/services/subscription"
 )
 
 //encore:api public raw method=GET path=/api/checkout-callback
 func (s *Service) CheckoutCallback(w http.ResponseWriter, r *http.Request) {
+	checkoutID := r.URL.Query().Get("checkout_id")
 
-	res, err := subscription.HandleCheckoutCallback(r.Context(), &subscription.HandleCheckoutCallbackRequest{
-		CheckoutID: r.URL.Query().Get("checkout_id"),
-	})
+	rlog.Info("Checkout callback received, redirecting to dashboard", "checkout_id", checkoutID)
 
-	if err != nil {
-		http.Error(w, "Failed to handle checkout callback", http.StatusInternalServerError)
-		return
-	}
-
-	rlog.Info("Checkout callback handled successfully", "subscription_id", res.SubscriptionID)
-	http.Redirect(w, r, "/create-instance", http.StatusSeeOther)
+	// Note: The actual instance creation and subscription setup is handled by the webhook
+	// This callback is just for redirecting the user to a success page
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
