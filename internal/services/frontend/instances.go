@@ -40,26 +40,34 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 
 	subdomain := r.FormValue("subdomain")
 
-	rlog.Debug("Creating pending instance", "user_id", user.ID, "subdomain", subdomain)
+	rlog.Debug("Creating checkout session for instance", "user_id", user.ID, "subdomain", subdomain)
 
-	// First, create pending instance to reserve the subdomain
-	instanceResp, err := provisioning.CreateInstance(r.Context(), &provisioning.CreateInstanceRequest{
-		UserID:    user.ID,
-		Subdomain: subdomain,
-		DeployNow: false, // Just create the record, don't deploy yet
-	})
-	if err != nil {
-		rlog.Error("Failed to create pending instance", "error", err)
+	// Validate subdomain
+	if err := domainutils.ValidateSubdomain(subdomain); err != nil {
+		rlog.Error("Invalid subdomain", "error", err, "subdomain", subdomain)
 		lo.Must0(components.CreateInstanceError(err.Error()).Render(r.Context(), w))
 		return
 	}
 
-	rlog.Debug("Pending instance created, creating checkout session", "user_id", user.ID, "instance_id", instanceResp.InstanceID)
+	// Check if subdomain already exists
+	subdomainResp, err := provisioning.CheckSubdomainExists(r.Context(), &provisioning.CheckSubdomainExistsRequest{
+		Subdomain: subdomain,
+	})
+	if err != nil {
+		rlog.Error("Failed to check subdomain availability", "error", err)
+		lo.Must0(components.CreateInstanceError("Failed to check subdomain availability").Render(r.Context(), w))
+		return
+	}
+	if subdomainResp.Exists {
+		rlog.Error("Subdomain already taken", "subdomain", subdomain)
+		lo.Must0(components.CreateInstanceError("Subdomain is already taken").Render(r.Context(), w))
+		return
+	}
 
 	// Create checkout session for the subscription
 	checkoutResp, err := subscription.CreateCheckout(r.Context(), &subscription.CreateCheckoutRequest{
 		UserID:     user.ID,
-		InstanceID: instanceResp.InstanceID,
+		Subdomain:  subdomain,
 		UserEmail:  user.Email,
 		SuccessURL: "https://instol.cloud/checkout/success?checkout_id={CHECKOUT_ID}",
 		ReturnURL:  "https://instol.cloud/dashboard",
@@ -70,7 +78,7 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rlog.Info("Checkout session created", "checkout_id", checkoutResp.CheckoutID, "user_id", user.ID)
+	rlog.Info("Checkout session created", "checkout_id", checkoutResp.CheckoutID, "user_id", user.ID, "subdomain", subdomain)
 
 	// Redirect to Polar checkout page
 	w.Header().Set("HX-Redirect", checkoutResp.CheckoutURL)

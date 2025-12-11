@@ -14,7 +14,7 @@ import (
 // CreateCheckoutRequest represents the request to create a checkout session
 type CreateCheckoutRequest struct {
 	UserID     string `json:"user_id"`
-	InstanceID string `json:"instance_id"`
+	Subdomain  string `json:"subdomain"`
 	UserEmail  string `json:"user_email,omitempty"`
 	SuccessURL string `json:"success_url"`
 	ReturnURL  string `json:"return_url,omitempty"`
@@ -36,10 +36,6 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 		ExternalCustomerID: polargo.Pointer(req.UserID),
 		CustomerEmail:      polargo.Pointer(req.UserEmail),
 		SuccessURL:         polargo.Pointer(req.SuccessURL),
-		// Store instance_id in metadata so we can deploy it after payment
-		Metadata: map[string]components.CheckoutCreateMetadata{
-			"instance_id": components.CreateCheckoutCreateMetadataStr(req.InstanceID),
-		},
 	}
 
 	if req.ReturnURL != "" {
@@ -48,7 +44,7 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 
 	rlog.Info("Creating Polar checkout session",
 		"user_id", req.UserID,
-		"instance_id", req.InstanceID,
+		"subdomain", req.Subdomain,
 		"email", req.UserEmail,
 	)
 
@@ -67,6 +63,27 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 		"checkout_url", resp.Checkout.URL,
 	)
 
+	// Store checkout session in database
+	queries := db.New(s.db)
+	checkoutSession, err := queries.CreateCheckoutSession(ctx, db.CreateCheckoutSessionParams{
+		UserID:          req.UserID,
+		PolarCheckoutID: resp.Checkout.ID,
+		Subdomain:       req.Subdomain,
+		UserEmail:       req.UserEmail,
+		SuccessUrl:      req.SuccessURL,
+		ReturnUrl:       req.ReturnURL,
+		Status:          "pending",
+	})
+	if err != nil {
+		rlog.Error("Failed to store checkout session in database", "error", err)
+		return nil, fmt.Errorf("failed to store checkout session: %w", err)
+	}
+
+	rlog.Info("Checkout session stored in database",
+		"checkout_session_id", checkoutSession.ID,
+		"polar_checkout_id", checkoutSession.PolarCheckoutID,
+	)
+
 	return &CreateCheckoutResponse{
 		CheckoutURL: resp.Checkout.URL,
 		CheckoutID:  resp.Checkout.ID,
@@ -83,10 +100,19 @@ type HandleCheckoutCallbackResponse struct {
 
 //encore:api private
 func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckoutCallbackRequest) (*HandleCheckoutCallbackResponse, error) {
-	// Fetch checkout details
+	queries := db.New(s.db)
+
+	// Fetch checkout session from database
+	checkoutSession, err := queries.GetCheckoutSessionByPolarID(ctx, req.CheckoutID)
+	if err != nil {
+		rlog.Error("Failed to fetch checkout session from database", "error", err, "checkout_id", req.CheckoutID)
+		return nil, fmt.Errorf("failed to fetch checkout session: %w", err)
+	}
+
+	// Fetch checkout details from Polar
 	checkout, err := s.polarClient.Checkouts.Get(ctx, req.CheckoutID)
 	if err != nil {
-		rlog.Error("Failed to fetch checkout details", "error", err, "checkout_id", req.CheckoutID)
+		rlog.Error("Failed to fetch checkout details from Polar", "error", err, "checkout_id", req.CheckoutID)
 		return nil, fmt.Errorf("failed to fetch checkout details: %w", err)
 	}
 
@@ -94,42 +120,30 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 		return nil, fmt.Errorf("checkout not completed successfully: status=%s", checkout.Checkout.Status)
 	}
 
-	// Extract instance_id from checkout metadata
-	instanceID := ""
-	if checkout.Checkout.Metadata != nil {
-		if metadata, ok := checkout.Checkout.Metadata["instance_id"]; ok {
-			if metadata.Str != nil {
-				instanceID = *metadata.Str
-			}
-		}
-	}
-
-	if instanceID == "" {
-		rlog.Error("instance_id not found in checkout metadata", "checkout_id", req.CheckoutID)
-		return nil, fmt.Errorf("instance_id not found in checkout metadata")
-	}
-
 	userID := *checkout.Checkout.ExternalCustomerID
 
 	rlog.Info("Processing checkout callback",
 		"checkout_id", req.CheckoutID,
-		"instance_id", instanceID,
+		"subdomain", checkoutSession.Subdomain,
 		"user_id", userID,
 		"status", checkout.Checkout.Status,
 	)
 
-	// Deploy the pending instance
-	provisionResp, err := provisioning.DeployPendingInstance(ctx, &provisioning.DeployPendingInstanceRequest{
-		InstanceID: instanceID,
+	// Create and deploy the instance
+	provisionResp, err := provisioning.CreateInstance(ctx, &provisioning.CreateInstanceRequest{
+		UserID:    userID,
+		Subdomain: checkoutSession.Subdomain,
+		DeployNow: true,
 	})
 	if err != nil {
-		rlog.Error("Failed to deploy pending instance", "error", err, "instance_id", instanceID)
-		return nil, fmt.Errorf("failed to deploy instance: %w", err)
+		rlog.Error("Failed to create and deploy instance", "error", err, "subdomain", checkoutSession.Subdomain)
+		return nil, fmt.Errorf("failed to create instance: %w", err)
 	}
 
-	rlog.Info("Instance provisioned successfully",
+	rlog.Info("Instance created and deployed successfully",
 		"instance_id", provisionResp.InstanceID,
 		"user_id", userID,
+		"subdomain", checkoutSession.Subdomain,
 	)
 
 	// Validate Polar checkout data
@@ -144,7 +158,6 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 	}
 
 	// Create active subscription for this instance
-	queries := db.New(s.db)
 	sub, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
 		UserID:              userID,
 		InstanceID:          provisionResp.InstanceID,
@@ -156,6 +169,16 @@ func (s *Service) HandleCheckoutCallback(ctx context.Context, req *HandleCheckou
 	if err != nil {
 		rlog.Error("Failed to create subscription after checkout", "error", err, "instance_id", provisionResp.InstanceID)
 		return nil, fmt.Errorf("failed to create subscription: %w", err)
+	}
+
+	// Update checkout session status to completed
+	err = queries.UpdateCheckoutSessionStatus(ctx, db.UpdateCheckoutSessionStatusParams{
+		ID:     checkoutSession.ID,
+		Status: "completed",
+	})
+	if err != nil {
+		rlog.Error("Failed to update checkout session status", "error", err, "checkout_session_id", checkoutSession.ID)
+		// Not a critical error, continue
 	}
 
 	rlog.Info("Subscription created successfully after checkout",
