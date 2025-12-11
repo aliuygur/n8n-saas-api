@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/samber/lo"
 )
 

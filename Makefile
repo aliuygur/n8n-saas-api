@@ -12,7 +12,7 @@ run: build
 
 # Run with live reload (requires air: go install github.com/air-verse/air@latest)
 dev:
-	@air
+	templ generate --watch --proxy="http://localhost:8080" --cmd="go run cmd/server/main.go"
 
 # Clean build artifacts
 clean:

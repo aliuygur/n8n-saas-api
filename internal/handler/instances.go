@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 	"github.com/google/uuid"
 	"github.com/samber/lo"

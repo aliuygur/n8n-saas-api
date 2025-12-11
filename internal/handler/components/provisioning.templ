@@ -1,6 +1,5 @@
 package components
 
-import "github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 
 templ ProvisioningStatusPage(checkoutID string) {
 	@Layout("Provisioning Instance - instol.cloud") {
@@ -88,7 +87,7 @@ templ ProvisioningPending(checkoutID string) {
 	</div>
 }
 
-templ ProvisioningComplete(instance *provisioning.Instance) {
+templ ProvisioningComplete(instance *Instance) {
 	<div id="status-container" class="bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm space-y-6">
 		<div class="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-6">
 			<div class="flex items-start gap-4">

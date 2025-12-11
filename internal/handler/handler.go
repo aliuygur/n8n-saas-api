@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"log/slog"
 
 	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
@@ -15,14 +16,14 @@ import (
 
 // Handler holds all dependencies for HTTP handlers
 type Handler struct {
-	db             *db.Queries
-	gke            *gke.Client
-	cloudflare     *cloudflare.Client
-	polarClient    *polargo.Polar
-	oauth2Config   *oauth2.Config
-	jwtSecret      []byte
-	config         *config.Config
-	logger         *slog.Logger
+	db                 *db.Queries
+	gke                *gke.Client
+	cloudflare         *cloudflare.Client
+	polarClient        *polargo.Polar
+	oauth2Config       *oauth2.Config
+	jwtSecret          []byte
+	config             *config.Config
+	logger             *slog.Logger
 	polarWebhookSecret string
 }
 
@@ -31,8 +32,13 @@ func New(cfg *config.Config, database *sql.DB, logger *slog.Logger) (*Handler, e
 	// Initialize database queries
 	queries := db.New(database)
 
+	// Decode base64-encoded GCP credentials
+	decodedCreds, err := base64.StdEncoding.DecodeString(cfg.GCP.Credentials)
+	if err != nil {
+		return nil, err
+	}
 	// Initialize GKE client
-	gkeClient, err := gke.NewClient(cfg.GCP.ProjectID, []byte(cfg.GCP.Credentials))
+	gkeClient, err := gke.NewClient(cfg.GCP.ProjectID, decodedCreds)
 	if err != nil {
 		return nil, err
 	}

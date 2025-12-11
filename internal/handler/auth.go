@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/db"
-	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/samber/lo"
 )

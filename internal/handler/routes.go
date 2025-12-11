@@ -6,8 +6,8 @@ import (
 
 // RegisterRoutes registers all HTTP routes
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	// Static files
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./internal/services/frontend/static"))))
+	// Register static files route first to avoid pattern conflicts
+	// mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./internal/services/frontend/static"))))
 
 	// Public routes (no auth required)
 	mux.HandleFunc("GET /", h.Home)

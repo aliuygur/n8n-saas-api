@@ -7,3 +7,7 @@ type Instance struct {
 	Status      string
 	CreatedAt   string
 }
+
+func (i *Instance) GetInstanceURL() string {
+	return ""
+}
