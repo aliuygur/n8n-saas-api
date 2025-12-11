@@ -5,6 +5,7 @@ import (
 
 	"encore.dev"
 	"encore.dev/rlog"
+	"encore.dev/types/uuid"
 	"github.com/aliuygur/n8n-saas-api/internal/auth"
 	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
 	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
@@ -64,13 +65,17 @@ func (s *Service) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get base URL from Encore metadata
+	baseURL := encore.Meta().APIBaseURL.String()
+
 	// Create checkout session for the subscription
 	checkoutResp, err := subscription.CreateCheckout(r.Context(), &subscription.CreateCheckoutRequest{
 		UserID:     user.ID,
+		InstanceID: lo.Must(uuid.NewV4()).String(),
 		Subdomain:  subdomain,
 		UserEmail:  user.Email,
-		SuccessURL: "https://instol.cloud/checkout/success?checkout_id={CHECKOUT_ID}",
-		ReturnURL:  "https://instol.cloud/dashboard",
+		SuccessURL: baseURL + "/provisioning?checkout_id={CHECKOUT_ID}",
+		ReturnURL:  baseURL + "/dashboard",
 	})
 	if err != nil {
 		rlog.Error("Failed to create checkout session", "error", err)

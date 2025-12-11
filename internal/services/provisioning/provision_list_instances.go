@@ -46,12 +46,11 @@ func (s *Service) ListInstances(ctx context.Context, req *ListInstancesRequest) 
 	result := make([]*Instance, len(instances))
 	for i, instance := range instances {
 		result[i] = &Instance{
-			ID:         instance.ID,
-			Status:     instance.Status,
-			Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
-			Namespace:  instance.Namespace,
-			ServiceURL: fmt.Sprintf("n8n-main.%s.svc.cluster.local", instance.Namespace),
-			CreatedAt:  instance.CreatedAt.Time,
+			ID:        instance.ID,
+			Status:    instance.Status,
+			SubDomain: instance.Subdomain,
+			Namespace: instance.Namespace,
+			CreatedAt: instance.CreatedAt.Time,
 		}
 
 		if instance.DeployedAt.Valid {

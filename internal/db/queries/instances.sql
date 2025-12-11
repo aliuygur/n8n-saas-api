@@ -1,9 +1,8 @@
 -- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, gke_cluster_name, gke_project_id, gke_zone,
-    namespace, subdomain
+    id, user_id, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 ) RETURNING *;
 
 -- name: GetInstance :one

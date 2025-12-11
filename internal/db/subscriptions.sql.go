@@ -134,6 +134,30 @@ func (q *Queries) GetSubscriptionByInstanceID(ctx context.Context, instanceID st
 	return i, err
 }
 
+const getSubscriptionByPolarID = `-- name: GetSubscriptionByPolarID :one
+SELECT id, user_id, instance_id, polar_product_id, polar_customer_id, polar_subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
+WHERE polar_subscription_id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetSubscriptionByPolarID(ctx context.Context, polarSubscriptionID string) (Subscription, error) {
+	row := q.db.QueryRowContext(ctx, getSubscriptionByPolarID, polarSubscriptionID)
+	var i Subscription
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.InstanceID,
+		&i.PolarProductID,
+		&i.PolarCustomerID,
+		&i.PolarSubscriptionID,
+		&i.Status,
+		&i.TrialEndsAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getSubscriptionByUserIDAndProductID = `-- name: GetSubscriptionByUserIDAndProductID :one
 SELECT id, user_id, instance_id, polar_product_id, polar_customer_id, polar_subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
 WHERE user_id = $1 AND polar_product_id = $2

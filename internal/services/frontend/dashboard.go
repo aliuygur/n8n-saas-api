@@ -32,7 +32,7 @@ func (s *Service) Dashboard(w http.ResponseWriter, r *http.Request) {
 	instances := lo.Map(resp.Instances, func(inst *provisioning.Instance, _ int) components.Instance {
 		return components.Instance{
 			ID:          inst.ID,
-			InstanceURL: inst.Domain,
+			InstanceURL: inst.SubDomain,
 			Status:      inst.Status,
 			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
 		}
@@ -66,7 +66,7 @@ func (s *Service) DeleteModal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract subdomain from domain (e.g., "https://myapp.instol.cloud" -> "myapp")
-	domain := instance.Domain
+	domain := instance.SubDomain
 	subdomain := domain
 	if len(domain) > len("https://") && len(domain) > len(".instol.cloud") {
 		subdomain = domain[8:]                    // Remove "https://"

@@ -11,7 +11,7 @@ import (
 )
 
 // Encore database definition
-var mainDB = sqldb.NewDatabase("main", sqldb.DatabaseConfig{
+var provisionDB = sqldb.NewDatabase("provision", sqldb.DatabaseConfig{
 	Migrations: "./migrations",
 })
 
@@ -53,7 +53,7 @@ func initService() (*Service, error) {
 	cloudflareClient := cloudflare.NewClient(cloudflareConfig)
 
 	return &Service{
-		db:         mainDB.Stdlib(),
+		db:         provisionDB.Stdlib(),
 		gke:        gkeClient,
 		cloudflare: cloudflareClient,
 		config:     config,

@@ -25,14 +25,14 @@ type Config struct {
 }
 
 // TODO: Set secrets via Encore:
-//   encore secret set PolarAccessToken --dev
-//   encore secret set PolarProductID --dev
-//   encore secret set PolarWebhookSecret --dev
+//   encore secret set POLAR_ACCESS_TOKEN --dev
+//   encore secret set POLAR_PRODUCT_ID --dev
+//   encore secret set POLAR_WEBHOOK_SECRET --dev
 // Get the webhook secret from Polar dashboard > Settings > Webhooks
 var secrets struct {
-	PolarAccessToken   string
-	PolarProductID     string
-	PolarWebhookSecret string
+	POLAR_ACCESS_TOKEN   string
+	POLAR_PRODUCT_ID     string
+	POLAR_WEBHOOK_SECRET string
 }
 
 // initService initializes the subscription service
@@ -40,7 +40,7 @@ func initService() (*Service, error) {
 	// Initialize Polar client with sandbox mode for testing
 	polarClient := polargo.New(
 		polargo.WithServer("sandbox"), // Use "production" when ready
-		polargo.WithSecurity(secrets.PolarAccessToken),
+		polargo.WithSecurity(secrets.POLAR_ACCESS_TOKEN),
 	)
 
 	return &Service{

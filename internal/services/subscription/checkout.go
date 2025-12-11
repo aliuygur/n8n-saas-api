@@ -13,6 +13,7 @@ import (
 // CreateCheckoutRequest represents the request to create a checkout session
 type CreateCheckoutRequest struct {
 	UserID     string `json:"user_id"`
+	InstanceID string `json:"instance_id"`
 	Subdomain  string `json:"subdomain"`
 	UserEmail  string `json:"user_email,omitempty"`
 	SuccessURL string `json:"success_url"`
@@ -31,7 +32,7 @@ type CreateCheckoutResponse struct {
 func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest) (*CreateCheckoutResponse, error) {
 
 	checkoutCreate := components.CheckoutCreate{
-		Products:           []string{secrets.PolarProductID},
+		Products:           []string{secrets.POLAR_PRODUCT_ID},
 		ExternalCustomerID: polargo.Pointer(req.UserID),
 		CustomerEmail:      polargo.Pointer(req.UserEmail),
 		SuccessURL:         polargo.Pointer(req.SuccessURL),
@@ -66,6 +67,7 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 	queries := db.New(s.db)
 	checkoutSession, err := queries.CreateCheckoutSession(ctx, db.CreateCheckoutSessionParams{
 		UserID:          req.UserID,
+		InstanceID:      req.InstanceID,
 		PolarCheckoutID: resp.Checkout.ID,
 		Subdomain:       req.Subdomain,
 		UserEmail:       req.UserEmail,
@@ -86,5 +88,43 @@ func (s *Service) CreateCheckout(ctx context.Context, req *CreateCheckoutRequest
 	return &CreateCheckoutResponse{
 		CheckoutURL: resp.Checkout.URL,
 		CheckoutID:  resp.Checkout.ID,
+	}, nil
+}
+
+type CheckoutSession struct {
+	CheckoutID string `json:"checkout_id"`
+	UserID     string `json:"user_id"`
+	InstanceID string `json:"instance_id"`
+	Status     string `json:"status"`
+	Subdomain  string `json:"subdomain"`
+}
+
+type GetCheckoutSesionByPolarIDRequest struct {
+	PolarCheckoutID string `json:"polar_checkout_id"`
+}
+
+type GetCheckoutResponse struct {
+	Session CheckoutSession `json:"session"`
+}
+
+// GetCheckout retrieves a checkout session by its Polar checkout ID
+//
+//encore:api private
+func (s *Service) GetCheckoutSessionByPolarID(ctx context.Context, req *GetCheckoutSesionByPolarIDRequest) (*GetCheckoutResponse, error) {
+	queries := db.New(s.db)
+	checkoutSession, err := queries.GetCheckoutSessionByPolarID(ctx, req.PolarCheckoutID)
+	if err != nil {
+		rlog.Error("Failed to get checkout session from database", "error", err, "polar_checkout_id", req.PolarCheckoutID)
+		return nil, fmt.Errorf("failed to get checkout session: %w", err)
+	}
+
+	return &GetCheckoutResponse{
+		Session: CheckoutSession{
+			CheckoutID: checkoutSession.PolarCheckoutID,
+			UserID:     checkoutSession.UserID,
+			InstanceID: checkoutSession.InstanceID,
+			Status:     checkoutSession.Status,
+			Subdomain:  checkoutSession.Subdomain,
+		},
 	}, nil
 }

@@ -30,13 +30,16 @@ type Querier interface {
 	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
 	GetSubscriptionByInstanceID(ctx context.Context, instanceID string) (Subscription, error)
+	GetSubscriptionByPolarID(ctx context.Context, polarSubscriptionID string) (Subscription, error)
 	GetSubscriptionByUserIDAndProductID(ctx context.Context, arg GetSubscriptionByUserIDAndProductIDParams) (Subscription, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
+	ListCheckoutSessions(ctx context.Context, limit int32) ([]CheckoutSession, error)
 	ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error)
 	ReleaseUserLock(ctx context.Context, hashtext string) error
 	SoftDeleteInstance(ctx context.Context, id string) (Instance, error)
+	UpdateCheckoutSessionCompleted(ctx context.Context, arg UpdateCheckoutSessionCompletedParams) error
 	UpdateCheckoutSessionStatus(ctx context.Context, arg UpdateCheckoutSessionStatusParams) error
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)

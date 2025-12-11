@@ -13,9 +13,10 @@ import (
 
 // Create Instance API types
 type CreateInstanceRequest struct {
+	InstanceID    string `json:"instance_id"`
 	UserID        string `json:"user_id"`
 	Subdomain     string `json:"subdomain"`
-	DeployNow     bool   `json:"deploy_now"`      // If true, deploy immediately. If false, just create DB record
+	DeployNow     bool   `json:"deploy_now"`               // If true, deploy immediately. If false, just create DB record
 	EncryptionKey string `json:"encryption_key,omitempty"` // Optional: provide encryption key for existing instance
 }
 
@@ -29,6 +30,9 @@ type CreateInstanceResponse struct {
 //encore:api private
 func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest) (*CreateInstanceResponse, error) {
 	// Validate required fields
+	if req.InstanceID == "" {
+		return nil, fmt.Errorf("instance_id is required")
+	}
 	if req.UserID == "" {
 		return nil, fmt.Errorf("user_id is required")
 	}
@@ -59,6 +63,7 @@ func (s *Service) CreateInstance(ctx context.Context, req *CreateInstanceRequest
 
 	// Create instance record in database
 	instance, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
+		ID:             req.InstanceID,
 		UserID:         req.UserID,
 		GkeClusterName: s.config.DefaultClusterName,
 		GkeProjectID:   s.config.DefaultProjectID,

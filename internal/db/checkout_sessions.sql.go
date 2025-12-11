@@ -12,6 +12,7 @@ import (
 const createCheckoutSession = `-- name: CreateCheckoutSession :one
 INSERT INTO checkout_sessions (
     user_id,
+    instance_id,
     polar_checkout_id,
     subdomain,
     user_email,
@@ -19,12 +20,13 @@ INSERT INTO checkout_sessions (
     return_url,
     status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, user_id, polar_checkout_id, subdomain, user_email, status, success_url, return_url, created_at, updated_at, completed_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at
 `
 
 type CreateCheckoutSessionParams struct {
 	UserID          string `json:"user_id"`
+	InstanceID      string `json:"instance_id"`
 	PolarCheckoutID string `json:"polar_checkout_id"`
 	Subdomain       string `json:"subdomain"`
 	UserEmail       string `json:"user_email"`
@@ -36,6 +38,7 @@ type CreateCheckoutSessionParams struct {
 func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error) {
 	row := q.db.QueryRowContext(ctx, createCheckoutSession,
 		arg.UserID,
+		arg.InstanceID,
 		arg.PolarCheckoutID,
 		arg.Subdomain,
 		arg.UserEmail,
@@ -47,12 +50,13 @@ func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutS
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.PolarCheckoutID,
+		&i.InstanceID,
 		&i.Subdomain,
 		&i.UserEmail,
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
+		&i.PolarCheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -61,7 +65,7 @@ func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutS
 }
 
 const getCheckoutSessionByID = `-- name: GetCheckoutSessionByID :one
-SELECT id, user_id, polar_checkout_id, subdomain, user_email, status, success_url, return_url, created_at, updated_at, completed_at FROM checkout_sessions
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
 WHERE id = $1
 LIMIT 1
 `
@@ -72,12 +76,13 @@ func (q *Queries) GetCheckoutSessionByID(ctx context.Context, id string) (Checko
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.PolarCheckoutID,
+		&i.InstanceID,
 		&i.Subdomain,
 		&i.UserEmail,
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
+		&i.PolarCheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -86,7 +91,7 @@ func (q *Queries) GetCheckoutSessionByID(ctx context.Context, id string) (Checko
 }
 
 const getCheckoutSessionByPolarID = `-- name: GetCheckoutSessionByPolarID :one
-SELECT id, user_id, polar_checkout_id, subdomain, user_email, status, success_url, return_url, created_at, updated_at, completed_at FROM checkout_sessions
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
 WHERE polar_checkout_id = $1
 LIMIT 1
 `
@@ -97,12 +102,13 @@ func (q *Queries) GetCheckoutSessionByPolarID(ctx context.Context, polarCheckout
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.PolarCheckoutID,
+		&i.InstanceID,
 		&i.Subdomain,
 		&i.UserEmail,
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
+		&i.PolarCheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -110,20 +116,80 @@ func (q *Queries) GetCheckoutSessionByPolarID(ctx context.Context, polarCheckout
 	return i, err
 }
 
+const listCheckoutSessions = `-- name: ListCheckoutSessions :many
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
+ORDER BY created_at DESC
+LIMIT $1
+`
+
+func (q *Queries) ListCheckoutSessions(ctx context.Context, limit int32) ([]CheckoutSession, error) {
+	rows, err := q.db.QueryContext(ctx, listCheckoutSessions, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CheckoutSession
+	for rows.Next() {
+		var i CheckoutSession
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.InstanceID,
+			&i.Subdomain,
+			&i.UserEmail,
+			&i.Status,
+			&i.SuccessUrl,
+			&i.ReturnUrl,
+			&i.PolarCheckoutID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCheckoutSessionCompleted = `-- name: UpdateCheckoutSessionCompleted :exec
+UPDATE checkout_sessions
+SET status = 'completed',
+    instance_id = $2,
+    updated_at = NOW(),
+    completed_at = NOW()
+WHERE id = $1 AND completed_at IS NULL
+`
+
+type UpdateCheckoutSessionCompletedParams struct {
+	ID         string `json:"id"`
+	InstanceID string `json:"instance_id"`
+}
+
+func (q *Queries) UpdateCheckoutSessionCompleted(ctx context.Context, arg UpdateCheckoutSessionCompletedParams) error {
+	_, err := q.db.ExecContext(ctx, updateCheckoutSessionCompleted, arg.ID, arg.InstanceID)
+	return err
+}
+
 const updateCheckoutSessionStatus = `-- name: UpdateCheckoutSessionStatus :exec
 UPDATE checkout_sessions
-SET status = $2,
-    updated_at = NOW(),
-    completed_at = CASE WHEN $2 = 'completed' THEN NOW() ELSE completed_at END
-WHERE id = $1
+SET status = $1,
+    updated_at = NOW()
+WHERE id = $2
 `
 
 type UpdateCheckoutSessionStatusParams struct {
-	ID     string `json:"id"`
 	Status string `json:"status"`
+	ID     string `json:"id"`
 }
 
 func (q *Queries) UpdateCheckoutSessionStatus(ctx context.Context, arg UpdateCheckoutSessionStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateCheckoutSessionStatus, arg.ID, arg.Status)
+	_, err := q.db.ExecContext(ctx, updateCheckoutSessionStatus, arg.Status, arg.ID)
 	return err
 }

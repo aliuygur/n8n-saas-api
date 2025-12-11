@@ -43,8 +43,6 @@ func initService() (*Service, error) {
 		JWTSecret:          "your-secret-key-change-this-in-production",
 	}
 
-	rlog.Info("Initializing frontend service", "redirect_url", config.GoogleRedirectURL)
-
 	oauth2Config := &oauth2.Config{
 		ClientID:     config.GoogleClientID,
 		ClientSecret: config.GoogleClientSecret,

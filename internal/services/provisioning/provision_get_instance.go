@@ -3,7 +3,6 @@ package provisioning
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -19,12 +18,18 @@ type Instance struct {
 	ID         string     `json:"id"`
 	UserID     string     `json:"user_id"`
 	Status     string     `json:"status"`
-	Domain     string     `json:"domain"`
+	SubDomain  string     `json:"sub_domain"`
 	Namespace  string     `json:"namespace"`
-	ServiceURL string     `json:"service_url"`
 	CreatedAt  time.Time  `json:"created_at"`
 	DeployedAt *time.Time `json:"deployed_at,omitempty"`
-	Details    string     `json:"details,omitempty"` // JSON string instead of interface{}
+}
+
+func (i *Instance) GetInstanceURL() string {
+	return fmt.Sprintf("https://%s.instol.cloud", i.SubDomain)
+}
+
+func (i *Instance) GetServiceURL() string {
+	return fmt.Sprintf("n8n-main.%s.svc.cluster.local", i.Namespace)
 }
 
 //encore:api private
@@ -40,32 +45,16 @@ func (s *Service) GetInstance(ctx context.Context, req *GetInstanceRequest) (*In
 	}
 
 	response := &Instance{
-		ID:         instance.ID,
-		UserID:     instance.UserID,
-		Status:     instance.Status,
-		Domain:     fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
-		Namespace:  instance.Namespace,
-		ServiceURL: fmt.Sprintf("n8n-main.%s.svc.cluster.local", instance.Namespace),
-		CreatedAt:  instance.CreatedAt.Time,
+		ID:        instance.ID,
+		UserID:    instance.UserID,
+		Status:    instance.Status,
+		SubDomain: instance.Subdomain,
+		Namespace: instance.Namespace,
+		CreatedAt: instance.CreatedAt.Time,
 	}
 
 	if instance.DeployedAt.Valid {
 		response.DeployedAt = &instance.DeployedAt.Time
-	}
-
-	// Get live status from Kubernetes if deployed
-	if instance.Status == "deployed" && instance.Namespace != "" {
-		if err := s.gke.ConnectToCluster(ctx, s.config.DefaultClusterName, s.config.DefaultZone); err == nil {
-			// TODO: Implement GetInstanceStatus method for SQLite-based architecture
-			basicDetails := map[string]interface{}{
-				"namespace":    instance.Namespace,
-				"architecture": "sqlite_isolated",
-				"status":       "running",
-			}
-			if detailsJSON, err := json.Marshal(basicDetails); err == nil {
-				response.Details = string(detailsJSON)
-			}
-		}
 	}
 
 	return response, nil

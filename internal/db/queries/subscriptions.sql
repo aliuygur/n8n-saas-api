@@ -16,6 +16,11 @@ SELECT * FROM subscriptions
 WHERE instance_id = $1
 LIMIT 1;
 
+-- name: GetSubscriptionByPolarID :one
+SELECT * FROM subscriptions
+WHERE polar_subscription_id = $1
+LIMIT 1;
+
 -- name: GetAllSubscriptionsByUserID :many
 SELECT * FROM subscriptions
 WHERE user_id = $1

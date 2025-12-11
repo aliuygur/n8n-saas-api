@@ -2,12 +2,13 @@
 CREATE TABLE checkout_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    polar_checkout_id VARCHAR NOT NULL UNIQUE,
+    instance_id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
     subdomain VARCHAR NOT NULL,
     user_email VARCHAR NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'pending',
     success_url VARCHAR NOT NULL,
     return_url VARCHAR NOT NULL,
+    polar_checkout_id VARCHAR NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     completed_at TIMESTAMP

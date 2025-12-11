@@ -5,6 +5,7 @@ import (
 
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/aliuygur/n8n-saas-api/internal/services/provisioning"
 	"github.com/aliuygur/n8n-saas-api/internal/services/subscription"
 	"github.com/samber/lo"
 )
@@ -35,8 +36,8 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get checkout session status from subscription service
-	checkoutStatus, err := subscription.GetCheckoutStatus(r.Context(), &subscription.GetCheckoutStatusRequest{
-		CheckoutID: checkoutID,
+	checkoutStatus, err := subscription.GetCheckoutSessionByPolarID(r.Context(), &subscription.GetCheckoutSesionByPolarIDRequest{
+		PolarCheckoutID: checkoutID,
 	})
 	if err != nil {
 		rlog.Error("Failed to get checkout status", "error", err, "checkout_id", checkoutID)
@@ -45,16 +46,19 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check status
-	switch checkoutStatus.Status {
+	switch checkoutStatus.Session.Status {
 	case "pending":
 		// Still processing
 		lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
 
 	case "completed":
 		// Get instance to show URL
-		instance, err := s.db.GetInstanceBySubdomain(r.Context(), checkoutStatus.Subdomain)
+
+		instance, err := provisioning.GetInstance(r.Context(), &provisioning.GetInstanceRequest{
+			InstanceID: checkoutStatus.Session.InstanceID,
+		})
 		if err != nil {
-			rlog.Error("Failed to get instance", "error", err, "subdomain", checkoutStatus.Subdomain)
+			rlog.Error("Failed to get instance", "error", err, "subdomain", checkoutStatus.Session.Subdomain)
 			lo.Must0(components.ProvisioningFailed("Instance not found").Render(r.Context(), w))
 			return
 		}
@@ -62,7 +66,7 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 		if instance.Status == "deployed" {
 			// Stop polling by removing hx-trigger attribute
 			w.Header().Set("HX-Trigger", "stopPolling")
-			lo.Must0(components.ProvisioningComplete(instance.Subdomain).Render(r.Context(), w))
+			lo.Must0(components.ProvisioningComplete(instance.SubDomain).Render(r.Context(), w))
 		} else {
 			// Still deploying
 			lo.Must0(components.ProvisioningPending().Render(r.Context(), w))

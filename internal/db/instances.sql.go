@@ -33,14 +33,14 @@ func (q *Queries) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, gke_cluster_name, gke_project_id, gke_zone,
-    namespace, subdomain
+    id, user_id, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 ) RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type CreateInstanceParams struct {
+	ID             string `json:"id"`
 	UserID         string `json:"user_id"`
 	GkeClusterName string `json:"gke_cluster_name"`
 	GkeProjectID   string `json:"gke_project_id"`
@@ -51,6 +51,7 @@ type CreateInstanceParams struct {
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
 	row := q.db.QueryRowContext(ctx, createInstance,
+		arg.ID,
 		arg.UserID,
 		arg.GkeClusterName,
 		arg.GkeProjectID,
