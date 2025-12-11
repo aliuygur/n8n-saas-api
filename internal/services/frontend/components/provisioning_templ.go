@@ -50,7 +50,7 @@ func ProvisioningStatusPage(checkoutID string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs("/api/provisioning-status?checkout_id=" + checkoutID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 23, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 23, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -135,7 +135,7 @@ func ProvisioningComplete(instance *provisioning.Instance) templ.Component {
 		var templ_7745c5c3_Var6 templ.SafeURL
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 108, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 108, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -148,39 +148,26 @@ func ProvisioningComplete(instance *provisioning.Instance) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(instance.GetInstanceURL())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 112, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 112, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</a></div><div class=\"bg-gray-950 rounded-lg p-4 mb-4\"><p class=\"text-sm text-gray-400 mb-2\">Service URL (internal):</p><code class=\"text-sm font-mono text-gray-300 break-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</a></div><div class=\"flex gap-3\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(instance.GetServiceURL())
+		var templ_7745c5c3_Var8 templ.SafeURL
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 118, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 117, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</code></div><div class=\"flex gap-3\"><a href=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 templ.SafeURL
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 123, Col: 54}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" target=\"_blank\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Open Instance</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Go to Dashboard</a></div></div></div></div><div class=\"bg-gray-950 border border-gray-800 rounded-lg p-6\"><h4 class=\"text-lg font-semibold text-white mb-4\">Next Steps</h4><ul class=\"space-y-3 text-gray-300\"><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Complete the initial setup wizard</span></li><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Create your first workflow automation</span></li><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Connect your apps and services</span></li></ul></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" target=\"_blank\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Open Instance</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Go to Dashboard</a></div></div></div></div><div class=\"bg-gray-950 border border-gray-800 rounded-lg p-6\"><h4 class=\"text-lg font-semibold text-white mb-4\">Next Steps</h4><ul class=\"space-y-3 text-gray-300\"><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Complete the initial setup wizard</span></li><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Create your first workflow automation</span></li><li class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> <span>Connect your apps and services</span></li></ul></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -204,35 +191,35 @@ func ProvisioningFailed(errorMsg string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var10 == nil {
-			templ_7745c5c3_Var10 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Provisioning Failed</h3><p class=\"text-gray-300 mb-4\">We encountered an error while setting up your instance. Don't worry, you won't be charged.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-8 h-8 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-2xl font-bold text-white mb-2\">Provisioning Failed</h3><p class=\"text-gray-300 mb-4\">We encountered an error while setting up your instance. Don't worry, you won't be charged.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if errorMsg != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"bg-gray-950 rounded-lg p-4 mb-4\"><p class=\"text-sm text-gray-400 mb-1\">Error details:</p><p class=\"text-sm text-red-400 font-mono\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"bg-gray-950 rounded-lg p-4 mb-4\"><p class=\"text-sm text-gray-400 mb-1\">Error details:</p><p class=\"text-sm text-red-400 font-mono\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `provisioning.templ`, Line: 180, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/services/frontend/components/provisioning.templ`, Line: 174, Col: 59}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"flex gap-3\"><a href=\"/create-instance\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Try Again</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Back to Dashboard</a></div></div></div></div><div class=\"bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div class=\"text-sm text-yellow-300\"><p class=\"font-semibold mb-1\">Need help?</p><p>Contact our support team at support@instol.cloud or try creating a new instance.</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"flex gap-3\"><a href=\"/create-instance\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Try Again</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Back to Dashboard</a></div></div></div></div><div class=\"bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div class=\"text-sm text-yellow-300\"><p class=\"font-semibold mb-1\">Need help?</p><p>Contact our support team at support@instol.cloud or try creating a new instance.</p></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
