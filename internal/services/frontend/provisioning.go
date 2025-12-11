@@ -66,7 +66,7 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 		if instance.Status == "deployed" {
 			// Stop polling by removing hx-trigger attribute
 			w.Header().Set("HX-Trigger", "stopPolling")
-			lo.Must0(components.ProvisioningComplete(instance.SubDomain).Render(r.Context(), w))
+			lo.Must0(components.ProvisioningComplete(instance).Render(r.Context(), w))
 		} else {
 			// Still deploying
 			lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
