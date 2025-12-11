@@ -5,6 +5,7 @@ import (
 
 	"encore.dev/rlog"
 	"github.com/aliuygur/n8n-saas-api/internal/services/frontend/components"
+	"github.com/aliuygur/n8n-saas-api/internal/services/subscription"
 	"github.com/samber/lo"
 )
 
@@ -33,25 +34,27 @@ func (s *Service) ProvisioningStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get checkout session
-	checkoutSession, err := s.db.GetCheckoutSessionByPolarID(r.Context(), checkoutID)
+	// Get checkout session status from subscription service
+	checkoutStatus, err := subscription.GetCheckoutStatus(r.Context(), &subscription.GetCheckoutStatusRequest{
+		CheckoutID: checkoutID,
+	})
 	if err != nil {
-		rlog.Error("Failed to get checkout session", "error", err, "checkout_id", checkoutID)
+		rlog.Error("Failed to get checkout status", "error", err, "checkout_id", checkoutID)
 		lo.Must0(components.ProvisioningFailed("Checkout session not found").Render(r.Context(), w))
 		return
 	}
 
 	// Check status
-	switch checkoutSession.Status {
+	switch checkoutStatus.Status {
 	case "pending":
 		// Still processing
 		lo.Must0(components.ProvisioningPending().Render(r.Context(), w))
 
 	case "completed":
 		// Get instance to show URL
-		instance, err := s.db.GetInstanceBySubdomain(r.Context(), checkoutSession.Subdomain)
+		instance, err := s.db.GetInstanceBySubdomain(r.Context(), checkoutStatus.Subdomain)
 		if err != nil {
-			rlog.Error("Failed to get instance", "error", err, "subdomain", checkoutSession.Subdomain)
+			rlog.Error("Failed to get instance", "error", err, "subdomain", checkoutStatus.Subdomain)
 			lo.Must0(components.ProvisioningFailed("Instance not found").Render(r.Context(), w))
 			return
 		}
