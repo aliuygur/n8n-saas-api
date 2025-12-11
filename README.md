@@ -1,149 +1,256 @@
-# n8n SaaS Platform
+# n8n SaaS Platform - Standard Go Version
 
-A platform for deploying and managing n8n workflow automation instances on Google Cloud Platform (GCP).
+A managed n8n hosting platform built with standard Go, featuring Google OAuth authentication, GKE-based provisioning, and Polar subscription management.
 
-## Architecture
-
-The platform consists of the following components:
-
-### Frontend (React Router)
-- Located in `frontend-remix/`
-- Modern React application using React Router v7
-- Dark theme UI for instol.cloud branding
-- Runs on `http://localhost:5173` in development
-
-### Backend Services (Encore.dev)
-
-#### API Service (`internal/services/api/`)
-- Main backend API that the frontend communicates with
-- Handles authentication (Google OAuth)
-- Manages instance operations by calling other services
-- Runs on `http://localhost:4000`
-
-#### Provisioning Service (`internal/services/provisioning/`)
-- Manages n8n instance lifecycle (create, delete, monitor)
-- Integrates with Google Kubernetes Engine (GKE)
-- Handles subdomain validation and DNS configuration
-
-#### Subscription Service (`internal/services/subscription/`)
-- Manages user subscriptions and trials
-- Enforces instance limits based on subscription tier
-- Handles subscription lifecycle and billing
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21+
-- Node.js 18+
-- Encore CLI (`curl -L https://encore.dev/install.sh | bash`)
-- Google Cloud Platform account with GKE enabled
 
-### Development Setup
+- Go 1.24+
+- PostgreSQL database
+- Google Cloud Platform account (for GKE)
+- Cloudflare account (for DNS/tunneling)
+- Polar account (for subscriptions)
 
-1. **Start the Encore backend:**
+### Setup
+
+1. **Clone and install dependencies**
    ```bash
-   encore run
+   go mod download
    ```
-   This starts all backend services on `http://localhost:4000`
 
-2. **Start the React Router frontend:**
+2. **Configure environment**
    ```bash
-   cd frontend-remix
-   npm install
-   npm run dev
+   cp .env.example .env
+   # Edit .env with your configuration
    ```
-   This starts the frontend on `http://localhost:5173`
 
-3. **Access the application:**
-   - Open `http://localhost:5173` in your browser
-   - Login with Google
-   - Create and manage n8n instances
+3. **Run database migrations**
+   ```bash
+   psql $DATABASE_URL < migrations/001_init.up.sql
+   ```
 
-## Project Structure
+4. **Build and run**
+   ```bash
+   make build
+   make run
+   ```
+
+   Or directly:
+   ```bash
+   go run ./cmd/server
+   ```
+
+The server will start on `http://localhost:8080` by default.
+
+## 📁 Project Structure
 
 ```
-n8n-host/
-├── frontend-remix/          # React Router frontend application
-│   ├── app/
-│   │   ├── routes/         # Page routes
-│   │   ├── app.css         # Global styles
-│   │   └── root.tsx        # Root component
-│   └── package.json
-│
+.
+├── cmd/
+│   └── server/          # Main application entry point
 ├── internal/
-│   ├── auth/               # Shared authentication utilities
-│   ├── db/                 # Database queries (sqlc generated)
-│   └── services/
-│       ├── api/            # Main API service (NEW)
-│       │   ├── auth.go
-│       │   ├── auth_google.go
-│       │   ├── instances.go
-│       │   ├── service.go
-│       │   └── migrations/
-│       ├── provisioning/   # Instance provisioning service
-│       └── subscription/   # Subscription management service
-│
-├── k8s/                    # Kubernetes manifests
-├── scripts/                # Utility scripts
-└── encore.app              # Encore configuration
+│   ├── auth/            # Authentication utilities
+│   ├── cloudflare/      # Cloudflare client
+│   ├── config/          # Configuration management
+│   ├── db/              # SQLC generated database code
+│   ├── gke/             # Google Kubernetes Engine client
+│   ├── handler/         # HTTP handlers (main business logic)
+│   └── services/        # Old Encore services (being phased out)
+├── migrations/          # Database migrations
+├── pkg/
+│   └── domainutils/     # Domain validation utilities
+└── Makefile             # Build and development commands
 ```
 
-## API Documentation
+## 🛠 Development
 
-See [API Service README](internal/services/api/README.md) for detailed API documentation.
-
-## Key Features
-
-- **One-Click Deployment**: Deploy n8n instances on GKE with a single click
-- **Automatic SSL**: Let's Encrypt certificates automatically provisioned
-- **Google OAuth**: Secure authentication with Google accounts
-- **Instance Management**: Create, monitor, and delete instances
-- **Subscription Management**: Trial accounts and paid subscriptions
-- **Dark Theme UI**: Modern, clean interface
-
-## Database
-
-The platform uses PostgreSQL databases managed by Encore:
-
-- `api`: User accounts and sessions
-- `provisioning`: Instance metadata
-- `subscription`: Subscription and billing data
-
-## Environment Configuration
-
-Configuration is managed through Encore secrets. Set these values:
+### Available Make Commands
 
 ```bash
-encore secret set GoogleClientID
-encore secret set GoogleClientSecret
-encore secret set GoogleRedirectURL
+make build      # Build the application
+make run        # Build and run
+make dev        # Run with live reload (requires air)
+make clean      # Clean build artifacts
+make sqlc       # Generate SQLC code
+make templ      # Generate templ templates
+make test       # Run tests
+make fmt        # Format code
+make tidy       # Tidy dependencies
 ```
 
-## Deployment
+### Environment Variables
 
-### Backend Deployment
+See [.env.example](.env.example) for all required configuration. Key variables:
+
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET` - Secret for JWT token signing
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth
+- `GCP_*` - Google Cloud Platform configuration
+- `CLOUDFLARE_*` - Cloudflare API configuration
+- `POLAR_*` - Polar subscription configuration
+
+## 🔄 API Routes
+
+### Authentication
+- `GET /login` - Login page
+- `GET /auth/google` - Initiate Google OAuth
+- `GET /auth/google/callback` - OAuth callback
+- `GET /api/auth/logout` - Logout
+- `GET /api/auth/me` - Get current user
+
+### Frontend
+- `GET /` - Home page
+- `GET /dashboard` - User dashboard
+- `GET /create-instance` - Create instance page
+- `GET /provisioning` - Provisioning status page
+
+### Instance Management
+- `POST /api/create-instance` - Create new instance
+- `POST /api/check-subdomain` - Check subdomain availability
+- `DELETE /instances/{id}` - Delete instance
+- `GET /api/delete-modal/{id}` - Get delete confirmation modal
+- `GET /api/provisioning-status` - Get provisioning status (HTMX polling)
+
+### Webhooks
+- `POST /api/webhooks/polar` - Polar subscription webhooks
+
+### Static Files
+- `/static/*` - Static assets (CSS, images, etc.)
+
+## 🏗 Architecture
+
+### Handler-Based Architecture
+
+The application uses a handler-based architecture where all HTTP endpoints are managed by the `internal/handler` package:
+
+```go
+// Handler holds all dependencies
+type Handler struct {
+    db             *db.Queries
+    gke            *gke.Client
+    cloudflare     *cloudflare.Client
+    polarClient    *polargo.Polar
+    oauth2Config   *oauth2.Config
+    jwtSecret      []byte
+    config         *config.Config
+    logger         *slog.Logger
+}
+```
+
+### Key Components
+
+- **Auth**: JWT-based authentication with Google OAuth
+- **Database**: SQLC for type-safe SQL queries
+- **Logging**: Standard library `log/slog` for structured logging
+- **Provisioning**: GKE-based instance deployment
+- **Subscriptions**: Polar for payment processing
+- **Templates**: templ for type-safe HTML templates
+
+## 🔐 Authentication Flow
+
+1. User clicks "Login with Google"
+2. Redirected to Google OAuth
+3. Callback creates/updates user in database
+4. JWT token issued and stored in HTTP-only cookie
+5. Subsequent requests validated via JWT middleware
+
+## 🚢 Deployment
+
+### Building for Production
+
 ```bash
-# Deploy to Encore Cloud
-encore deploy
+# Build optimized binary
+CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o bin/server ./cmd/server
 
-# Or deploy to your own infrastructure
-encore build docker
+# Run
+./bin/server
 ```
 
-### Frontend Deployment
+### Docker (Example)
+
+```dockerfile
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o server ./cmd/server
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/server .
+COPY --from=builder /app/internal/services/frontend/static ./internal/services/frontend/static
+CMD ["./server"]
+```
+
+## 📊 Database Schema
+
+The application uses a unified PostgreSQL schema with the following tables:
+
+- `users` - User accounts
+- `sessions` - Session management
+- `instances` - n8n instance records
+- `subscriptions` - Polar subscriptions
+- `checkout_sessions` - Polar checkout tracking
+
+See [migrations/001_init.up.sql](migrations/001_init.up.sql) for full schema.
+
+## 🧪 Testing
+
 ```bash
-cd frontend-remix
-npm run build
-# Deploy the build/ directory to your static hosting service
+# Run all tests
+make test
+
+# Run with coverage
+go test -v -cover ./...
+
+# Run specific package
+go test ./internal/handler
 ```
 
-## Contributing
+## 📚 Documentation
+
+- [MIGRATION.md](MIGRATION.md) - Detailed migration guide from Encore
+- [MIGRATION_STATUS.md](MIGRATION_STATUS.md) - Current migration progress
+- [.env.example](.env.example) - Environment variable reference
+
+## 🐛 Troubleshooting
+
+### Build Errors
+
+If you encounter build errors related to Encore:
+```bash
+go mod tidy
+go clean -modcache
+go mod download
+```
+
+### Database Connection
+
+Ensure your DATABASE_URL is correctly formatted:
+```
+postgresql://user:password@localhost:5432/database?sslmode=disable
+```
+
+### Missing Templates
+
+If templ templates are missing:
+```bash
+make templ
+```
+
+## 📝 License
+
+[Your License Here]
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Run tests and formatting
+5. Submit a pull request
 
-## License
+## 📧 Support
 
-[Your License Here]
+For issues and questions, please open a GitHub issue.
