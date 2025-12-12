@@ -50,11 +50,11 @@ spec:
                 name: cloudflare-tunnel
           resources:
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 1000m
+              memory: 1Gi
             requests:
-              cpu: 1m
-              memory: 10Mi
+              cpu: 250m
+              memory: 512Mi
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true
@@ -82,4 +82,4 @@ metadata:
     component: shared-tunnel
 type: Opaque
 data:
-  token: eyJhIjoiMGYyYTE2NjU1MWFhM2M1YWZhNjE5MzVlMTdhMTg4ZTUiLCJ0IjoiYTg0ODY4OTktY2MxMi00NDY2LWEwMzMtNmYwMWE2YTllNmQ3IiwicyI6Ill6QmpabUl4TUdVdFlqRXlZeTAwTkRSaUxXSXdNbVl0WkRRM1pUQXhPREJpTjJSbCJ9
+  token: ZXlKaElqb2lNR1l5WVRFMk5qVTFNV0ZoTTJNMVlXWmhOakU1TXpWbE1UZGhNVGc0WlRVaUxDSjBJam9pWVRnME9EWTRPVGt0WTJNeE1pMDBORFkyTFdFd016TXRObVl3TVdFMllUbGxObVEzSWl3aWN5STZJbGw2UW1wYWJVbDRUVWRWZEZscVJYbFplVEF3VGtSU2FVeFhTWGROYlZsMFdrUlJNMXBVUVhoUFJFSnBUakpTYkNKOQ==
