@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/db"
-	"github.com/aliuygur/n8n-saas-api/internal/provisioning"
+	"github.com/aliuygur/n8n-saas-api/internal/provisioning/n8ntemplates"
 	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 	"github.com/samber/lo"
 )
@@ -199,17 +199,8 @@ func (h *Handler) createInstanceInternal(ctx context.Context, req CreateInstance
 		return result, nil
 	}
 
-	// Use provided encryption key or generate a new one
-	encryptionKey := req.EncryptionKey
-	if encryptionKey == "" {
-		encryptionKey, err = generateSecureKey(32)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate encryption key: %w", err)
-		}
-	}
-
 	// Deploy the instance
-	if err := h.deployInstance(ctx, instance, encryptionKey); err != nil {
+	if err := h.deployInstance(ctx, instance); err != nil {
 		return nil, fmt.Errorf("failed to deploy instance: %w", err)
 	}
 
@@ -225,7 +216,7 @@ func (h *Handler) deleteInstanceInternal(ctx context.Context, instanceID string)
 	}
 
 	// Delete from Kubernetes
-	if err := h.provisioning.DeleteN8NInstance(ctx, instance.Namespace); err != nil {
+	if err := h.provisioning.DeleteNamespace(ctx, instance.Namespace); err != nil {
 		h.logger.Error("Failed to delete namespace", slog.Any("error", err))
 		// Continue with database deletion even if K8s deletion fails
 	}
@@ -282,32 +273,30 @@ func (h *Handler) generateUniqueNamespace(ctx context.Context, userID string) (s
 }
 
 // deployInstance deploys an instance to Kubernetes
-func (h *Handler) deployInstance(ctx context.Context, instance db.Instance, encryptionKey string) error {
+func (h *Handler) deployInstance(ctx context.Context, instance db.Instance) error {
 	h.logger.Info("Starting deployment", slog.String("instance_id", instance.ID))
 
+	encryptionKey, err := generateSecureKey(32)
+	if err != nil {
+		return fmt.Errorf("failed to generate encryption key: %w", err)
+	}
 	// Deploy n8n instance
 	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
-	n8nInstance := provisioning.N8NInstance{
+	n8nInstance := &n8ntemplates.N8N_V1{
 		Namespace:     instance.Namespace,
-		CPURequest:    "150m",
-		MemoryRequest: "512Mi",
-		CPULimit:      "500m",
-		MemoryLimit:   "1Gi",
-		StorageSize:   "5Gi",
 		EncryptionKey: encryptionKey,
 		BaseURL:       domain,
 	}
 
-	if err := h.provisioning.DeployN8NInstance(ctx, n8nInstance); err != nil {
+	if err := h.provisioning.Apply(ctx, n8nInstance); err != nil {
 		return fmt.Errorf("failed to deploy n8n: %w", err)
 	}
 
 	// Mark as deployed
-	_, err := h.db.UpdateInstanceDeployed(ctx, db.UpdateInstanceDeployedParams{
+	if _, err := h.db.UpdateInstanceDeployed(ctx, db.UpdateInstanceDeployedParams{
 		ID:     instance.ID,
 		Status: "deployed",
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("failed to update instance status: %w", err)
 	}
 
@@ -345,8 +334,8 @@ func (h *Handler) TestDeployInstance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Test configuration
-	namespace := "n8n-test-abc123"
-	subdomain := "test-dummy"
+	namespace := "n8n-test-abc2"
+	subdomain := "aliko"
 
 	h.logger.Info("Starting test deployment",
 		slog.String("namespace", namespace),
@@ -362,18 +351,13 @@ func (h *Handler) TestDeployInstance(w http.ResponseWriter, r *http.Request) {
 
 	// Deploy n8n instance directly without database interaction
 	domain := fmt.Sprintf("https://%s.instol.cloud", subdomain)
-	n8nInstance := provisioning.N8NInstance{
+	n8nInstance := &n8ntemplates.N8N_V1{
 		Namespace:     namespace,
-		CPURequest:    "150m",
-		MemoryRequest: "512Mi",
-		CPULimit:      "500m",
-		MemoryLimit:   "1Gi",
-		StorageSize:   "5Gi",
 		EncryptionKey: encryptionKey,
 		BaseURL:       domain,
 	}
 
-	if err := h.provisioning.DeployN8NInstance(ctx, n8nInstance); err != nil {
+	if err := h.provisioning.Apply(ctx, n8nInstance); err != nil {
 		h.logger.Error("Failed to deploy n8n", slog.Any("error", err))
 		http.Error(w, fmt.Sprintf("Failed to deploy n8n: %v", err), http.StatusInternalServerError)
 		return
@@ -405,9 +389,8 @@ func (h *Handler) TestDeployInstance(w http.ResponseWriter, r *http.Request) {
 
 // CreateInstanceRequest represents a request to create an instance
 type CreateInstanceRequest struct {
-	InstanceID    string
-	UserID        string
-	Subdomain     string
-	DeployNow     bool
-	EncryptionKey string
+	InstanceID string
+	UserID     string
+	Subdomain  string
+	DeployNow  bool
 }

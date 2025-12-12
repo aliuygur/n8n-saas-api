@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: instol-app
+  namespace: instol
+  labels:
+    app: instol-app
+    component: application
+spec:
+  replicas: 1  # Autopilot manages scaling
+  selector:
+    matchLabels:
+      app: instol-app
+  template:
+    metadata:
+      labels:
+        app: instol-app
+    spec:
+      containers:
+        - name: instol-app
+          image: REPLACE_WITH_IMAGE # e.g. us-central1-docker.pkg.dev/PROJECT/REPO/IMAGE:TAG
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: instol-app-secrets  # Store sensitive env vars in a Secret
+            - configMapRef:
+                name: instol-app-config   # Store non-sensitive env vars in a ConfigMap
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+      automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: instol-service
+  namespace: instol
+  labels:
+    app: instol-app
+spec:
+  selector:
+    app: instol-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

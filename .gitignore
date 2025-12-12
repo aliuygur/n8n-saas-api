@@ -34,8 +34,6 @@ encore.gen.cue
 /encore.gen
 encore.app
 
-# Compiled templates
-*_templ.go
 
 # OS
 .DS_Store

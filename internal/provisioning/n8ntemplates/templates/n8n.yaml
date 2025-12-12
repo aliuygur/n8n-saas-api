@@ -15,7 +15,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: PLACEHOLDER_STORAGE_SIZE
+      storage: 10Gi
   storageClassName: premium-rwo
 ---
 apiVersion: apps/v1
@@ -75,11 +75,11 @@ spec:
           runAsGroup: 1000
         resources:
           requests:
-            cpu: PLACEHOLDER_CPU_REQUEST
-            memory: PLACEHOLDER_MEMORY_REQUEST
+            cpu: 100m
+            memory: 256Mi
           limits:
-            cpu: PLACEHOLDER_CPU_LIMIT
-            memory: PLACEHOLDER_MEMORY_LIMIT
+            cpu: 500m
+            memory: 512Mi
       volumes:
       - name: n8n-data
         persistentVolumeClaim:

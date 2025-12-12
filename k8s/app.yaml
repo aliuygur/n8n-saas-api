@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: instol
+  labels:
+    name: instol
+    component: application
+    purpose: business-application
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: instol-app
+  namespace: instol
+  labels:
+    app: instol-app
+    component: application
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: instol-app
+  template:
+    metadata:
+      labels:
+        app: instol-app
+    spec:
+      containers:
+        - name: instol-app
+          image: instol/app:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            readOnlyRootFilesystem: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: instol-service
+  namespace: instol
+  labels:
+    app: instol-app
+spec:
+  selector:
+    app: instol-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

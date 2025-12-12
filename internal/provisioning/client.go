@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aliuygur/n8n-saas-api/internal/provisioning/n8ntemplates"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,29 +23,25 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// getConfig tries in-cluster first, then falls back to local kubeconfig (KUBECONFIG/$HOME/.kube/config)
+func getConfig() (*rest.Config, error) {
+	// in-cluster
+	if cfg, err := rest.InClusterConfig(); err == nil {
+		return cfg, nil
+	}
+
+	// fallback to kubeconfig
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	).ClientConfig()
+}
+
 // Client handles N8N instance provisioning on Kubernetes
 type Client struct {
 	k8sClient  *kubernetes.Clientset
 	restConfig *rest.Config
 }
-
-// N8NInstance represents an N8N deployment configuration
-type N8NInstance struct {
-	Namespace     string
-	CPURequest    string
-	MemoryRequest string
-	CPULimit      string
-	MemoryLimit   string
-	StorageSize   string
-	EncryptionKey string
-	BaseURL       string
-}
-
-// Constants for N8N component names
-const (
-	N8NMainName = "n8n-main"
-	N8NDBName   = "n8n-db"
-)
 
 // NewClient creates a new provisioning client
 // Tries in-cluster config first, then falls back to kubeconfig
@@ -67,64 +62,28 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-// getConfig tries in-cluster first, then falls back to local kubeconfig (KUBECONFIG/$HOME/.kube/config)
-func getConfig() (*rest.Config, error) {
-	// in-cluster
-	if cfg, err := rest.InClusterConfig(); err == nil {
-		return cfg, nil
-	}
-
-	// fallback to kubeconfig
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		&clientcmd.ConfigOverrides{},
-	).ClientConfig()
-}
-
-// NewClientFromConfig creates a new provisioning client from rest.Config
-func NewClientFromConfig(config *rest.Config) (*Client, error) {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
-	}
-
-	return &Client{
-		k8sClient:  clientset,
-		restConfig: config,
-	}, nil
-}
-
 // K8sClient returns the Kubernetes clientset
 func (c *Client) K8sClient() kubernetes.Interface {
 	return c.k8sClient
 }
 
-// DeployN8NInstance deploys an N8N instance using YAML templates
-func (c *Client) DeployN8NInstance(ctx context.Context, instance N8NInstance) error {
+type Template interface {
+	Content() ([]byte, error)
+}
+
+// Apply deploys resources using YAML templates
+func (c *Client) Apply(ctx context.Context, template Template) error {
 	if c.restConfig == nil {
 		return fmt.Errorf("kubernetes client not connected")
 	}
 
-	// Map N8NInstance to n8ntemplates.Config
-	templateConfig := n8ntemplates.Config{
-		Namespace:     instance.Namespace,
-		EncryptionKey: instance.EncryptionKey,
-		BaseURL:       instance.BaseURL,
-		CPURequest:    instance.CPURequest,
-		MemoryRequest: instance.MemoryRequest,
-		CPULimit:      instance.CPULimit,
-		MemoryLimit:   instance.MemoryLimit,
-		StorageSize:   instance.StorageSize,
-	}
-
-	// Render templates using n8ntemplates package
-	renderedYAML, err := n8ntemplates.Render(templateConfig)
+	yaml, err := template.Content()
 	if err != nil {
-		return fmt.Errorf("failed to render templates: %w", err)
+		return fmt.Errorf("failed to render template: %w", err)
 	}
 
 	// Apply YAML to cluster
-	if err := c.applyMultiYAML(ctx, []byte(renderedYAML)); err != nil {
+	if err := c.applyMultiYAML(ctx, yaml); err != nil {
 		return fmt.Errorf("failed to apply YAML: %w", err)
 	}
 
@@ -147,8 +106,8 @@ func (c *Client) NamespaceExists(ctx context.Context, namespace string) (bool, e
 	return true, nil
 }
 
-// DeleteN8NInstance deletes an N8N instance and its associated resources
-func (c *Client) DeleteN8NInstance(ctx context.Context, namespace string) error {
+// DeleteNamespace deletes a namespace and its associated resources
+func (c *Client) DeleteNamespace(ctx context.Context, namespace string) error {
 	if c.k8sClient == nil {
 		return fmt.Errorf("kubernetes client not connected")
 	}
