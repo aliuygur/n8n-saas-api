@@ -31,4 +31,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Public webhooks (no auth)
 	mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
+
+	// Temporary test endpoints
+	mux.HandleFunc("POST /api/test/deploy-instance", h.TestDeployInstance)
 }

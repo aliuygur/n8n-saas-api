@@ -50,11 +50,11 @@ spec:
                 name: cloudflare-tunnel
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
-            requests:
-              cpu: 250m
+              cpu: 500m
               memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
           imagePullPolicy: Always
           securityContext:
             readOnlyRootFilesystem: true

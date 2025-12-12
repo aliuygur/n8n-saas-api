@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -337,6 +338,69 @@ func generateSecureKey(length int) (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+// TestDeployInstance is a temporary endpoint to test instance deployment
+func (h *Handler) TestDeployInstance(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Test configuration
+	namespace := "n8n-test-abc123"
+	subdomain := "test-dummy"
+
+	h.logger.Info("Starting test deployment",
+		slog.String("namespace", namespace),
+		slog.String("subdomain", subdomain))
+
+	// Generate encryption key
+	encryptionKey, err := generateSecureKey(32)
+	if err != nil {
+		h.logger.Error("Failed to generate encryption key", slog.Any("error", err))
+		http.Error(w, fmt.Sprintf("Failed to generate encryption key: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Deploy n8n instance directly without database interaction
+	domain := fmt.Sprintf("https://%s.instol.cloud", subdomain)
+	n8nInstance := provisioning.N8NInstance{
+		Namespace:     namespace,
+		CPURequest:    "150m",
+		MemoryRequest: "512Mi",
+		CPULimit:      "500m",
+		MemoryLimit:   "1Gi",
+		StorageSize:   "5Gi",
+		EncryptionKey: encryptionKey,
+		BaseURL:       domain,
+	}
+
+	if err := h.provisioning.DeployN8NInstance(ctx, n8nInstance); err != nil {
+		h.logger.Error("Failed to deploy n8n", slog.Any("error", err))
+		http.Error(w, fmt.Sprintf("Failed to deploy n8n: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Add Cloudflare tunnel route for external access
+	serviceURL := fmt.Sprintf("http://n8n-main.%s.svc.cluster.local", namespace)
+	if err := h.cloudflare.AddTunnelRoute(ctx, domain, serviceURL); err != nil {
+		h.logger.Error("Failed to add Cloudflare tunnel route",
+			slog.Any("error", err),
+			slog.String("domain", domain),
+			slog.String("service_url", serviceURL))
+		// Don't fail the deployment if tunnel route creation fails
+	} else {
+		h.logger.Info("Successfully added Cloudflare tunnel route",
+			slog.String("domain", domain),
+			slog.String("service_url", serviceURL))
+	}
+
+	h.logger.Info("Test deployment completed successfully",
+		slog.String("namespace", namespace),
+		slog.String("subdomain", subdomain))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, `{"status":"success","namespace":"%s","subdomain":"%s","domain":"%s"}`,
+		namespace, subdomain, domain)
 }
 
 // CreateInstanceRequest represents a request to create an instance

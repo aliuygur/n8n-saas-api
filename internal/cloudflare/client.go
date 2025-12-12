@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
-
-	"encore.dev/rlog"
 )
 
 // Config holds Cloudflare configuration
@@ -58,7 +57,7 @@ func (c *Client) AddTunnelRoute(ctx context.Context, hostname, serviceURL string
 	}
 
 	// First, get the current tunnel configuration
-	currentConfig, err := c.getTunnelConfig(ctx)
+	currentConfig, err := c.GetTunnelConfig(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get current tunnel config: %w", err)
 	}
@@ -81,7 +80,7 @@ func (c *Client) AddTunnelRoute(ctx context.Context, hostname, serviceURL string
 		return fmt.Errorf("failed to create DNS record: %w", err)
 	}
 
-	rlog.Info("Successfully added tunnel route and DNS record",
+	slog.Info("Successfully added tunnel route and DNS record",
 		"hostname", hostname,
 		"service", serviceURL,
 		"tunnel_id", c.config.TunnelID)
@@ -89,8 +88,8 @@ func (c *Client) AddTunnelRoute(ctx context.Context, hostname, serviceURL string
 	return nil
 }
 
-// getTunnelConfig retrieves the current tunnel configuration
-func (c *Client) getTunnelConfig(ctx context.Context) (map[string]any, error) {
+// GetTunnelConfig retrieves the current tunnel configuration
+func (c *Client) GetTunnelConfig(ctx context.Context) (map[string]any, error) {
 	url := fmt.Sprintf("%s/accounts/%s/cfd_tunnel/%s/configurations",
 		c.baseURL, c.config.AccountID, c.config.TunnelID)
 
@@ -210,7 +209,7 @@ func (c *Client) addRouteToConfig(currentConfig map[string]any, newRoute TunnelR
 	// Check if the route already exists to avoid duplicates
 	for _, rule := range ingress {
 		if hostname, hasHostname := rule["hostname"]; hasHostname && hostname == newRoute.Hostname {
-			rlog.Debug("Route already exists, skipping", "hostname", newRoute.Hostname)
+			slog.Debug("Route already exists, skipping", "hostname", newRoute.Hostname)
 			return currentConfig
 		}
 	}
@@ -249,7 +248,7 @@ func (c *Client) addHeaders(req *http.Request) {
 // RemoveTunnelRoute removes a route from the Cloudflare tunnel
 func (c *Client) RemoveTunnelRoute(ctx context.Context, hostname string) error {
 	// Get current configuration
-	currentConfig, err := c.getTunnelConfig(ctx)
+	currentConfig, err := c.GetTunnelConfig(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get current tunnel config: %w", err)
 	}
@@ -265,10 +264,10 @@ func (c *Client) RemoveTunnelRoute(ctx context.Context, hostname string) error {
 	// Delete the DNS record
 	if err := c.DeleteDNSRecord(ctx, hostname); err != nil {
 		// Log the error but don't fail the entire operation
-		rlog.Error("Failed to delete DNS record", "error", err, "hostname", hostname)
+		slog.Error("Failed to delete DNS record", "error", err, "hostname", hostname)
 	}
 
-	rlog.Info("Successfully removed tunnel route and DNS record", "hostname", hostname)
+	slog.Info("Successfully removed tunnel route and DNS record", "hostname", hostname)
 	return nil
 }
 
@@ -318,7 +317,7 @@ func (c *Client) ResetTunnelConfig(ctx context.Context) error {
 		return fmt.Errorf("failed to reset tunnel config: %w", err)
 	}
 
-	rlog.Info("Successfully reset tunnel configuration")
+	slog.Info("Successfully reset tunnel configuration")
 	return nil
 }
 
@@ -363,7 +362,7 @@ func (c *Client) CreateCNAMERecord(ctx context.Context, hostname string) error {
 	}
 
 	if existingRecord != nil {
-		rlog.Info("DNS record already exists", "hostname", hostname, "record_id", existingRecord.ID)
+		slog.Info("DNS record already exists", "hostname", hostname, "record_id", existingRecord.ID)
 		return nil
 	}
 
@@ -419,7 +418,7 @@ func (c *Client) CreateCNAMERecord(ctx context.Context, hostname string) error {
 		return fmt.Errorf("cloudflare API returned success=false: %v", response.Errors)
 	}
 
-	rlog.Info("Successfully created DNS record",
+	slog.Info("Successfully created DNS record",
 		"hostname", hostname,
 		"target", tunnelTarget,
 		"record_id", response.Result.ID)
@@ -486,7 +485,7 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, hostname string) error {
 	}
 
 	if record == nil {
-		rlog.Info("DNS record not found, nothing to delete", "hostname", hostname)
+		slog.Info("DNS record not found, nothing to delete", "hostname", hostname)
 		return nil
 	}
 
@@ -528,6 +527,6 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, hostname string) error {
 		return fmt.Errorf("cloudflare API returned success=false: %v", response.Errors)
 	}
 
-	rlog.Info("Successfully deleted DNS record", "hostname", hostname, "record_id", record.ID)
+	slog.Info("Successfully deleted DNS record", "hostname", hostname, "record_id", record.ID)
 	return nil
 }
