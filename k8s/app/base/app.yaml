@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: instol
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: instol-app
+  namespace: instol
+  labels:
+    app: instol-app
+    component: application
+spec:
+  replicas: 1  # Autopilot manages scaling
+  selector:
+    matchLabels:
+      app: instol-app
+  template:
+    metadata:
+      labels:
+        app: instol-app
+    spec:
+      containers:
+        - name: instol-app
+          image: us-central1-docker.pkg.dev/instol/n8n-saas/n8n-saas-api:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: instol-env
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            readOnlyRootFilesystem: true
+      automountServiceAccountToken: true
+      serviceAccountName: instol-app-sa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: instol-app
+  namespace: instol
+spec:
+  selector:
+    app: instol-app
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: instol-app-sa
+  namespace: instol
+  annotations:
+    iam.gke.io/gcp-service-account: "n8n-gke-manager@instol.iam.gserviceaccount.com"

@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: instol-prod
+
+resources:
+  - ../../base
+
+secretGenerator:
+  - name: instol-env
+    envs:
+      - .env.prod
+    type: Opaque
+
+generatorOptions:
+  disableNameSuffixHash: false
