@@ -57,7 +57,7 @@ func New(cfg *config.Config, database *sql.DB, logger *slog.Logger) (*Handler, e
 	oauth2Config := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,
 		ClientSecret: cfg.Google.ClientSecret,
-		RedirectURL:  cfg.Google.RedirectURL,
+		RedirectURL:  cfg.Server.BaseURL("/auth/google/callback"),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",

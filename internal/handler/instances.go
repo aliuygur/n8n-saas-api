@@ -45,7 +45,7 @@ func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create checkout session for the subscription
-	baseURL := h.config.Server.BaseURL()
+	baseURL := h.config.Server.BaseURL("/")
 	instanceID := uuid.New().String()
 	checkoutResp, err := h.createCheckoutInternal(r.Context(), CreateCheckoutRequest{
 		UserID:     user.UserID,

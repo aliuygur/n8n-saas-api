@@ -9,13 +9,13 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	Server      ServerConfig
-	Database    DatabaseConfig
-	Google      GoogleConfig
-	JWT         JWTConfig
-	GCP         GCPConfig
-	Cloudflare  CloudflareConfig
-	Polar       PolarConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	Google     GoogleConfig
+	JWT        JWTConfig
+	GCP        GCPConfig
+	Cloudflare CloudflareConfig
+	Polar      PolarConfig
 }
 
 // ServerConfig holds server configuration
@@ -27,10 +27,10 @@ type ServerConfig struct {
 
 // BaseURL returns the base URL for the application
 // If APIBaseURL is configured, it returns that, otherwise constructs from host:port
-func (s *ServerConfig) BaseURL() string {
+func (s *ServerConfig) BaseURL(path string) string {
 	// Use configured API base URL if available
 	if s.APIBaseURL != "" {
-		return s.APIBaseURL
+		return s.APIBaseURL + path
 	}
 
 	// Fall back to host:port
@@ -39,7 +39,7 @@ func (s *ServerConfig) BaseURL() string {
 	if host == "0.0.0.0" || host == "" {
 		host = "localhost"
 	}
-	return fmt.Sprintf("http://%s:%s", host, s.Port)
+	return fmt.Sprintf("http://%s:%s%s", host, s.Port, path)
 }
 
 // DatabaseConfig holds database configuration
@@ -91,7 +91,7 @@ func Load() (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
 			Port:       getEnv("PORT", "8080"),
-			Host:       getEnv("HOST", "localhost"),
+			Host:       getEnv("HOST", "0.0.0.0"),
 			APIBaseURL: getEnv("API_BASE_URL", ""),
 		},
 		Database: DatabaseConfig{
@@ -100,7 +100,6 @@ func Load() (*Config, error) {
 		Google: GoogleConfig{
 			ClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 			ClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-			RedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", ""),
