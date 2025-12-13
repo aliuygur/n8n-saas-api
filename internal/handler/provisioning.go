@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -147,7 +146,7 @@ func (h *Handler) createInstanceInternal(ctx context.Context, req CreateInstance
 	}
 
 	// Generate unique namespace
-	namespace, err := h.generateUniqueNamespace(ctx, req.UserID)
+	namespace, err := h.generateUniqueNamespace(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate unique namespace: %w", err)
 	}
@@ -191,14 +190,6 @@ func (h *Handler) createInstanceInternal(ctx context.Context, req CreateInstance
 		DeletedAt:      instance.DeletedAt,
 	}
 
-	// If DeployNow is false, just return the pending instance
-	if !req.DeployNow {
-		h.logger.Info("Pending instance created",
-			slog.String("instance_id", instance.ID),
-			slog.String("subdomain", req.Subdomain))
-		return result, nil
-	}
-
 	// Deploy the instance
 	if err := h.deployInstance(ctx, instance); err != nil {
 		return nil, fmt.Errorf("failed to deploy instance: %w", err)
@@ -236,26 +227,19 @@ func (h *Handler) deleteInstanceInternal(ctx context.Context, instanceID string)
 }
 
 // generateUniqueNamespace creates a unique namespace by checking database
-func (h *Handler) generateUniqueNamespace(ctx context.Context, userID string) (string, error) {
-	// Sanitize userID to be kubernetes-compliant
-	sanitized := regexp.MustCompile(`[^a-z0-9-]`).ReplaceAllString(strings.ToLower(userID), "")
+func (h *Handler) generateUniqueNamespace(ctx context.Context) (string, error) {
 
 	// Try to find a unique namespace
 	maxAttempts := 10
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for range maxAttempts {
 		// Generate 8-character alphanumeric random string
 		randomStr := lo.RandomString(8, append(lo.LowerCaseLettersCharset, lo.NumbersCharset...))
 
-		// Format: n8n-{userid}-{8-alphanumeric}
-		namespace := fmt.Sprintf("n8n-%s-%s", sanitized, strings.ToLower(randomStr))
-
+		// Format: n8n-{8-alphanumeric}
+		namespace := fmt.Sprintf("n8n-%s", strings.ToLower(randomStr))
 		// Truncate if too long (Kubernetes limit is 63 characters)
 		if len(namespace) > 63 {
-			maxUserIDLength := 63 - 4 - 8 - 2 // 63 - "n8n-" - random - "-"
-			if len(sanitized) > maxUserIDLength {
-				sanitized = sanitized[:maxUserIDLength]
-			}
-			namespace = fmt.Sprintf("n8n-%s-%s", sanitized, strings.ToLower(randomStr))
+			namespace = namespace[:63]
 		}
 
 		// Check if namespace exists in database
@@ -392,5 +376,5 @@ type CreateInstanceRequest struct {
 	InstanceID string
 	UserID     string
 	Subdomain  string
-	DeployNow  bool
+	// DeployNow field removed
 }

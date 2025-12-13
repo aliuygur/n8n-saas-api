@@ -1,6 +1,6 @@
 # TODO
 
-[] create secret for .env file and mount it as volume instead of env vars injection at k8s/app.yaml
+[*] create secret for .env file and mount it as volume instead of env vars injection at k8s/app.yaml
 [] add footer with privacy policy and terms of service links
 [] add webhook for stage.instol.cloud in polar.sh
 [] add title, description and og meta tags to HTML head for better SEO

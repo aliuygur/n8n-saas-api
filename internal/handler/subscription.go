@@ -286,12 +286,11 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 		return nil
 	}
 
-	// Create and deploy the instance
+	// Create and deploy the instance (DeployNow removed)
 	instance, err := h.createInstanceInternal(ctx, CreateInstanceRequest{
 		InstanceID: checkoutSession.InstanceID,
 		UserID:     checkoutSession.UserID,
 		Subdomain:  checkoutSession.Subdomain,
-		DeployNow:  true,
 	})
 	if err != nil {
 		h.logger.Error("Failed to create instance",

@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: instol-namespace-admin-binding
+subjects:
+  - kind: ServiceAccount
+    name: instol-app-sa
+    namespace: instol
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: instol-namespace-admin
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: instol-namespace-admin
+rules:
+  # Namespace lifecycle
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+
+  # Workloads
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+
+  # Services
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+
+  # Pods (mostly indirect, but needed)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+
+  # PVC
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+
+  # ConfigMaps (safe)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
