@@ -14,25 +14,22 @@ import (
 
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/provisioning/n8ntemplates"
-	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
+	"github.com/aliuygur/n8n-saas-api/internal/types"
 	"github.com/samber/lo"
 )
 
 // Instance represents an instance for internal use
 type Instance struct {
-	ID             string
-	UserID         string
-	Status         string
-	GkeClusterName string
-	GkeProjectID   string
-	GkeZone        string
-	Namespace      string
-	SubDomain      string
-	Subdomain      string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	DeployedAt     sql.NullTime
-	DeletedAt      sql.NullTime
+	ID         string
+	UserID     string
+	Status     string
+	Namespace  string
+	SubDomain  string
+	Subdomain  string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeployedAt sql.NullTime
+	DeletedAt  sql.NullTime
 }
 
 // checkSubdomainExistsInternal checks if a subdomain already exists
@@ -45,185 +42,6 @@ func (h *Handler) checkSubdomainExistsInternal(ctx context.Context, subdomain st
 		return false, fmt.Errorf("failed to check subdomain: %w", err)
 	}
 	return true, nil
-}
-
-// listInstancesInternal lists all instances for a user
-func (h *Handler) listInstancesInternal(ctx context.Context, userID string) ([]Instance, error) {
-	dbInstances, err := h.db.ListInstancesByUser(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list instances: %w", err)
-	}
-
-	instances := make([]Instance, len(dbInstances))
-	for i, inst := range dbInstances {
-		createdAt := time.Time{}
-		if inst.CreatedAt.Valid {
-			createdAt = inst.CreatedAt.Time
-		}
-		updatedAt := time.Time{}
-		if inst.UpdatedAt.Valid {
-			updatedAt = inst.UpdatedAt.Time
-		}
-
-		instances[i] = Instance{
-			ID:             inst.ID,
-			UserID:         inst.UserID,
-			Status:         inst.Status,
-			GkeClusterName: inst.GkeClusterName,
-			GkeProjectID:   inst.GkeProjectID,
-			GkeZone:        inst.GkeZone,
-			Namespace:      inst.Namespace,
-			SubDomain:      fmt.Sprintf("https://%s.instol.cloud", inst.Subdomain),
-			Subdomain:      inst.Subdomain,
-			CreatedAt:      createdAt,
-			UpdatedAt:      updatedAt,
-			DeployedAt:     inst.DeployedAt,
-			DeletedAt:      inst.DeletedAt,
-		}
-	}
-
-	return instances, nil
-}
-
-// getInstanceInternal gets an instance by ID
-func (h *Handler) getInstanceInternal(ctx context.Context, instanceID string) (*Instance, error) {
-	inst, err := h.db.GetInstance(ctx, instanceID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get instance: %w", err)
-	}
-
-	createdAt := time.Time{}
-	if inst.CreatedAt.Valid {
-		createdAt = inst.CreatedAt.Time
-	}
-	updatedAt := time.Time{}
-	if inst.UpdatedAt.Valid {
-		updatedAt = inst.UpdatedAt.Time
-	}
-
-	return &Instance{
-		ID:             inst.ID,
-		UserID:         inst.UserID,
-		Status:         inst.Status,
-		GkeClusterName: inst.GkeClusterName,
-		GkeProjectID:   inst.GkeProjectID,
-		GkeZone:        inst.GkeZone,
-		Namespace:      inst.Namespace,
-		SubDomain:      fmt.Sprintf("https://%s.instol.cloud", inst.Subdomain),
-		Subdomain:      inst.Subdomain,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
-		DeployedAt:     inst.DeployedAt,
-		DeletedAt:      inst.DeletedAt,
-	}, nil
-}
-
-// createInstanceInternal creates a new instance
-func (h *Handler) createInstanceInternal(ctx context.Context, req CreateInstanceRequest) (*Instance, error) {
-	// Validate required fields
-	if req.InstanceID == "" {
-		return nil, fmt.Errorf("instance_id is required")
-	}
-	if req.UserID == "" {
-		return nil, fmt.Errorf("user_id is required")
-	}
-	if req.Subdomain == "" {
-		return nil, fmt.Errorf("subdomain is required")
-	}
-
-	// Validate subdomain
-	if err := domainutils.ValidateSubdomain(req.Subdomain); err != nil {
-		return nil, fmt.Errorf("invalid subdomain: %w", err)
-	}
-
-	// Check if subdomain is already taken
-	subdomainExists, err := h.db.CheckSubdomainExists(ctx, req.Subdomain)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check subdomain availability: %w", err)
-	}
-	if subdomainExists {
-		return nil, fmt.Errorf("subdomain '%s' is already taken", req.Subdomain)
-	}
-
-	// Generate unique namespace
-	namespace, err := h.generateUniqueNamespace(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate unique namespace: %w", err)
-	}
-
-	// Create instance record in database
-	instance, err := h.db.CreateInstance(ctx, db.CreateInstanceParams{
-		ID:             req.InstanceID,
-		UserID:         req.UserID,
-		GkeClusterName: h.config.GCP.ClusterName,
-		GkeProjectID:   h.config.GCP.ProjectID,
-		GkeZone:        h.config.GCP.Zone,
-		Namespace:      namespace,
-		Subdomain:      req.Subdomain,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create instance record: %w", err)
-	}
-
-	createdAt := time.Time{}
-	if instance.CreatedAt.Valid {
-		createdAt = instance.CreatedAt.Time
-	}
-	updatedAt := time.Time{}
-	if instance.UpdatedAt.Valid {
-		updatedAt = instance.UpdatedAt.Time
-	}
-
-	result := &Instance{
-		ID:             instance.ID,
-		UserID:         instance.UserID,
-		Status:         instance.Status,
-		GkeClusterName: instance.GkeClusterName,
-		GkeProjectID:   instance.GkeProjectID,
-		GkeZone:        instance.GkeZone,
-		Namespace:      instance.Namespace,
-		SubDomain:      fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain),
-		Subdomain:      instance.Subdomain,
-		CreatedAt:      createdAt,
-		UpdatedAt:      updatedAt,
-		DeployedAt:     instance.DeployedAt,
-		DeletedAt:      instance.DeletedAt,
-	}
-
-	// Deploy the instance
-	if err := h.deployInstance(ctx, instance); err != nil {
-		return nil, fmt.Errorf("failed to deploy instance: %w", err)
-	}
-
-	return result, nil
-}
-
-// deleteInstanceInternal deletes an instance
-func (h *Handler) deleteInstanceInternal(ctx context.Context, instanceID string) error {
-	// Get instance details
-	instance, err := h.db.GetInstance(ctx, instanceID)
-	if err != nil {
-		return fmt.Errorf("failed to get instance: %w", err)
-	}
-
-	// Delete from Kubernetes
-	if err := h.provisioning.DeleteNamespace(ctx, instance.Namespace); err != nil {
-		h.logger.Error("Failed to delete namespace", slog.Any("error", err))
-		// Continue with database deletion even if K8s deletion fails
-	}
-
-	// Delete Cloudflare DNS record
-	if err := h.cloudflare.DeleteDNSRecord(ctx, instance.Subdomain); err != nil {
-		h.logger.Error("Failed to delete Cloudflare DNS record", slog.Any("error", err))
-		// Continue with database deletion even if Cloudflare deletion fails
-	}
-
-	// Soft delete from database
-	if err := h.db.DeleteInstance(ctx, instanceID); err != nil {
-		return fmt.Errorf("failed to delete instance from database: %w", err)
-	}
-
-	return nil
 }
 
 // generateUniqueNamespace creates a unique namespace by checking database
@@ -256,9 +74,18 @@ func (h *Handler) generateUniqueNamespace(ctx context.Context) (string, error) {
 	return "", fmt.Errorf("failed to generate unique namespace after %d attempts", maxAttempts)
 }
 
+type DeployInstanceRequest struct {
+	InstanceID string
+}
+
 // deployInstance deploys an instance to Kubernetes
-func (h *Handler) deployInstance(ctx context.Context, instance db.Instance) error {
-	h.logger.Info("Starting deployment", slog.String("instance_id", instance.ID))
+func (h *Handler) deployInstanceInternal(ctx context.Context, req *DeployInstanceRequest) error {
+	h.logger.Info("Starting deployment", slog.String("instance_id", req.InstanceID))
+
+	instance, err := h.db.GetInstance(ctx, req.InstanceID)
+	if err != nil {
+		return fmt.Errorf("failed to get instance: %w", err)
+	}
 
 	encryptionKey, err := generateSecureKey(32)
 	if err != nil {
@@ -277,9 +104,9 @@ func (h *Handler) deployInstance(ctx context.Context, instance db.Instance) erro
 	}
 
 	// Mark as deployed
-	if _, err := h.db.UpdateInstanceDeployed(ctx, db.UpdateInstanceDeployedParams{
+	if _, err := h.db.UpdateInstanceStatus(ctx, db.UpdateInstanceStatusParams{
 		ID:     instance.ID,
-		Status: "deployed",
+		Status: types.InstanceStatusDeployed,
 	}); err != nil {
 		return fmt.Errorf("failed to update instance status: %w", err)
 	}

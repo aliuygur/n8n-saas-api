@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
+	"github.com/aliuygur/n8n-saas-api/internal/types"
 	"github.com/samber/lo"
 )
 
@@ -26,10 +27,10 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	instancesView := lo.Map(instances, func(inst Instance, _ int) components.Instance {
+	instancesView := lo.Map(instances, func(inst types.Instance, _ int) components.Instance {
 		return components.Instance{
 			ID:          inst.ID,
-			InstanceURL: inst.SubDomain,
+			InstanceURL: inst.Subdomain,
 			Status:      inst.Status,
 			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
 		}
@@ -112,13 +113,5 @@ func (h *Handler) DeleteModal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract subdomain from domain (e.g., "https://myapp.instol.cloud" -> "myapp")
-	domain := instance.Subdomain
-	subdomain := domain
-	if len(domain) > len("https://") && len(domain) > len(".instol.cloud") {
-		subdomain = domain[8:]                    // Remove "https://"
-		subdomain = subdomain[:len(subdomain)-13] // Remove ".instol.cloud"
-	}
-
-	lo.Must0(components.DeleteModal(instanceID, subdomain).Render(r.Context(), w))
+	lo.Must0(components.DeleteModal(instanceID, instance.Subdomain).Render(r.Context(), w))
 }

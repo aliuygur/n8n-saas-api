@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/aliuygur/n8n-saas-api/internal/types"
 	polargo "github.com/polarsource/polar-go"
 	"github.com/polarsource/polar-go/models/components"
 )
@@ -286,23 +287,26 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 		return nil
 	}
 
-	// Create and deploy the instance (DeployNow removed)
-	instance, err := h.createInstanceInternal(ctx, CreateInstanceRequest{
-		InstanceID: checkoutSession.InstanceID,
-		UserID:     checkoutSession.UserID,
-		Subdomain:  checkoutSession.Subdomain,
-	})
-	if err != nil {
-		h.logger.Error("Failed to create instance",
-			slog.Any("error", err),
-			slog.String("polar_subscription_id", *order.SubscriptionID))
-		// Mark checkout as failed
-		_ = h.db.UpdateCheckoutSessionStatus(ctx, db.UpdateCheckoutSessionStatusParams{
-			ID:     checkoutSession.ID,
-			Status: "failed",
-		})
-		return fmt.Errorf("failed to create instance: %w", err)
-	}
+	// TODO: we refactored code
+	// // Create and deploy the instance (DeployNow removed)
+	// instance, err := h.CreateInstanceInternal(ctx, CreateInstanceRequest{
+	// 	InstanceID: checkoutSession.InstanceID,
+	// 	UserID:     checkoutSession.UserID,
+	// 	Subdomain:  checkoutSession.Subdomain,
+	// })
+	// if err != nil {
+	// 	h.logger.Error("Failed to create instance",
+	// 		slog.Any("error", err),
+	// 		slog.String("polar_subscription_id", *order.SubscriptionID))
+	// 	// Mark checkout as failed
+	// 	_ = h.db.UpdateCheckoutSessionStatus(ctx, db.UpdateCheckoutSessionStatusParams{
+	// 		ID:     checkoutSession.ID,
+	// 		Status: "failed",
+	// 	})
+	// 	return fmt.Errorf("failed to create instance: %w", err)
+	// }
+
+	var instance types.Instance
 
 	h.logger.Info("Instance created and deployed successfully",
 		slog.String("instance_id", instance.ID),

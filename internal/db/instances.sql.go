@@ -33,40 +33,25 @@ func (q *Queries) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
-    id, user_id, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain
+    user_id, namespace, subdomain
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+    $1, $2, $3
+) RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type CreateInstanceParams struct {
-	ID             string `json:"id"`
-	UserID         string `json:"user_id"`
-	GkeClusterName string `json:"gke_cluster_name"`
-	GkeProjectID   string `json:"gke_project_id"`
-	GkeZone        string `json:"gke_zone"`
-	Namespace      string `json:"namespace"`
-	Subdomain      string `json:"subdomain"`
+	UserID    string `json:"user_id"`
+	Namespace string `json:"namespace"`
+	Subdomain string `json:"subdomain"`
 }
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, createInstance,
-		arg.ID,
-		arg.UserID,
-		arg.GkeClusterName,
-		arg.GkeProjectID,
-		arg.GkeZone,
-		arg.Namespace,
-		arg.Subdomain,
-	)
+	row := q.db.QueryRowContext(ctx, createInstance, arg.UserID, arg.Namespace, arg.Subdomain)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -87,7 +72,7 @@ func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
 }
 
 const getInstance = `-- name: GetInstance :one
-SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) {
@@ -97,9 +82,6 @@ func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) 
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -111,7 +93,7 @@ func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) 
 }
 
 const getInstanceByNamespace = `-- name: GetInstanceByNamespace :one
-SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE namespace = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE namespace = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error) {
@@ -121,9 +103,6 @@ func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) 
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -135,7 +114,7 @@ func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) 
 }
 
 const getInstanceBySubdomain = `-- name: GetInstanceBySubdomain :one
-SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE subdomain = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE subdomain = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error) {
@@ -145,9 +124,6 @@ func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) 
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -159,7 +135,7 @@ func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) 
 }
 
 const listAllInstances = `-- name: ListAllInstances :many
-SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
 WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -183,9 +159,6 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 			&i.ID,
 			&i.UserID,
 			&i.Status,
-			&i.GkeClusterName,
-			&i.GkeProjectID,
-			&i.GkeZone,
 			&i.Namespace,
 			&i.Subdomain,
 			&i.CreatedAt,
@@ -207,7 +180,7 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 }
 
 const listInstancesByUser = `-- name: ListInstancesByUser :many
-SELECT id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
 WHERE user_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 `
@@ -225,9 +198,6 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 			&i.ID,
 			&i.UserID,
 			&i.Status,
-			&i.GkeClusterName,
-			&i.GkeProjectID,
-			&i.GkeZone,
 			&i.Namespace,
 			&i.Subdomain,
 			&i.CreatedAt,
@@ -252,7 +222,7 @@ const softDeleteInstance = `-- name: SoftDeleteInstance :one
 UPDATE instances 
 SET deleted_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 func (q *Queries) SoftDeleteInstance(ctx context.Context, id string) (Instance, error) {
@@ -262,9 +232,6 @@ func (q *Queries) SoftDeleteInstance(ctx context.Context, id string) (Instance, 
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -279,7 +246,7 @@ const updateInstanceDeployed = `-- name: UpdateInstanceDeployed :one
 UPDATE instances 
 SET status = $2, deployed_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type UpdateInstanceDeployedParams struct {
@@ -294,9 +261,6 @@ func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstance
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -311,7 +275,7 @@ const updateInstanceNamespace = `-- name: UpdateInstanceNamespace :one
 UPDATE instances 
 SET namespace = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type UpdateInstanceNamespaceParams struct {
@@ -326,9 +290,6 @@ func (q *Queries) UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanc
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,
@@ -343,7 +304,7 @@ const updateInstanceStatus = `-- name: UpdateInstanceStatus :one
 UPDATE instances 
 SET status = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, gke_cluster_name, gke_project_id, gke_zone, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 type UpdateInstanceStatusParams struct {
@@ -358,9 +319,6 @@ func (q *Queries) UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceSt
 		&i.ID,
 		&i.UserID,
 		&i.Status,
-		&i.GkeClusterName,
-		&i.GkeProjectID,
-		&i.GkeZone,
 		&i.Namespace,
 		&i.Subdomain,
 		&i.CreatedAt,

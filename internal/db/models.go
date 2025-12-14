@@ -25,18 +25,15 @@ type CheckoutSession struct {
 }
 
 type Instance struct {
-	ID             string       `json:"id"`
-	UserID         string       `json:"user_id"`
-	Status         string       `json:"status"`
-	GkeClusterName string       `json:"gke_cluster_name"`
-	GkeProjectID   string       `json:"gke_project_id"`
-	GkeZone        string       `json:"gke_zone"`
-	Namespace      string       `json:"namespace"`
-	Subdomain      string       `json:"subdomain"`
-	CreatedAt      sql.NullTime `json:"created_at"`
-	UpdatedAt      sql.NullTime `json:"updated_at"`
-	DeployedAt     sql.NullTime `json:"deployed_at"`
-	DeletedAt      sql.NullTime `json:"deleted_at"`
+	ID         string       `json:"id"`
+	UserID     string       `json:"user_id"`
+	Status     string       `json:"status"`
+	Namespace  string       `json:"namespace"`
+	Subdomain  string       `json:"subdomain"`
+	CreatedAt  sql.NullTime `json:"created_at"`
+	UpdatedAt  sql.NullTime `json:"updated_at"`
+	DeployedAt sql.NullTime `json:"deployed_at"`
+	DeletedAt  sql.NullTime `json:"deleted_at"`
 }
 
 type Session struct {
