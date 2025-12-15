@@ -1,13 +1,7 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: instol
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: instol-app
-  namespace: instol
   labels:
     app: instol-app
     component: application
@@ -47,7 +41,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: instol-app
-  namespace: instol
 spec:
   selector:
     app: instol-app
@@ -60,6 +53,5 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: instol-app-sa
-  namespace: instol
   annotations:
     iam.gke.io/gcp-service-account: "n8n-gke-manager@instol.iam.gserviceaccount.com"
