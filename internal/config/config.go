@@ -140,6 +140,10 @@ func (c *Config) Validate() error {
 	if c.JWT.Secret == "" {
 		return fmt.Errorf("JWT_SECRET is required")
 	}
+
+	if c.Google.ClientID == "" || c.Google.ClientSecret == "" {
+		return fmt.Errorf("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required")
+	}
 	return nil
 }
 

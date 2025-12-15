@@ -89,7 +89,6 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 	dbUser, err := queries.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		if db.IsNotFoundError(err) {
-
 			dbUser, err = queries.CreateUser(ctx, db.CreateUserParams{
 				Email: params.Email,
 				Name:  params.Name,
@@ -97,8 +96,9 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 			if err != nil {
 				return nil, fmt.Errorf("failed to create user: %w", err)
 			}
+		} else {
+			return nil, fmt.Errorf("failed to get user by email: %w", err)
 		}
-		return nil, fmt.Errorf("failed to get user by email: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {

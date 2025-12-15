@@ -23,6 +23,7 @@ spec:
       containers:
         - name: instol-app
           image: us-central1-docker.pkg.dev/instol/n8n-saas/n8n-saas-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
