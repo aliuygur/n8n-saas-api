@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aliuygur/n8n-saas-api/internal/appreq"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/handler"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -52,7 +53,7 @@ func main() {
 	logger.Info("Database connection established")
 
 	// Initialize handler
-	h, err := handler.New(cfg, db, logger)
+	h, err := handler.New(cfg)
 	if err != nil {
 		logger.Error("Failed to initialize handler", "error", err)
 		os.Exit(1)
@@ -68,7 +69,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      appreq.Handler(mux, logger),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

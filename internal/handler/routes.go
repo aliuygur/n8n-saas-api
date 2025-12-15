@@ -27,11 +27,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/check-subdomain", h.requireAuthAPI(h.CheckSubdomain))
 	mux.HandleFunc("DELETE /instances/{id}", h.requireAuthAPI(h.DeleteInstance))
 	mux.HandleFunc("GET /api/delete-modal/{id}", h.requireAuthAPI(h.DeleteModal))
-	mux.HandleFunc("GET /api/provisioning-status", h.requireAuthAPI(h.GetProvisioningStatus))
 
 	// Public webhooks (no auth)
-	mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
-
-	// Temporary test endpoints
-	mux.HandleFunc("POST /api/test/deploy-instance", h.TestDeployInstance)
+	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
 }

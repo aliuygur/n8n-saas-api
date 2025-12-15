@@ -1,15 +1,15 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/aliuygur/n8n-saas-api/internal/appreq"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
+	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/samber/lo"
 )
@@ -61,7 +61,10 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 
 // HandleGoogleLogin redirects to Google OAuth
 func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("Initiating Google OAuth login")
+	ctx := r.Context()
+	l := appreq.GetLogger(ctx)
+
+	l.Info("Initiating Google OAuth login")
 	// Generate a random state token for CSRF protection
 	state := lo.RandomString(32, lo.LettersCharset)
 
@@ -81,13 +84,14 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	l := appreq.GetLogger(ctx)
 
 	// TODO: Validate state token to prevent CSRF
 
 	// Exchange code for token
 	token, err := h.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		h.logger.Error("Failed to exchange code", slog.Any("error", err))
+		l.Error("Failed to exchange code", slog.Any("error", err))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
 	}
@@ -96,7 +100,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	client := h.oauth2Config.Client(ctx, token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		h.logger.Error("Failed to get user info", slog.Any("error", err))
+		l.Error("Failed to get user info", slog.Any("error", err))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
 	}
@@ -104,45 +108,36 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		h.logger.Error("Failed to get user info", slog.Int("status", resp.StatusCode), slog.String("body", string(body)))
+		l.Error("Failed to get user info", slog.Int("status", resp.StatusCode), slog.String("body", string(body)))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
 	}
 
 	var googleUser GoogleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
-		h.logger.Error("Failed to decode user info", slog.Any("error", err))
+		l.Error("Failed to decode user info", slog.Any("error", err))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
 	}
 
-	// Create or get user in database
-	var user db.User
-	existingUser, err := h.db.GetUserByEmail(ctx, googleUser.Email)
-	if err == sql.ErrNoRows {
-		// Create new user
-		user, err = h.db.CreateUser(ctx, db.CreateUserParams{
-			Email: googleUser.Email,
-			Name:  googleUser.Name,
-		})
-		if err != nil {
-			h.logger.Error("Failed to create user", slog.Any("error", err))
-			http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
-			return
-		}
-		h.logger.Info("New user created", slog.String("user_id", user.ID), slog.String("email", user.Email))
-	} else if err != nil {
-		h.logger.Error("Failed to get user", slog.Any("error", err))
+	user, err := h.services.GetOrCreateUser(ctx, services.CreateUserParams{
+		Email: googleUser.Email,
+		Name:  googleUser.Name,
+	})
+	if err != nil {
+		l.Error("Failed to get or create user", slog.Any("error", err))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
-	} else {
-		user = existingUser
 	}
+
+	l.Info("User logged in via Google OAuth",
+		slog.String("user_id", user.ID),
+		slog.String("email", user.Email))
 
 	// Update last login
-	user, err = h.db.UpdateUserLastLogin(ctx, user.ID)
+	err = h.services.UpdateUserLastLogin(ctx, user.ID)
 	if err != nil {
-		h.logger.Error("Failed to update last login", slog.Any("error", err))
+		l.Error("Failed to update last login", slog.Any("error", err))
 		// Don't fail the login, just log the error
 	}
 
@@ -161,12 +156,12 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := jwtToken.SignedString(h.jwtSecret)
 	if err != nil {
-		h.logger.Error("Failed to create JWT token", slog.Any("error", err))
+		l.Error("Failed to create JWT token", slog.Any("error", err))
 		http.Redirect(w, r, "/login?error=auth_failed", http.StatusSeeOther)
 		return
 	}
 
-	h.logger.Info("JWT token created", slog.String("user_id", user.ID))
+	l.Info("JWT token created", slog.String("user_id", user.ID))
 
 	// Set JWT token in HTTP-only cookie
 	http.SetCookie(w, &http.Cookie{
@@ -188,7 +183,7 @@ func (h *Handler) GetAuthMe(w http.ResponseWriter, r *http.Request) {
 	user := MustGetUser(r.Context())
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"user_id": user.UserID,
 		"email":   user.Email,
 	})

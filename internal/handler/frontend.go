@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/aliuygur/n8n-saas-api/internal/appreq"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
-	"github.com/aliuygur/n8n-saas-api/internal/types"
+	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/samber/lo"
 )
 
@@ -20,17 +21,17 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	user := MustGetUser(r.Context())
 
 	// List instances for the user
-	instances, err := h.listInstancesInternal(r.Context(), user.UserID)
+	instances, err := h.services.GetInstancesByUser(r.Context(), user.UserID)
 	if err != nil {
-		h.logger.Error("failed to fetch instances", slog.Any("error", err))
+		appreq.GetLogger(r.Context()).Error("failed to fetch instances", slog.Any("error", err))
 		http.Error(w, "Failed to load instances", http.StatusInternalServerError)
 		return
 	}
 
-	instancesView := lo.Map(instances, func(inst types.Instance, _ int) components.Instance {
+	instancesView := lo.Map(instances, func(inst services.Instance, _ int) components.Instance {
 		return components.Instance{
 			ID:          inst.ID,
-			InstanceURL: inst.Subdomain,
+			InstanceURL: inst.GetInstanceURL(),
 			Status:      inst.Status,
 			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
 		}
@@ -55,47 +56,47 @@ func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
 	lo.Must0(components.ProvisioningStatusPage(checkoutID).Render(r.Context(), w))
 }
 
-// GetProvisioningStatus returns the provisioning status for HTMX polling
-func (h *Handler) GetProvisioningStatus(w http.ResponseWriter, r *http.Request) {
-	checkoutID := r.URL.Query().Get("checkout_id")
-	if checkoutID == "" {
-		http.Error(w, "checkout_id is required", http.StatusBadRequest)
-		return
-	}
+// // GetProvisioningStatus returns the provisioning status for HTMX polling
+// func (h *Handler) GetProvisioningStatus(w http.ResponseWriter, r *http.Request) {
+// 	checkoutID := r.URL.Query().Get("checkout_id")
+// 	if checkoutID == "" {
+// 		http.Error(w, "checkout_id is required", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Get checkout session
-	session, err := h.getCheckoutSessionByPolarIDInternal(r.Context(), checkoutID)
-	if err != nil {
-		h.logger.Error("Failed to get checkout session", slog.Any("error", err))
-		http.Error(w, "Failed to get checkout session", http.StatusInternalServerError)
-		return
-	}
+// 	// Get checkout session
+// 	session, err := h.getCheckoutSessionByPolarIDInternal(r.Context(), checkoutID)
+// 	if err != nil {
+// 		h.logger.Error("Failed to get checkout session", slog.Any("error", err))
+// 		http.Error(w, "Failed to get checkout session", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// If completed, get the instance details
-	if session.Status == "completed" {
-		instance, err := h.getInstanceForComponent(r.Context(), session.InstanceID)
-		if err != nil {
-			h.logger.Error("Failed to get instance", slog.Any("error", err))
-			lo.Must0(components.ProvisioningFailed("Instance not found").Render(r.Context(), w))
-			return
-		}
+// 	// If completed, get the instance details
+// 	if session.Status == "completed" {
+// 		instance, err := h.getInstanceForComponent(r.Context(), session.InstanceID)
+// 		if err != nil {
+// 			h.logger.Error("Failed to get instance", slog.Any("error", err))
+// 			lo.Must0(components.ProvisioningFailed("Instance not found").Render(r.Context(), w))
+// 			return
+// 		}
 
-		if instance.Status == "deployed" {
-			lo.Must0(components.ProvisioningComplete(instance).Render(r.Context(), w))
-		} else {
-			lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
-		}
-		return
-	}
+// 		if instance.Status == "deployed" {
+// 			lo.Must0(components.ProvisioningComplete(instance).Render(r.Context(), w))
+// 		} else {
+// 			lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
+// 		}
+// 		return
+// 	}
 
-	if session.Status == "failed" {
-		lo.Must0(components.ProvisioningFailed("Provisioning failed. Please try again.").Render(r.Context(), w))
-		return
-	}
+// 	if session.Status == "failed" {
+// 		lo.Must0(components.ProvisioningFailed("Provisioning failed. Please try again.").Render(r.Context(), w))
+// 		return
+// 	}
 
-	// Still pending
-	lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
-}
+// 	// Still pending
+// 	lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
+// }
 
 // DeleteModal renders the delete confirmation modal for an instance
 func (h *Handler) DeleteModal(w http.ResponseWriter, r *http.Request) {
@@ -106,9 +107,9 @@ func (h *Handler) DeleteModal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get instance details to show the subdomain
-	instance, err := h.getInstanceInternal(r.Context(), instanceID)
+	instance, err := h.services.GetInstanceByID(r.Context(), instanceID)
 	if err != nil {
-		h.logger.Error("failed to get instance", slog.Any("error", err))
+		appreq.GetLogger(r.Context()).Error("failed to get instance", slog.Any("error", err))
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

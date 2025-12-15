@@ -1,3 +1,5 @@
+//go:build ignore
+
 package handler
 
 import (
@@ -74,14 +76,14 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 		checkoutCreate.ReturnURL = polargo.Pointer(req.ReturnURL)
 	}
 
-	h.logger.Info("Creating Polar checkout session",
+	applogs.GetLogger(ctx).Info("Creating Polar checkout session",
 		slog.String("user_id", req.UserID),
 		slog.String("subdomain", req.Subdomain),
 		slog.String("email", req.UserEmail))
 
 	resp, err := h.polarClient.Checkouts.Create(ctx, checkoutCreate)
 	if err != nil {
-		h.logger.Error("Failed to create Polar checkout", slog.Any("error", err))
+		applogs.GetLogger(ctx).Error("Failed to create Polar checkout", slog.Any("error", err))
 		return nil, fmt.Errorf("failed to create checkout session: %w", err)
 	}
 
@@ -89,7 +91,7 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 		return nil, fmt.Errorf("checkout response is nil")
 	}
 
-	h.logger.Info("Polar checkout created successfully",
+	applogs.GetLogger(ctx).Info("Polar checkout created successfully",
 		slog.String("checkout_id", resp.Checkout.ID),
 		slog.String("checkout_url", resp.Checkout.URL))
 
@@ -105,11 +107,11 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 		Status:          "pending",
 	})
 	if err != nil {
-		h.logger.Error("Failed to store checkout session in database", slog.Any("error", err))
+		applogs.GetLogger(ctx).Error("Failed to store checkout session in database", slog.Any("error", err))
 		return nil, fmt.Errorf("failed to store checkout session: %w", err)
 	}
 
-	h.logger.Info("Checkout session stored in database",
+	applogs.GetLogger(ctx).Info("Checkout session stored in database",
 		slog.String("checkout_session_id", checkoutSession.ID),
 		slog.String("polar_checkout_id", checkoutSession.PolarCheckoutID))
 
@@ -123,7 +125,7 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 func (h *Handler) getCheckoutSessionByPolarIDInternal(ctx context.Context, polarCheckoutID string) (*CheckoutSession, error) {
 	checkoutSession, err := h.db.GetCheckoutSessionByPolarID(ctx, polarCheckoutID)
 	if err != nil {
-		h.logger.Error("Failed to get checkout session from database",
+		applogs.GetLogger(ctx).Error("Failed to get checkout session from database",
 			slog.Any("error", err),
 			slog.String("polar_checkout_id", polarCheckoutID))
 		return nil, fmt.Errorf("failed to get checkout session: %w", err)
@@ -148,14 +150,14 @@ func (h *Handler) PolarWebhook(w http.ResponseWriter, r *http.Request) {
 	// Read the raw body for signature verification
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.logger.Error("Failed to read webhook body", slog.Any("error", err))
+		applogs.GetLogger(r.Context()).Error("Failed to read webhook body", slog.Any("error", err))
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
 
 	// Verify webhook signature
 	if err := h.verifyWebhookSignature(r.Header, bodyBytes); err != nil {
-		h.logger.Error("Webhook signature verification failed", slog.Any("error", err))
+		applogs.GetLogger(r.Context()).Error("Webhook signature verification failed", slog.Any("error", err))
 		http.Error(w, "Invalid signature", http.StatusForbidden)
 		return
 	}
@@ -163,12 +165,12 @@ func (h *Handler) PolarWebhook(w http.ResponseWriter, r *http.Request) {
 	// Parse the webhook event
 	var event WebhookEvent
 	if err := json.Unmarshal(bodyBytes, &event); err != nil {
-		h.logger.Error("Failed to parse webhook event", slog.Any("error", err))
+		applogs.GetLogger(r.Context()).Error("Failed to parse webhook event", slog.Any("error", err))
 		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
-	h.logger.Info("Received Polar webhook", slog.String("event_type", event.Type))
+	applogs.GetLogger(r.Context()).Info("Received Polar webhook", slog.String("event_type", event.Type))
 
 	// Route to appropriate handler based on event type
 	ctx := r.Context()
@@ -178,13 +180,13 @@ func (h *Handler) PolarWebhook(w http.ResponseWriter, r *http.Request) {
 	case "order.paid":
 		handlerErr = h.handleOrderPaid(ctx, event.Data)
 	default:
-		h.logger.Info("Unhandled webhook event type", slog.String("event_type", event.Type))
+		applogs.GetLogger(r.Context()).Info("Unhandled webhook event type", slog.String("event_type", event.Type))
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	if handlerErr != nil {
-		h.logger.Error("Failed to handle webhook event",
+		applogs.GetLogger(r.Context()).Error("Failed to handle webhook event",
 			slog.String("event_type", event.Type),
 			slog.Any("error", handlerErr))
 		http.Error(w, "Failed to process webhook", http.StatusInternalServerError)
@@ -255,10 +257,10 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 		return fmt.Errorf("failed to unmarshal order data: %w", err)
 	}
 
-	h.logger.Info("Processing order.paid", slog.String("order_id", order.ID))
+	applogs.GetLogger(ctx).Info("Processing order.paid", slog.String("order_id", order.ID))
 
 	if order.BillingReason != components.OrderBillingReasonSubscriptionCreate {
-		h.logger.Info("Order billing reason is not subscription_create, ignoring",
+		applogs.GetLogger(ctx).Info("Order billing reason is not subscription_create, ignoring",
 			slog.String("order_id", order.ID),
 			slog.String("billing_reason", string(order.BillingReason)))
 		return nil
@@ -267,7 +269,7 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 	// Check if subscription already exists (idempotency)
 	existingSubscription, err := h.db.GetSubscriptionByPolarID(ctx, *order.SubscriptionID)
 	if err == nil {
-		h.logger.Info("Subscription already exists, skipping",
+		applogs.GetLogger(ctx).Info("Subscription already exists, skipping",
 			slog.String("polar_subscription_id", *order.SubscriptionID),
 			slog.String("instance_id", existingSubscription.InstanceID))
 		return nil
@@ -281,7 +283,7 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 
 	// Check if already processed
 	if checkoutSession.Status == "completed" {
-		h.logger.Info("Checkout already processed, skipping",
+		applogs.GetLogger(ctx).Info("Checkout already processed, skipping",
 			slog.String("checkout_id", *order.CheckoutID),
 			slog.String("polar_subscription_id", *order.SubscriptionID))
 		return nil
@@ -331,10 +333,10 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 		InstanceID: instance.ID,
 	})
 	if err != nil {
-		h.logger.Error("Failed to update checkout session to completed", slog.Any("error", err))
+		applogs.GetLogger(ctx).Error("Failed to update checkout session to completed", slog.Any("error", err))
 	}
 
-	h.logger.Info("Subscription created successfully from webhook",
+	applogs.GetLogger(ctx).Info("Subscription created successfully from webhook",
 		slog.String("instance_id", instance.ID),
 		slog.String("subscription_id", sub.ID),
 		slog.String("polar_subscription_id", *order.SubscriptionID))
