@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -49,10 +50,6 @@ func toDomainInstance(dbInst db.Instance) Instance {
 	}
 	return i
 }
-
-// errors
-
-type InstanceNotFoundError struct{}
 
 func (s *Service) GetInstancesByUser(ctx context.Context, userID string) ([]Instance, error) {
 
@@ -218,6 +215,29 @@ func (s *Service) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 	}
 
 	return exists, nil
+}
+
+func (s *Service) CheckInstanceURLActive(ctx context.Context, instanceURL string) (bool, error) {
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	// Make GET request to instance URL
+	req, err := http.NewRequestWithContext(ctx, "GET", instanceURL, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		// Instance not ready yet
+		return false, nil
+	}
+	defer resp.Body.Close()
+
+	// Check if we got a 200 status
+	return resp.StatusCode == http.StatusOK, nil
 }
 
 func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queries) (string, error) {

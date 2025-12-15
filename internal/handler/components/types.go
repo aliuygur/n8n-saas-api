@@ -9,5 +9,5 @@ type Instance struct {
 }
 
 func (i *Instance) GetInstanceURL() string {
-	return ""
+	return i.InstanceURL
 }

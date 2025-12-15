@@ -34,8 +34,8 @@ func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		slog.String("user_id", user.UserID),
 		slog.String("subdomain", subdomain))
 
-	// Return success - HTMX will handle the response
-	w.Header().Set("HX-Redirect", "/dashboard")
+	// Redirect to provisioning page to wait for instance to be ready
+	w.Header().Set("HX-Redirect", "/provision?instance_id="+instance.ID)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -98,4 +98,55 @@ func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
 
 	// Return success - HTMX will handle removing the element
 	w.WriteHeader(http.StatusOK)
+}
+
+// CheckInstanceStatus checks if the instance URL is active via HTMX polling
+func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	l := appreq.GetLogger(ctx)
+	user := MustGetUser(ctx)
+
+	instanceID := r.URL.Query().Get("instance_id")
+	if instanceID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get the instance
+	instance, err := h.services.GetInstanceByID(ctx, instanceID)
+	if err != nil {
+		l.Error("Failed to get instance", slog.Any("error", err))
+		lo.Must0(components.ProvisioningFailed("Instance not found").Render(ctx, w))
+		return
+	}
+
+	// Verify the instance belongs to the user
+	if instance.UserID != user.UserID {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Check if instance URL is active
+	isActive, err := h.services.CheckInstanceURLActive(ctx, instance.GetInstanceURL())
+	if err != nil {
+		l.Error("Failed to check instance URL", slog.Any("error", err))
+		// Continue polling - don't show error yet
+		lo.Must0(components.ProvisioningPending(instanceID).Render(ctx, w))
+		return
+	}
+
+	if isActive {
+		// Instance is ready!
+		componentInstance := &components.Instance{
+			ID:          instance.ID,
+			InstanceURL: instance.GetInstanceURL(),
+			Status:      instance.Status,
+			CreatedAt:   instance.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		lo.Must0(components.ProvisioningComplete(componentInstance).Render(ctx, w))
+		return
+	}
+
+	// Still provisioning
+	lo.Must0(components.ProvisioningPending(instanceID).Render(ctx, w))
 }

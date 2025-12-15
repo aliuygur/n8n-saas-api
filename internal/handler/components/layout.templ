@@ -26,6 +26,37 @@ templ Layout(title string) {
 						},
 					},
 				}
+
+				function toggleMobileMenu() {
+					const menu = document.getElementById('mobile-menu');
+					const button = document.getElementById('mobile-menu-button');
+					const icon = document.getElementById('menu-icon');
+
+					if (menu.classList.contains('hidden')) {
+						// Show menu
+						menu.classList.remove('hidden');
+						setTimeout(() => {
+							menu.style.maxHeight = '300px';
+							menu.classList.remove('opacity-0');
+							menu.classList.add('opacity-100');
+						}, 10);
+
+						// Rotate icon
+						icon.style.transform = 'rotate(90deg)';
+					} else {
+						// Hide menu
+						menu.style.maxHeight = '0';
+						menu.classList.remove('opacity-100');
+						menu.classList.add('opacity-0');
+
+						setTimeout(() => {
+							menu.classList.add('hidden');
+						}, 300);
+
+						// Reset icon rotation
+						icon.style.transform = 'rotate(0deg)';
+					}
+				}
 			</script>
 			<style>
 				html, body {
@@ -33,9 +64,17 @@ templ Layout(title string) {
 					text-rendering: optimizeLegibility;
 					-webkit-font-smoothing: antialiased;
 					-moz-osx-font-smoothing: grayscale;
+					overflow-x: hidden;
+					max-width: 100%;
 				}
 				html {
 					scroll-behavior: smooth;
+				}
+				body {
+					position: relative;
+				}
+				* {
+					max-width: 100%;
 				}
 				*:focus-visible {
 					outline: none;
@@ -68,17 +107,47 @@ templ Navigation() {
 	<nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="flex justify-between items-center h-16">
-				<a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-					<svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0">
+					<svg class="w-6 h-6 sm:w-8 sm:h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
 					</svg>
-					<h1 class="text-2xl font-bold text-white">instol.cloud</h1>
+					<h1 class="text-xl sm:text-2xl font-bold text-white">instol.cloud</h1>
 				</a>
-				<div class="flex gap-4">
+				<!-- Mobile menu button -->
+				<button
+					type="button"
+					class="md:hidden text-gray-300 hover:text-white p-2 transition-transform duration-300"
+					onclick="toggleMobileMenu()"
+					aria-label="Toggle menu"
+					id="mobile-menu-button"
+				>
+					<svg class="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-icon">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+					</svg>
+				</button>
+				<!-- Desktop menu -->
+				<div class="hidden md:flex gap-2 lg:gap-4 items-center">
+					<a href="/pricing" class="text-gray-300 hover:text-white transition-colors px-3 lg:px-4 py-2 font-medium text-sm lg:text-base">
+						Pricing
+					</a>
+					<a href="/login" class="text-gray-300 hover:text-white transition-colors px-3 lg:px-4 py-2 font-medium text-sm lg:text-base">
+						Sign In
+					</a>
+					<a href="/login" class="bg-indigo-600 text-white px-4 lg:px-6 py-2 rounded-lg hover:bg-indigo-500 transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm lg:text-base whitespace-nowrap">
+						Get Started
+					</a>
+				</div>
+			</div>
+			<!-- Mobile menu -->
+			<div id="mobile-menu" class="hidden md:hidden overflow-hidden transition-all duration-300 ease-in-out max-h-0 opacity-0" style="max-height: 0;">
+				<div class="flex flex-col space-y-2 pb-4 pt-2">
+					<a href="/pricing" class="text-gray-300 hover:text-white transition-colors px-4 py-2 font-medium">
+						Pricing
+					</a>
 					<a href="/login" class="text-gray-300 hover:text-white transition-colors px-4 py-2 font-medium">
 						Sign In
 					</a>
-					<a href="/login" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-500 transition-all font-medium shadow-lg shadow-indigo-500/20">
+					<a href="/login" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-500 transition-all font-medium shadow-lg shadow-indigo-500/20 text-center">
 						Get Started
 					</a>
 				</div>
@@ -111,11 +180,12 @@ templ AuthenticatedNavigation() {
 templ Footer() {
 	<footer class="border-t border-gray-800 bg-gray-900/70 py-8 mt-12">
 		<div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-400 text-sm">
-			<div class="mb-2 md:mb-0">&copy; 2025 instol.cloud. All rights reserved.</div>
-			<div class="flex gap-6">
-				<a href="/terms" class="hover:text-white transition-colors">Terms of Service</a>
-				<a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
-				<a href="/refund-policy" class="hover:text-white transition-colors">Refund Policy</a>
+			<div class="mb-2 md:mb-0 text-center md:text-left">&copy; 2025 instol.cloud. All rights reserved.</div>
+			<div class="flex flex-wrap gap-3 sm:gap-4 md:gap-6 justify-center text-xs sm:text-sm">
+				<a href="/pricing" class="hover:text-white transition-colors whitespace-nowrap">Pricing</a>
+				<a href="/terms" class="hover:text-white transition-colors whitespace-nowrap">Terms</a>
+				<a href="/privacy" class="hover:text-white transition-colors whitespace-nowrap">Privacy</a>
+				<a href="/refund-policy" class="hover:text-white transition-colors whitespace-nowrap">Refund</a>
 			</div>
 		</div>
 	</footer>

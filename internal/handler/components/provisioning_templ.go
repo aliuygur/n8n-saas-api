@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func ProvisioningStatusPage(checkoutID string) templ.Component {
+func ProvisioningStatusPage(instanceID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -45,7 +45,7 @@ func ProvisioningStatusPage(checkoutID string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProvisioningPending(checkoutID).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ProvisioningPending(instanceID).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -63,7 +63,7 @@ func ProvisioningStatusPage(checkoutID string) templ.Component {
 	})
 }
 
-func ProvisioningPending(checkoutID string) templ.Component {
+func ProvisioningPending(instanceID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -89,15 +89,15 @@ func ProvisioningPending(checkoutID string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("/api/provisioning-status?checkout_id=" + checkoutID)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("/api/check-instance-status?instance_id=" + instanceID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 29, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 29, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" hx-trigger=\"every 3s\" hx-swap=\"outerHTML\" class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><div class=\"text-center mb-8\"><div class=\"inline-flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-full mb-4\"><svg class=\"w-8 h-8 text-indigo-500 animate-spin\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div><h2 class=\"text-3xl font-bold text-white mb-2\">Payment Successful!</h2><p class=\"text-gray-400\">Your instance is being provisioned...</p></div><div class=\"space-y-6\"><div class=\"bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-6\"><div class=\"flex items-start gap-4\"><div class=\"flex-shrink-0\"><svg class=\"w-6 h-6 text-indigo-400 animate-pulse\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg></div><div class=\"flex-1\"><h3 class=\"text-lg font-semibold text-white mb-2\">Provisioning in Progress</h3><p class=\"text-gray-300 mb-4\">We're setting up your n8n instance on Google Cloud Platform. This usually takes 2-3 minutes.</p><div class=\"space-y-3\"><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin\"></div><span class=\"text-gray-300\">Creating Kubernetes namespace...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Deploying n8n instance...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Configuring SSL certificate...</span></div><div class=\"flex items-center gap-3\"><div class=\"w-5 h-5 border-2 border-gray-600 rounded-full\"></div><span class=\"text-gray-500\">Setting up secure tunnel...</span></div></div></div></div></div><div class=\"bg-blue-500/10 border border-blue-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><p class=\"text-sm text-blue-300\">You can close this page. We'll send you an email when your instance is ready!</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" hx-trigger=\"every 3s\" hx-swap=\"outerHTML\" class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><!-- Header Section --><div class=\"text-center mb-8\"><div class=\"inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full mb-6 relative\"><div class=\"absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-500/30 animate-ping\"></div><svg class=\"w-10 h-10 text-indigo-400 animate-spin relative z-10\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"3\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div><h2 class=\"text-3xl font-bold text-white mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent\">Provisioning Your Instance</h2><p class=\"text-gray-400 text-lg mb-4\">Setting up your n8n automation platform</p><div class=\"inline-flex items-center gap-2 text-sm text-indigo-400 bg-indigo-500/10 px-4 py-2 rounded-full\"><svg class=\"w-4 h-4 animate-pulse\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z\" clip-rule=\"evenodd\"></path></svg> <span class=\"font-medium\">Estimated time: 2-3 minutes</span></div></div><!-- Progress Bar --><div class=\"mb-8\"><div class=\"relative h-2 bg-gray-800 rounded-full overflow-hidden\"><div class=\"absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-full animate-pulse\" style=\"width: 90%; animation: progressPulse 2s ease-in-out infinite;\"></div><div class=\"absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer\" style=\"animation: shimmer 2s linear infinite;\"></div></div></div><!-- Status Card --><div class=\"space-y-6\"><div class=\"bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/20 rounded-xl p-6 shadow-lg shadow-indigo-500/10\"><div class=\"space-y-5\"><!-- Step 1: Completed --><div class=\"flex items-start gap-4 group\"><div class=\"flex-shrink-0 relative\"><div class=\"w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shadow-lg shadow-green-500/30\"><svg class=\"w-5 h-5 text-white\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2.5\" d=\"M5 13l4 4L19 7\"></path></svg></div></div><div class=\"flex-1 pt-1\"><h4 class=\"text-base font-semibold text-white mb-1 flex items-center gap-2\">Deployed n8n Instance <span class=\"inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300\">Complete</span></h4><p class=\"text-sm text-gray-400 leading-relaxed\">Your dedicated n8n container has been deployed on Google Cloud Platform</p></div></div><!-- Divider --><div class=\"relative\"><div class=\"absolute inset-0 flex items-center\"><div class=\"w-full border-t border-gray-800\"></div></div></div><!-- Step 2: Completed --><div class=\"flex items-start gap-4 group\"><div class=\"flex-shrink-0 relative\"><div class=\"w-10 h-10 rounded-full bg-green-600 flex items-center justify-center shadow-lg shadow-green-500/30\"><svg class=\"w-5 h-5 text-white\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2.5\" d=\"M5 13l4 4L19 7\"></path></svg></div></div><div class=\"flex-1 pt-1\"><h4 class=\"text-base font-semibold text-white mb-1 flex items-center gap-2\">Configured SSL Certificate <span class=\"inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300\">Complete</span></h4><p class=\"text-sm text-gray-400 leading-relaxed\">Your instance is secured with Let's Encrypt SSL/TLS encryption</p></div></div><!-- Divider --><div class=\"relative\"><div class=\"absolute inset-0 flex items-center\"><div class=\"w-full border-t border-gray-800\"></div></div></div><!-- Step 3: In Progress --><div class=\"flex items-start gap-4 group\"><div class=\"flex-shrink-0 relative\"><div class=\"w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 animate-pulse\"><div class=\"w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin\"></div></div><div class=\"absolute -right-1 -bottom-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 animate-bounce\"></div></div><div class=\"flex-1 pt-1\"><h4 class=\"text-base font-semibold text-white mb-1 flex items-center gap-2\">Starting Your Instance <span class=\"inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 animate-pulse\">In Progress</span></h4><p class=\"text-sm text-gray-400 leading-relaxed\">Initializing n8n and verifying that your instance is ready to use</p></div></div></div></div></div><!-- Custom CSS for animations --><style>\n\t\t\t@keyframes shimmer {\n\t\t\t\t0% { transform: translateX(-100%); }\n\t\t\t\t100% { transform: translateX(100%); }\n\t\t\t}\n\t\t\t@keyframes progressPulse {\n\t\t\t\t0%, 100% { opacity: 1; }\n\t\t\t\t50% { opacity: 0.8; }\n\t\t\t}\n\t\t</style></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,7 +133,7 @@ func ProvisioningComplete(instance *Instance) templ.Component {
 		var templ_7745c5c3_Var6 templ.SafeURL
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 105, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 165, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -146,7 +146,7 @@ func ProvisioningComplete(instance *Instance) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(instance.GetInstanceURL())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 109, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 169, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -159,7 +159,7 @@ func ProvisioningComplete(instance *Instance) templ.Component {
 		var templ_7745c5c3_Var8 templ.SafeURL
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.GetInstanceURL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 114, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 174, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -206,7 +206,7 @@ func ProvisioningFailed(errorMsg string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 171, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/provisioning.templ`, Line: 231, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

@@ -20,3 +20,8 @@ func PrivacyPolicyHandler(w http.ResponseWriter, r *http.Request) {
 func RefundPolicyHandler(w http.ResponseWriter, r *http.Request) {
 	components.RefundPolicyPage().Render(r.Context(), w)
 }
+
+// PricingHandler serves the Pricing page at /pricing
+func PricingHandler(w http.ResponseWriter, r *http.Request) {
+	components.PricingPage().Render(r.Context(), w)
+}

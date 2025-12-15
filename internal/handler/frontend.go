@@ -47,13 +47,13 @@ func (h *Handler) CreateInstancePage(w http.ResponseWriter, r *http.Request) {
 
 // ProvisioningPage renders the provisioning status page
 func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
-	checkoutID := r.URL.Query().Get("checkout_id")
-	if checkoutID == "" {
+	instanceID := r.URL.Query().Get("instance_id")
+	if instanceID == "" {
 		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
 
-	lo.Must0(components.ProvisioningStatusPage(checkoutID).Render(r.Context(), w))
+	lo.Must0(components.ProvisioningStatusPage(instanceID).Render(r.Context(), w))
 }
 
 // // GetProvisioningStatus returns the provisioning status for HTMX polling
