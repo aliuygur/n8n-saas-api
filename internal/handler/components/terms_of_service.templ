@@ -1,0 +1,100 @@
+package components
+
+templ TermsOfServicePage() {
+	@Layout("Terms of Service") {
+		<div class="min-h-screen bg-gray-950">
+			@Navigation()
+			<main class="max-w-2xl mx-auto px-4 py-16 text-gray-200">
+				<h1 class="text-3xl font-bold mb-6 text-white">Terms of Service</h1>
+				<p class="mb-2 text-gray-400">Effective Date: <span class="text-white font-semibold">[add date]</span></p>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">1. Service Description</h2>
+					<p class="mb-2">instol.cloud (“Service”) is a managed hosting platform that allows users to deploy and run open-source software applications (such as n8n) without requiring DevOps or advanced technical expertise.</p>
+					<p>Each deployed application is provided as an independent hosted instance.</p>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">2. Account & Eligibility</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>You must be at least 18 years old to use the Service.</li>
+						<li>You are responsible for maintaining the security of your account.</li>
+						<li>You are responsible for all activity occurring under your account.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">3. Free Trial</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>instol.cloud offers a 3-day free trial.</li>
+						<li>No credit card is required during the trial.</li>
+						<li>The trial provides full access to the Service.</li>
+						<li>After the trial ends, continued use requires an active paid subscription.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">4. Pricing & Billing</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>Pricing is $9.99 USD per month, per application instance.</li>
+						<li>Each hosted instance is billed separately.</li>
+						<li>Subscriptions are billed on a recurring monthly basis.</li>
+						<li>Prices do not include applicable taxes unless stated otherwise.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">5. Cancellation</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>You may cancel your subscription at any time through your account dashboard.</li>
+						<li>Cancellation becomes effective at the end of the current billing period.</li>
+						<li>Upon cancellation, access to the hosted instance will be terminated.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">6. Refund Policy</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>Payments are handled via Paddle.</li>
+						<li>Free trials are not charged.</li>
+						<li>Paid subscriptions are non-refundable once a billing cycle has started.</li>
+						<li>No partial refunds are provided for unused time.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">7. Acceptable Use</h2>
+					<p class="mb-2">You agree not to use the Service to:</p>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>Violate any laws or regulations</li>
+						<li>Host malicious software, malware, or phishing content</li>
+						<li>Abuse system resources or interfere with other customers</li>
+					</ul>
+					<p class="mt-2">We reserve the right to suspend or terminate accounts violating these rules.</p>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">8. Limitation of Liability</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>The Service is provided “as is” and “as available”.</li>
+						<li>instol.cloud shall not be liable for indirect, incidental, or consequential damages.</li>
+					</ul>
+				</section>
+
+				<section class="mb-6">
+					<h2 class="text-xl font-semibold text-white mb-2">9. Changes to Terms</h2>
+					<ul class="list-disc pl-6 space-y-1">
+						<li>We may update these Terms from time to time.</li>
+						<li>Continued use of the Service constitutes acceptance of the updated Terms.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 class="text-xl font-semibold text-white mb-2">10. Contact</h2>
+					<p>For questions regarding these Terms, contact:<br/>
+					<span class="font-semibold">📧 support@instol.cloud</span></p>
+				</section>
+			</main>
+		</div>
+	}
+}

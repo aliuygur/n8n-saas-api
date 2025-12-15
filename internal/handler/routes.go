@@ -28,6 +28,11 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /instances/{id}", h.requireAuthAPI(h.DeleteInstance))
 	mux.HandleFunc("GET /api/delete-modal/{id}", h.requireAuthAPI(h.DeleteModal))
 
+	// Legal pages (no auth)
+	mux.HandleFunc("GET /terms", TermsOfServiceHandler)
+	mux.HandleFunc("GET /privacy", PrivacyPolicyHandler)
+	mux.HandleFunc("GET /refund-policy", RefundPolicyHandler)
+
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
 }
