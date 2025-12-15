@@ -3,7 +3,7 @@ kind: Kustomization
 
 namePrefix: prod-
 
-namespace: instol-prod
+namespace: prod-instol
 
 resources:
   - ../../base

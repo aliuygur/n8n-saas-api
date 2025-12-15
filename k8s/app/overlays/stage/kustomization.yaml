@@ -3,7 +3,7 @@ kind: Kustomization
 
 namePrefix: stage-
 
-namespace: instol-stage
+namespace: stage-instol
 
 resources:
   - ../../base

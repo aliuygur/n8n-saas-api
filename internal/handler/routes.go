@@ -1,13 +1,18 @@
 package handler
 
 import (
+	"embed"
 	"net/http"
 )
 
+//go:embed static/*
+var staticFiles embed.FS
+
 // RegisterRoutes registers all HTTP routes
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+
 	// Register static files route first to avoid pattern conflicts
-	// mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./internal/services/frontend/static"))))
+	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 
 	// Public routes (no auth required)
 	mux.HandleFunc("GET /", h.Home)
