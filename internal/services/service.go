@@ -14,7 +14,7 @@ type Service struct {
 	gke        *provisioning.Client
 }
 
-func NewService(db *sql.DB, config config.Config) (*Service, error) {
+func NewService(db *sql.DB, config *config.Config) (*Service, error) {
 	cfClient := cloudflare.NewClient(cloudflare.Config{
 		APIToken:  config.Cloudflare.APIToken,
 		TunnelID:  config.Cloudflare.TunnelID,

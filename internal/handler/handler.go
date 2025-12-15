@@ -20,7 +20,7 @@ type Handler struct {
 }
 
 // New creates a new Handler instance
-func New(cfg *config.Config) (*Handler, error) {
+func New(cfg *config.Config, svc *services.Service) (*Handler, error) {
 
 	// Initialize OAuth2 config
 	oauth2Config := &oauth2.Config{
@@ -38,5 +38,6 @@ func New(cfg *config.Config) (*Handler, error) {
 		oauth2Config: oauth2Config,
 		jwtSecret:    []byte(cfg.JWT.Secret),
 		config:       cfg,
+		services:     svc,
 	}, nil
 }

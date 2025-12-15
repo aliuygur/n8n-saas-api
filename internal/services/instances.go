@@ -146,6 +146,17 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 
 	var dbInstance db.Instance
 	if err := s.RunInTransaction(ctx, func(tx *db.Queries) error {
+
+		// one customer can have only one instance with trial status
+		instances, err := tx.ListInstancesByUser(ctx, params.UserID)
+		if err != nil {
+			return apperrs.Server("failed to list user instances", err)
+		}
+
+		if len(instances) > 0 {
+			return apperrs.Client(apperrs.CodeInvalidInput, "user already has an instance")
+		}
+
 		// Check if subdomain already exists
 		exists, err := tx.CheckSubdomainExists(ctx, params.Subdomain)
 		if err != nil {
@@ -214,7 +225,7 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 	maxAttempts := 10
 	for range maxAttempts {
 		// Generate 8-character alphanumeric random string
-		randomStr := lo.RandomString(8, append(lo.LowerCaseLettersCharset, lo.NumbersCharset...))
+		randomStr := lo.RandomString(16, append(lo.LowerCaseLettersCharset, lo.NumbersCharset...))
 
 		// Format: n8n-{8-alphanumeric}
 		namespace := fmt.Sprintf("n8n-%s", strings.ToLower(randomStr))

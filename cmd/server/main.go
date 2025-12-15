@@ -14,6 +14,7 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/appreq"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/handler"
+	"github.com/aliuygur/n8n-saas-api/internal/services"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -52,8 +53,15 @@ func main() {
 
 	logger.Info("Database connection established")
 
+	// Initialize services
+	svc, err := services.NewService(db, cfg)
+	if err != nil {
+		logger.Error("Failed to initialize services", "error", err)
+		os.Exit(1)
+	}
+
 	// Initialize handler
-	h, err := handler.New(cfg)
+	h, err := handler.New(cfg, svc)
 	if err != nil {
 		logger.Error("Failed to initialize handler", "error", err)
 		os.Exit(1)
