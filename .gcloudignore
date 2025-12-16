@@ -1,0 +1,55 @@
+# This file specifies files that are intentionally untracked by git and should be
+# excluded from uploads to Cloud Build.
+
+# Binaries (compiled output, not source directories)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+# Ignore the compiled server binary in root, but NOT cmd/server directory
+/server
+!/cmd/
+
+# Build artifacts
+/encore.gen
+encore.app
+encore.gen.go
+encore.gen.cue
+
+# Environment and secrets
+.env
+.env.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git directory
+.git/
+.gitignore
+
+# Docker files (not needed in Cloud Build)
+.dockerignore
+
+# Documentation (optional, remove if you want to include)
+*.md
+!README.md
+
+# Test files (optional)
+*_test.go
+
+# Misc
+*.log
+*.tmp
+node_modules/
+vendor/
