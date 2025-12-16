@@ -13,14 +13,15 @@ import (
 
 	"github.com/aliuygur/n8n-saas-api/internal/appreq"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
+	"github.com/aliuygur/n8n-saas-api/internal/gcplog"
 	"github.com/aliuygur/n8n-saas-api/internal/handler"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	// Initialize structured logger
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	// Initialize GCP Cloud Logging compatible structured logger
+	logger := slog.New(gcplog.NewHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)

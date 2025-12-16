@@ -24,7 +24,7 @@ func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 		Subdomain: subdomain,
 	})
 	if err != nil {
-		appreq.GetLogger(r.Context()).Error("Failed to create instance", slog.Any("error", err))
+		l.Error("Failed to create instance", slog.Any("error", err))
 		lo.Must0(components.CreateInstanceError(err.Error()).Render(r.Context(), w))
 		return
 	}
