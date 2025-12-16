@@ -181,7 +181,7 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 		domain := fmt.Sprintf("https://%s.instol.cloud", params.Subdomain)
 		n8nInstance := &n8ntemplates.N8N_V1{
 			Namespace:     namespace,
-			EncryptionKey: lo.RandomString(32, lo.AllCharset),
+			EncryptionKey: lo.RandomString(32, lo.AlphanumericCharset),
 			BaseURL:       domain,
 		}
 
