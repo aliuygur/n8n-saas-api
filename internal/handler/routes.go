@@ -40,6 +40,10 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /privacy", PrivacyPolicyHandler)
 	mux.HandleFunc("GET /refund-policy", RefundPolicyHandler)
 
+	// Blog routes (no auth)
+	mux.HandleFunc("GET /blog", h.BlogIndex)
+	mux.HandleFunc("GET /blog/{slug}", h.BlogPost)
+
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
 }

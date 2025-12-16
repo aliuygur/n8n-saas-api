@@ -1,0 +1,188 @@
+package components
+
+// Blog index page showing all blog posts
+var blogIndexSEO = SEOMetadata{
+	Title:        "n8n Workflow Automation Blog | instol.cloud",
+	Description:  "Learn about n8n workflow automation, tutorials, comparisons, and best practices. Discover how to automate your business with n8n.",
+	Keywords:     []string{"n8n blog", "workflow automation blog", "n8n tutorials", "automation guides"},
+	CanonicalURL: "https://instol.cloud/blog",
+	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+}
+
+templ BlogIndexPage() {
+	@Layout(blogIndexSEO) {
+		<div class="min-h-screen bg-gray-950">
+			@Navigation()
+			<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+				<div class="text-center mb-12">
+					<h1 class="text-4xl md:text-5xl font-bold text-white mb-4">n8n Automation Blog</h1>
+					<p class="text-xl text-gray-400 max-w-3xl mx-auto">
+						Tutorials, guides, and insights about workflow automation with n8n
+					</p>
+				</div>
+				@BlogPostList(GetAllBlogPosts())
+			</main>
+		</div>
+	}
+}
+
+// BlogPostList renders a grid of blog post cards
+templ BlogPostList(posts []BlogPost) {
+	<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+		for _, post := range posts {
+			@BlogPostCard(post)
+		}
+	</div>
+}
+
+// BlogPostCard renders a single blog post card
+templ BlogPostCard(post BlogPost) {
+	<article class="bg-gray-900/50 rounded-xl border border-gray-800 hover:border-gray-700 transition-all overflow-hidden group">
+		<a href={ templ.SafeURL("/blog/" + post.Slug) } class="block">
+			<div class="p-6">
+				<div class="flex items-center gap-3 text-sm text-gray-400 mb-3">
+					<time datetime={ post.Date.Format("2006-01-02") }>
+						{ post.Date.Format("Jan 2, 2006") }
+					</time>
+					<span>•</span>
+					<span>{ post.ReadTime }</span>
+				</div>
+				<h2 class="text-2xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors">
+					{ post.Title }
+				</h2>
+				<p class="text-gray-400 mb-4 line-clamp-3">
+					{ post.Description }
+				</p>
+				<div class="flex items-center text-indigo-400 font-medium group-hover:gap-3 transition-all">
+					<span>Read more</span>
+					<svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+					</svg>
+				</div>
+			</div>
+		</a>
+	</article>
+}
+
+// Individual blog post page
+templ BlogPostPage(post BlogPost) {
+	@Layout(SEOMetadata{
+		Title:        post.Title + " | instol.cloud",
+		Description:  post.Description,
+		Keywords:     post.Keywords,
+		CanonicalURL: "https://instol.cloud/blog/" + post.Slug,
+		OGImage:      post.OGImage,
+		OGType:       "article",
+	}) {
+		@ArticleSchema(post)
+		<div class="min-h-screen bg-gray-950">
+			@Navigation()
+			<article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+				<!-- Breadcrumb -->
+				<nav class="mb-8 text-sm">
+					<ol class="flex items-center gap-2 text-gray-400">
+						<li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+						<li>/</li>
+						<li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+						<li>/</li>
+						<li class="text-white">{ post.Title }</li>
+					</ol>
+				</nav>
+				<!-- Article Header -->
+				<header class="mb-12">
+					<h1 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+						{ post.Title }
+					</h1>
+					<div class="flex items-center gap-4 text-gray-400">
+						<span>By { post.Author }</span>
+						<span>•</span>
+						<time datetime={ post.Date.Format("2006-01-02") }>
+							{ post.Date.Format("January 2, 2006") }
+						</time>
+						<span>•</span>
+						<span>{ post.ReadTime }</span>
+					</div>
+				</header>
+				<!-- Article Content -->
+				<div class="prose prose-invert prose-lg max-w-none">
+					@templ.Raw(GetBlogContent(post.Slug))
+				</div>
+				<!-- Article Footer -->
+				<footer class="mt-16 pt-8 border-t border-gray-800">
+					<div class="bg-gray-900/50 rounded-xl p-8 border border-gray-800">
+						<h3 class="text-2xl font-bold text-white mb-4">Ready to try n8n?</h3>
+						<p class="text-gray-400 mb-6">
+							Deploy your own managed n8n instance on Google Cloud Platform in under 2 minutes.
+							Start with a 3-day free trial, no credit card required.
+						</p>
+						<div class="flex gap-4 flex-wrap">
+							<a href="/create-instance" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition-colors font-semibold">
+								Start Free Trial
+							</a>
+							<a href="/pricing" class="bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors font-semibold">
+								View Pricing
+							</a>
+						</div>
+					</div>
+				</footer>
+				<!-- Related Posts -->
+				<div class="mt-16">
+					<h3 class="text-2xl font-bold text-white mb-8">More Articles</h3>
+					<div class="grid md:grid-cols-2 gap-6">
+						for _, relatedPost := range GetRelatedPosts(post.Slug, 2) {
+							@BlogPostCard(relatedPost)
+						}
+					</div>
+				</div>
+			</article>
+		</div>
+	}
+}
+
+// Helper function to get related posts (excluding current post)
+func GetRelatedPosts(currentSlug string, limit int) []BlogPost {
+	allPosts := GetAllBlogPosts()
+	related := make([]BlogPost, 0, limit)
+
+	for _, post := range allPosts {
+		if post.Slug != currentSlug && len(related) < limit {
+			related = append(related, post)
+		}
+	}
+
+	return related
+}
+
+// ArticleSchema renders JSON-LD structured data for blog posts
+templ ArticleSchema(post BlogPost) {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "BlogPosting",
+		"headline": "{ post.Title }",
+		"description": "{ post.Description }",
+		"author": {
+			"@type": "Organization",
+			"name": "{ post.Author }"
+		},
+		"datePublished": "{ post.Date.Format("2006-01-02") }",
+		"dateModified": "{ post.Date.Format("2006-01-02") }",
+		"publisher": {
+			"@type": "Organization",
+			"name": "instol.cloud",
+			"logo": {
+				"@type": "ImageObject",
+				"url": "https://instol.cloud/static/android-chrome-512x512.png"
+			}
+		},
+		"mainEntityOfPage": {
+			"@type": "WebPage",
+			"@id": "https://instol.cloud/blog/{ post.Slug }"
+		}
+		if post.OGImage != "" {
+			,
+			"image": "{ post.OGImage }"
+		}
+	}
+	</script>
+}

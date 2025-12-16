@@ -6,6 +6,9 @@ subjects:
   - kind: ServiceAccount
     name: instol-app-sa
     namespace: instol
+  - kind: ServiceAccount
+    name: stage-instol-app-sa
+    namespace: stage-instol
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -19,7 +22,7 @@ rules:
   # Namespace lifecycle
   - apiGroups: [""]
     resources: ["namespaces"]
-    verbs: ["create", "get", "list", "watch", "delete"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
 
   # Workloads
   - apiGroups: ["apps"]
