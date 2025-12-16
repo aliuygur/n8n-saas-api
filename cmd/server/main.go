@@ -20,20 +20,29 @@ import (
 )
 
 func main() {
-	// Initialize GCP Cloud Logging compatible structured logger
-	logger := slog.New(gcplog.NewHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
-	slog.SetDefault(logger)
-
-	// Load configuration
+	// Load configuration first to determine environment
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("Failed to load configuration", "error", err)
+		slog.Error("Failed to load configuration", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Info("Configuration loaded successfully")
+	// Initialize logger based on environment
+	var logger *slog.Logger
+	if cfg.Server.IsDevelopment() {
+		// Use human-readable text handler for local development
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		}))
+	} else {
+		// Use GCP Cloud Logging compatible handler for production
+		logger = slog.New(gcplog.NewHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		}))
+	}
+	slog.SetDefault(logger)
+
+	logger.Info("Configuration loaded successfully", "env", cfg.Server.Env)
 
 	// Connect to database
 	db, err := sql.Open("pgx", cfg.Database.URL)

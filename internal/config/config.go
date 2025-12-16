@@ -23,6 +23,12 @@ type ServerConfig struct {
 	Port       string
 	Host       string
 	APIBaseURL string // External API base URL (e.g., https://api.example.com)
+	Env        string // Environment: development, staging, production
+}
+
+// IsDevelopment returns true if the environment is development
+func (s *ServerConfig) IsDevelopment() bool {
+	return s.Env == "development" || s.Env == ""
 }
 
 // BaseURL returns the base URL for the application
@@ -93,6 +99,7 @@ func Load() (*Config, error) {
 			Port:       getEnv("PORT", "8080"),
 			Host:       getEnv("HOST", "0.0.0.0"),
 			APIBaseURL: getEnv("API_BASE_URL", ""),
+			Env:        getEnv("ENV", "development"),
 		},
 		Database: DatabaseConfig{
 			URL: getEnv("DATABASE_URL", ""),

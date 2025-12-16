@@ -14,3 +14,4 @@
 [] improve frontend for better mobile experience
 [*] add middlewares for request id, and add log object to the request context
 [*] after create instance still pendning status is shown, fix that
+[*] sitemap and robots.txt files for better SEO

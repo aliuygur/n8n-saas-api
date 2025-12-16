@@ -47,6 +47,46 @@ func main() {
 }
 ```
 
+### Environment-based Setup (Recommended)
+
+The application automatically selects the appropriate log handler based on the `ENV` environment variable:
+
+- **Development** (`ENV=development` or not set): Uses `slog.TextHandler` for human-readable output
+- **Production** (`ENV=production`): Uses `gcplog.Handler` for GCP Cloud Logging
+
+```go
+import (
+    "log/slog"
+    "os"
+    "github.com/aliuygur/n8n-saas-api/internal/config"
+    "github.com/aliuygur/n8n-saas-api/internal/gcplog"
+)
+
+func main() {
+    cfg, _ := config.Load()
+
+    var logger *slog.Logger
+    if cfg.Server.IsDevelopment() {
+        logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+    } else {
+        logger = slog.New(gcplog.NewHandler(os.Stdout, nil))
+    }
+    slog.SetDefault(logger)
+}
+```
+
+**Local development output** (TextHandler):
+```
+time=2024-01-15T10:30:45.123-07:00 level=INFO msg="Application started" env=development
+time=2024-01-15T10:30:46.456-07:00 level=INFO msg="HTTP request" path=/api/users status=200
+```
+
+**Production output** (GCP Handler):
+```json
+{"severity":"INFO","message":"Application started","timestamp":"2024-01-15T10:30:45.123Z","env":"production"}
+{"severity":"INFO","message":"HTTP request","timestamp":"2024-01-15T10:30:46.456Z","path":"/api/users","status":200}
+```
+
 ### HTTP Request Logging
 
 ```go
