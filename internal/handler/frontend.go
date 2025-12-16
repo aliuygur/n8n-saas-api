@@ -138,3 +138,9 @@ func (h *Handler) BlogPost(w http.ResponseWriter, r *http.Request) {
 
 	lo.Must0(components.BlogPostPage(*post).Render(r.Context(), w))
 }
+
+// NotFound renders the 404 page
+func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	lo.Must0(components.NotFoundPage().Render(r.Context(), w))
+}

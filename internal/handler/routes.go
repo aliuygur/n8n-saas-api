@@ -46,4 +46,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
+
+	// 404 handler (must be last)
+	mux.HandleFunc("/", h.NotFound)
 }
