@@ -39,6 +39,24 @@ templ BlogPostList(posts []BlogPost) {
 templ BlogPostCard(post BlogPost) {
 	<article class="bg-gray-900/50 rounded-xl border border-gray-800 hover:border-gray-700 transition-all overflow-hidden group">
 		<a href={ templ.SafeURL("/blog/" + post.Slug) } class="block">
+			if post.CoverImage != "" {
+				<div class="relative h-48 overflow-hidden">
+					<img
+						src={ post.CoverImage }
+						alt={ post.Title }
+						class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+						loading="lazy"
+					/>
+					<div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+					if post.Category != "" {
+						<div class="absolute top-4 left-4">
+							<span class="bg-indigo-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+								{ post.Category }
+							</span>
+						</div>
+					}
+				</div>
+			}
 			<div class="p-6">
 				<div class="flex items-center gap-3 text-sm text-gray-400 mb-3">
 					<time datetime={ post.Date.Format("2006-01-02") }>
@@ -75,8 +93,36 @@ templ BlogPostPage(post BlogPost) {
 		OGType:       "article",
 	}) {
 		@ArticleSchema(post)
+		<!-- Reading Progress Bar -->
+		<div id="reading-progress" class="fixed top-0 left-0 h-1 bg-indigo-600 z-50 transition-all duration-100" style="width: 0%"></div>
+		<script>
+			window.addEventListener('scroll', function() {
+				const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+				const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+				const scrolled = (winScroll / height) * 100;
+				document.getElementById('reading-progress').style.width = scrolled + '%';
+			});
+		</script>
 		<div class="min-h-screen bg-gray-950">
 			@Navigation()
+			<!-- Cover Image -->
+			if post.CoverImage != "" {
+				<div class="relative h-96 overflow-hidden">
+					<img
+						src={ post.CoverImage }
+						alt={ post.Title }
+						class="w-full h-full object-cover"
+					/>
+					<div class="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-gray-950/50 to-gray-950"></div>
+					if post.Category != "" {
+						<div class="absolute top-8 left-1/2 transform -translate-x-1/2 max-w-4xl w-full px-4">
+							<span class="bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
+								{ post.Category }
+							</span>
+						</div>
+					}
+				</div>
+			}
 			<article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 				<!-- Breadcrumb -->
 				<nav class="mb-8 text-sm">
