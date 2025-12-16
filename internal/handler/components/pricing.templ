@@ -1,7 +1,16 @@
 package components
 
+var pricingPageSEO = SEOMetadata{
+	Title:        "Pricing - Affordable n8n Hosting Plans | instol.cloud",
+	Description:  "Transparent pricing for n8n workflow automation hosting on GCP. Pay only $9.99/month per instance. 3-day free trial with no credit card required. Cancel anytime.",
+	Keywords:     []string{"n8n pricing", "workflow automation cost", "n8n hosting price", "automation hosting plans"},
+	CanonicalURL: "https://instol.cloud/pricing",
+	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+}
+
 templ PricingPage() {
-	@Layout("Pricing - instol.cloud") {
+	@Layout(pricingPageSEO) {
+		@SoftwareApplicationSchema()
 		<div class="min-h-screen bg-gray-950">
 			@Navigation()
 			<main class="max-w-4xl mx-auto px-4 py-16">

@@ -2,8 +2,14 @@ package components
 
 import "strings"
 
+var dashboardPageSEO = SEOMetadata{
+	Title:       "Dashboard - Manage Your n8n Instances | instol.cloud",
+	Description: "View and manage your n8n workflow automation instances.",
+	NoIndex:     true,
+}
+
 templ DashboardPage(instances []Instance) {
-	@Layout("Dashboard - instol.cloud") {
+	@Layout(dashboardPageSEO) {
 		<div class="min-h-screen bg-gray-950">
 			@AuthenticatedNavigation()
 			<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

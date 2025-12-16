@@ -1,0 +1,19 @@
+# robots.txt for instol.cloud
+
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /terms
+Allow: /privacy
+Allow: /refund-policy
+
+# Disallow authenticated/private pages
+Disallow: /login
+Disallow: /dashboard
+Disallow: /create-instance
+Disallow: /provision
+Disallow: /api/
+Disallow: /auth/
+
+# Sitemap location (uncomment when sitemap is created)
+# Sitemap: https://instol.cloud/sitemap.xml

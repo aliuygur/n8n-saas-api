@@ -1,7 +1,13 @@
 package components
 
+var termsPageSEO = SEOMetadata{
+	Title:        "Terms of Service | instol.cloud",
+	Description:  "Read instol.cloud's Terms of Service for n8n hosting services.",
+	CanonicalURL: "https://instol.cloud/terms",
+}
+
 templ TermsOfServicePage() {
-	@Layout("Terms of Service") {
+	@Layout(termsPageSEO) {
 		<div class="min-h-screen bg-gray-950">
 			@Navigation()
 			<main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16 text-gray-200">

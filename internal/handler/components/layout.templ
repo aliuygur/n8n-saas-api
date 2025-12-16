@@ -1,12 +1,12 @@
 package components
 
-templ Layout(title string) {
+templ Layout(seo SEOMetadata) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
+			@SEOHead(seo)
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ title }</title>
 			<link rel="preconnect" href="https://fonts.googleapis.com"/>
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
 			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"/>
@@ -191,8 +191,14 @@ templ Footer() {
 	</footer>
 }
 
+var errorPageSEO = SEOMetadata{
+	Title:       "Error - instol.cloud",
+	Description: "An error occurred.",
+	NoIndex:     true,
+}
+
 templ ErrorPage(message string) {
-	@Layout("Error - instol.cloud") {
+	@Layout(errorPageSEO) {
 		<main class="pt-16 p-4 container mx-auto">
 			<h1 class="text-4xl font-bold text-white mb-4">Error</h1>
 			<p class="text-gray-400">{ message }</p>

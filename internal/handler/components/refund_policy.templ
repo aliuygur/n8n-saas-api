@@ -1,7 +1,13 @@
 package components
 
+var refundPageSEO = SEOMetadata{
+	Title:        "Refund Policy | instol.cloud",
+	Description:  "Understand instol.cloud's refund and cancellation policy. 3-day free trial with 7-day money-back guarantee on your first payment.",
+	CanonicalURL: "https://instol.cloud/refund-policy",
+}
+
 templ RefundPolicyPage() {
-	@Layout("Refund Policy") {
+	@Layout(refundPageSEO) {
 		<div class="min-h-screen bg-gray-950">
 			@Navigation()
 			<main class="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16 text-gray-200">

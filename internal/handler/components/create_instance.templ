@@ -1,7 +1,13 @@
 package components
 
+var createInstancePageSEO = SEOMetadata{
+	Title:       "Create Instance - Deploy n8n | instol.cloud",
+	Description: "Deploy a new n8n workflow automation instance on Google Cloud Platform.",
+	NoIndex:     true,
+}
+
 templ CreateInstancePage() {
-	@Layout("Create Instance - instol.cloud") {
+	@Layout(createInstancePageSEO) {
 		<div class="min-h-screen bg-gray-950">
 			<nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg">
 				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

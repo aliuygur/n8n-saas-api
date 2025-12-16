@@ -1,8 +1,13 @@
 package components
 
+var provisioningPageSEO = SEOMetadata{
+	Title:       "Provisioning Instance | instol.cloud",
+	Description: "Your n8n instance is being provisioned.",
+	NoIndex:     true,
+}
 
 templ ProvisioningStatusPage(instanceID string) {
-	@Layout("Provisioning Instance - instol.cloud") {
+	@Layout(provisioningPageSEO) {
 		<div class="min-h-screen bg-gray-950">
 			<nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg">
 				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

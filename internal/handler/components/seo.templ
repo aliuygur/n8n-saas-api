@@ -1,0 +1,73 @@
+package components
+
+import "strings"
+
+// SEOMetadata contains all SEO-related metadata for a page
+type SEOMetadata struct {
+	Title        string
+	Description  string
+	Keywords     []string
+	CanonicalURL string
+	OGImage      string
+	OGType       string // default: "website"
+	TwitterCard  string // default: "summary_large_image"
+	NoIndex      bool
+}
+
+// getOGType returns the og:type value, defaulting to "website" if empty
+func getOGType(ogType string) string {
+	if ogType == "" {
+		return "website"
+	}
+	return ogType
+}
+
+// getTwitterCard returns the twitter:card value, defaulting to "summary_large_image" if empty
+func getTwitterCard(card string) string {
+	if card == "" {
+		return "summary_large_image"
+	}
+	return card
+}
+
+// SEOHead renders all SEO-related meta tags
+templ SEOHead(meta SEOMetadata) {
+	<!-- Primary Meta Tags -->
+	<title>{ meta.Title }</title>
+	<meta name="title" content={ meta.Title }/>
+	<meta name="description" content={ meta.Description }/>
+	if len(meta.Keywords) > 0 {
+		<meta name="keywords" content={ strings.Join(meta.Keywords, ", ") }/>
+	}
+	<!-- Canonical URL -->
+	if meta.CanonicalURL != "" {
+		<link rel="canonical" href={ meta.CanonicalURL }/>
+	}
+	<!-- Robots -->
+	if meta.NoIndex {
+		<meta name="robots" content="noindex, nofollow"/>
+	} else {
+		<meta name="robots" content="index, follow"/>
+	}
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content={ getOGType(meta.OGType) }/>
+	if meta.CanonicalURL != "" {
+		<meta property="og:url" content={ meta.CanonicalURL }/>
+	}
+	<meta property="og:title" content={ meta.Title }/>
+	<meta property="og:description" content={ meta.Description }/>
+	if meta.OGImage != "" {
+		<meta property="og:image" content={ meta.OGImage }/>
+	}
+	<meta property="og:site_name" content="instol.cloud"/>
+	<!-- Twitter Card -->
+	<meta property="twitter:card" content={ getTwitterCard(meta.TwitterCard) }/>
+	if meta.CanonicalURL != "" {
+		<meta property="twitter:url" content={ meta.CanonicalURL }/>
+	}
+	<meta property="twitter:title" content={ meta.Title }/>
+	<meta property="twitter:description" content={ meta.Description }/>
+	if meta.OGImage != "" {
+		<meta property="twitter:image" content={ meta.OGImage }/>
+	}
+}

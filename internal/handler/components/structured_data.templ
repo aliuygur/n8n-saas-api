@@ -1,0 +1,85 @@
+package components
+
+// OrganizationSchema renders JSON-LD structured data for the organization
+templ OrganizationSchema() {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"name": "instol.cloud",
+		"url": "https://instol.cloud",
+		"logo": "https://instol.cloud/static/android-chrome-512x512.png",
+		"description": "One-Click n8n Workflow Automation Hosting on Google Cloud Platform"
+	}
+	</script>
+}
+
+// WebApplicationSchema renders JSON-LD structured data for the web application
+templ WebApplicationSchema() {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		"name": "instol.cloud",
+		"applicationCategory": "BusinessApplication",
+		"offers": {
+			"@type": "Offer",
+			"price": "0",
+			"priceCurrency": "USD"
+		},
+		"operatingSystem": "Web Browser",
+		"description": "Deploy and manage n8n workflow automation instances on GCP with one click"
+	}
+	</script>
+}
+
+// SoftwareApplicationSchema renders JSON-LD structured data for the software application
+templ SoftwareApplicationSchema() {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		"name": "n8n on instol.cloud",
+		"applicationCategory": "BusinessApplication",
+		"operatingSystem": "Cloud",
+		"description": "Hosted n8n workflow automation platform",
+		"offers": {
+			"@type": "AggregateOffer",
+			"priceCurrency": "USD",
+			"lowPrice": "0",
+			"url": "https://instol.cloud/pricing"
+		}
+	}
+	</script>
+}
+
+// FAQItem represents a single FAQ question and answer
+type FAQItem struct {
+	Question string
+	Answer   string
+}
+
+// FAQSchema renders JSON-LD structured data for FAQ pages
+templ FAQSchema(items []FAQItem) {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		"mainEntity": [
+			for i, item := range items {
+				{
+					"@type": "Question",
+					"name": "{ item.Question }",
+					"acceptedAnswer": {
+						"@type": "Answer",
+						"text": "{ item.Answer }"
+					}
+				}
+				if i < len(items)-1 {
+					,
+				}
+			}
+		]
+	}
+	</script>
+}

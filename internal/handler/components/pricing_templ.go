@@ -8,6 +8,14 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+var pricingPageSEO = SEOMetadata{
+	Title:        "Pricing - Affordable n8n Hosting Plans | instol.cloud",
+	Description:  "Transparent pricing for n8n workflow automation hosting on GCP. Pay only $9.99/month per instance. 3-day free trial with no credit card required. Cancel anytime.",
+	Keywords:     []string{"n8n pricing", "workflow automation cost", "n8n hosting price", "automation hosting plans"},
+	CanonicalURL: "https://instol.cloud/pricing",
+	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+}
+
 func PricingPage() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -41,7 +49,11 @@ func PricingPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-gray-950\">")
+			templ_7745c5c3_Err = SoftwareApplicationSchema().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"min-h-screen bg-gray-950\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -55,7 +67,7 @@ func PricingPage() templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout("Pricing - instol.cloud").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout(pricingPageSEO).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
