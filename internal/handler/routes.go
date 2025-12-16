@@ -51,16 +51,23 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 // NotFoundHandlerWrapper wraps the mux to intercept 404 responses and render custom page
 func (h *Handler) NotFoundHandlerWrapper(mux *http.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if the mux has a handler for this path
-		_, pattern := mux.Handler(r)
+		// In Go 1.22, GET / matches everything as a catch-all
+		// We need to check if the path is exactly "/" for home, or if it's a known route
+		// For any other path, check if it would return 404
 
-		// If pattern is empty, no route matched - show custom 404
-		if pattern == "" {
-			h.NotFound(w, r)
-			return
+		if r.URL.Path != "/" && r.Method == "GET" {
+			// Check if this exact path has a registered handler
+			_, pattern := mux.Handler(r)
+
+			// If it falls back to "GET /", it means no specific route matched
+			// (since GET / is our catch-all home route)
+			if pattern == "GET /" {
+				h.NotFound(w, r)
+				return
+			}
 		}
 
-		// Otherwise, serve normally
+		// Serve normally
 		mux.ServeHTTP(w, r)
 	})
 }
