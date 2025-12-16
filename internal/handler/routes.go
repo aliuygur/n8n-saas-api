@@ -46,7 +46,21 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
+}
 
-	// 404 handler (must be last)
-	mux.HandleFunc("/", h.NotFound)
+// NotFoundHandlerWrapper wraps the mux to intercept 404 responses and render custom page
+func (h *Handler) NotFoundHandlerWrapper(mux *http.ServeMux) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if the mux has a handler for this path
+		_, pattern := mux.Handler(r)
+
+		// If pattern is empty, no route matched - show custom 404
+		if pattern == "" {
+			h.NotFound(w, r)
+			return
+		}
+
+		// Otherwise, serve normally
+		mux.ServeHTTP(w, r)
+	})
 }
