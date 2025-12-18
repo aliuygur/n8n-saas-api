@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/appreq"
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/gcplog"
 	"github.com/aliuygur/n8n-saas-api/internal/handler"
@@ -32,12 +32,12 @@ func main() {
 	if cfg.Server.IsDevelopment() {
 		// Use human-readable text handler for local development
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelInfo,
+			Level: slog.LevelDebug,
 		}))
 	} else {
 		// Use GCP Cloud Logging compatible handler for production
 		logger = slog.New(gcplog.NewHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelInfo,
+			Level: slog.LevelDebug,
 		}))
 	}
 	slog.SetDefault(logger)
@@ -90,7 +90,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      appreq.Handler(handler, logger),
+		Handler:      appctx.Handler(handler, logger),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

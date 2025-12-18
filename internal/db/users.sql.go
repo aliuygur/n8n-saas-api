@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-const acquireUserLock = `-- name: AcquireUserLock :exec
+const acquireLock = `-- name: AcquireLock :exec
 SELECT pg_advisory_lock(hashtext($1))
 `
 
-func (q *Queries) AcquireUserLock(ctx context.Context, hashtext string) error {
-	_, err := q.db.ExecContext(ctx, acquireUserLock, hashtext)
+func (q *Queries) AcquireLock(ctx context.Context, hashtext string) error {
+	_, err := q.db.ExecContext(ctx, acquireLock, hashtext)
 	return err
 }
 
@@ -167,12 +167,12 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 	return i, err
 }
 
-const releaseUserLock = `-- name: ReleaseUserLock :exec
+const releaseLock = `-- name: ReleaseLock :exec
 SELECT pg_advisory_unlock(hashtext($1))
 `
 
-func (q *Queries) ReleaseUserLock(ctx context.Context, hashtext string) error {
-	_, err := q.db.ExecContext(ctx, releaseUserLock, hashtext)
+func (q *Queries) ReleaseLock(ctx context.Context, hashtext string) error {
+	_, err := q.db.ExecContext(ctx, releaseLock, hashtext)
 	return err
 }
 

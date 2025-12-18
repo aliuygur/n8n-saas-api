@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/appreq"
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/samber/lo"
@@ -23,7 +23,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	// List instances for the user
 	instances, err := h.services.GetInstancesByUser(r.Context(), user.UserID)
 	if err != nil {
-		appreq.GetLogger(r.Context()).Error("failed to fetch instances", slog.Any("error", err))
+		appctx.GetLogger(r.Context()).Error("failed to fetch instances", slog.Any("error", err))
 		http.Error(w, "Failed to load instances", http.StatusInternalServerError)
 		return
 	}
@@ -109,7 +109,7 @@ func (h *Handler) DeleteModal(w http.ResponseWriter, r *http.Request) {
 	// Get instance details to show the subdomain
 	instance, err := h.services.GetInstanceByID(r.Context(), instanceID)
 	if err != nil {
-		appreq.GetLogger(r.Context()).Error("failed to get instance", slog.Any("error", err))
+		appctx.GetLogger(r.Context()).Error("failed to get instance", slog.Any("error", err))
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

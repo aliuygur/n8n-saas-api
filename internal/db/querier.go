@@ -9,7 +9,7 @@ import (
 )
 
 type Querier interface {
-	AcquireUserLock(ctx context.Context, hashtext string) error
+	AcquireLock(ctx context.Context, hashtext string) error
 	CheckNamespaceExists(ctx context.Context, namespace string) (bool, error)
 	CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error)
 	CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error)
@@ -28,6 +28,7 @@ type Querier interface {
 	GetInstance(ctx context.Context, id string) (Instance, error)
 	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
 	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
+	GetInstanceForUpdate(ctx context.Context, id string) (Instance, error)
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
 	GetSubscriptionByInstanceID(ctx context.Context, instanceID string) (Subscription, error)
 	GetSubscriptionByPolarID(ctx context.Context, polarSubscriptionID string) (Subscription, error)
@@ -37,8 +38,7 @@ type Querier interface {
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
 	ListCheckoutSessions(ctx context.Context, limit int32) ([]CheckoutSession, error)
 	ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error)
-	ReleaseUserLock(ctx context.Context, hashtext string) error
-	SoftDeleteInstance(ctx context.Context, id string) (Instance, error)
+	ReleaseLock(ctx context.Context, hashtext string) error
 	UpdateCheckoutSessionCompleted(ctx context.Context, arg UpdateCheckoutSessionCompletedParams) error
 	UpdateCheckoutSessionStatus(ctx context.Context, arg UpdateCheckoutSessionStatusParams) error
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)

@@ -22,3 +22,31 @@ func (s *Service) RunInTransaction(ctx context.Context, fn func(tx *db.Queries) 
 
 	return tx.Commit()
 }
+
+func (s *Service) getDB(ctx context.Context) *db.Queries {
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return db.New(conn)
+}
+
+func (s *Service) getDBWithLock(ctx context.Context, lockKey string) (*db.Queries, func()) {
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		panic(err)
+	}
+	queries := db.New(conn)
+
+	if err := queries.AcquireLock(ctx, lockKey); err != nil {
+		panic(err)
+	}
+
+	releaseFunc := func() {
+		if err := queries.ReleaseLock(ctx, lockKey); err != nil {
+			panic(err)
+		}
+	}
+
+	return queries, releaseFunc
+}

@@ -33,9 +33,9 @@ func (q *Queries) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, namespace, subdomain
+    user_id, namespace, subdomain, status
 ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
 ) RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
@@ -43,10 +43,16 @@ type CreateInstanceParams struct {
 	UserID    string `json:"user_id"`
 	Namespace string `json:"namespace"`
 	Subdomain string `json:"subdomain"`
+	Status    string `json:"status"`
 }
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, createInstance, arg.UserID, arg.Namespace, arg.Subdomain)
+	row := q.db.QueryRowContext(ctx, createInstance,
+		arg.UserID,
+		arg.Namespace,
+		arg.Subdomain,
+		arg.Status,
+	)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -63,7 +69,10 @@ func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) 
 }
 
 const deleteInstance = `-- name: DeleteInstance :exec
-DELETE FROM instances WHERE id = $1
+UPDATE instances 
+SET deleted_at = NOW(), updated_at = NOW()
+WHERE id = $1
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
 `
 
 func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
@@ -119,6 +128,27 @@ SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deploy
 
 func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error) {
 	row := q.db.QueryRowContext(ctx, getInstanceBySubdomain, subdomain)
+	var i Instance
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Status,
+		&i.Namespace,
+		&i.Subdomain,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeployedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getInstanceForUpdate = `-- name: GetInstanceForUpdate :one
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL FOR UPDATE
+`
+
+func (q *Queries) GetInstanceForUpdate(ctx context.Context, id string) (Instance, error) {
+	row := q.db.QueryRowContext(ctx, getInstanceForUpdate, id)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -216,30 +246,6 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 		return nil, err
 	}
 	return items, nil
-}
-
-const softDeleteInstance = `-- name: SoftDeleteInstance :one
-UPDATE instances 
-SET deleted_at = NOW(), updated_at = NOW()
-WHERE id = $1
-RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
-`
-
-func (q *Queries) SoftDeleteInstance(ctx context.Context, id string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, softDeleteInstance, id)
-	var i Instance
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Status,
-		&i.Namespace,
-		&i.Subdomain,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeployedAt,
-		&i.DeletedAt,
-	)
-	return i, err
 }
 
 const updateInstanceDeployed = `-- name: UpdateInstanceDeployed :one

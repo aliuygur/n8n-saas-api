@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/aliuygur/n8n-saas-api/internal/appreq"
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
@@ -14,7 +14,7 @@ import (
 // CreateInstance creates a new instance via HTMX
 func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 	user := MustGetUser(ctx)
 
 	subdomain := r.FormValue("subdomain")
@@ -42,7 +42,7 @@ func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 // CheckSubdomain checks if a subdomain is available via HTMX
 func (h *Handler) CheckSubdomain(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 
 	subdomain := r.FormValue("subdomain")
 	if subdomain == "" {
@@ -74,7 +74,7 @@ func (h *Handler) CheckSubdomain(w http.ResponseWriter, r *http.Request) {
 // DeleteInstance handles instance deletion via HTMX
 func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 	user := MustGetUser(ctx)
 
 	instanceID := r.PathValue("id")
@@ -103,7 +103,7 @@ func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
 // CheckInstanceStatus checks if the instance URL is active via HTMX polling
 func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 	user := MustGetUser(ctx)
 
 	instanceID := r.URL.Query().Get("instance_id")

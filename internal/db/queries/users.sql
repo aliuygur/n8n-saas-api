@@ -39,8 +39,8 @@ DELETE FROM sessions WHERE expires_at <= NOW();
 -- name: DeleteUserSessions :exec
 DELETE FROM sessions WHERE user_id = $1;
 
--- name: AcquireUserLock :exec
+-- name: AcquireLock :exec
 SELECT pg_advisory_lock(hashtext($1));
 
--- name: ReleaseUserLock :exec
+-- name: ReleaseLock :exec
 SELECT pg_advisory_unlock(hashtext($1));

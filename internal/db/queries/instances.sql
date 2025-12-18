@@ -1,12 +1,15 @@
 -- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, namespace, subdomain
+    user_id, namespace, subdomain, status
 ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
 ) RETURNING *;
 
 -- name: GetInstance :one
 SELECT * FROM instances WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: GetInstanceForUpdate :one
+SELECT * FROM instances WHERE id = $1 AND deleted_at IS NULL FOR UPDATE;
 
 -- name: GetInstanceByNamespace :one
 SELECT * FROM instances WHERE namespace = $1 AND deleted_at IS NULL;
@@ -49,11 +52,8 @@ SELECT EXISTS(SELECT 1 FROM instances WHERE namespace = $1 AND deleted_at IS NUL
 -- name: CheckSubdomainExists :one
 SELECT EXISTS(SELECT 1 FROM instances WHERE subdomain = $1 AND deleted_at IS NULL);
 
--- name: SoftDeleteInstance :one
+-- name: DeleteInstance :exec
 UPDATE instances 
 SET deleted_at = NOW(), updated_at = NOW()
 WHERE id = $1
 RETURNING *;
-
--- name: DeleteInstance :exec
-DELETE FROM instances WHERE id = $1;

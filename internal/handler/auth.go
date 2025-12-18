@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/appreq"
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/golang-jwt/jwt/v5"
@@ -62,7 +62,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 // HandleGoogleLogin redirects to Google OAuth
 func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 
 	l.Info("Initiating Google OAuth login")
 	// Generate a random state token for CSRF protection
@@ -84,7 +84,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	l := appreq.GetLogger(ctx)
+	l := appctx.GetLogger(ctx)
 
 	// TODO: Validate state token to prevent CSRF
 

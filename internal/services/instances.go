@@ -2,15 +2,16 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/apperrs"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/provisioning/n8ntemplates"
-	"github.com/aliuygur/n8n-saas-api/pkg/domainutils"
 	"github.com/samber/lo"
 )
 
@@ -86,29 +87,38 @@ type DeleteInstanceParams struct {
 }
 
 func (s *Service) DeleteInstance(ctx context.Context, params DeleteInstanceParams) error {
+	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_delete_%s", params.UserID))
+	defer releaseLock()
 
-	if err := s.RunInTransaction(ctx, func(tx *db.Queries) error {
-		instance, err := tx.GetInstance(ctx, params.InstanceID)
-		if err != nil {
-			return fmt.Errorf("failed to get instance: %w", err)
-		}
+	l := appctx.GetLogger(ctx)
 
-		if err := s.gke.DeleteNamespace(ctx, instance.Namespace); err != nil {
-			return apperrs.Server("failed to delete namespace from Kubernetes", err)
+	instance, err := queries.GetInstance(ctx, params.InstanceID)
+	if err != nil {
+		if db.IsNotFoundError(err) {
+			return apperrs.Client(apperrs.CodeNotFound, "instance not found")
 		}
-		if err := s.cloudflare.DeleteDNSRecord(ctx, instance.Subdomain); err != nil {
-			return apperrs.Server("failed to delete DNS record from Cloudflare", err)
-		}
-
-		// Soft delete from database
-		if err := tx.DeleteInstance(ctx, params.InstanceID); err != nil {
-			return apperrs.Server("failed to delete instance from database", err)
-		}
-
-		return nil
-	}); err != nil {
-		return err
+		return fmt.Errorf("failed to get instance: %w", err)
 	}
+
+	if instance.UserID != params.UserID {
+		return apperrs.Client(apperrs.CodeForbidden, "user does not own the instance")
+	}
+
+	if err := s.gke.DeleteNamespace(ctx, instance.Namespace); err != nil {
+		return apperrs.Server("failed to delete namespace from Kubernetes", err)
+	}
+	l.Debug("deleted namespace from Kubernetes", "namespace", instance.Namespace)
+
+	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
+	if err := s.cloudflare.DeleteDNSRecord(ctx, domain); err != nil {
+		return apperrs.Server("failed to delete DNS record from Cloudflare", err)
+	}
+	l.Debug("deleted DNS record from Cloudflare", "domain", domain)
+
+	if err := queries.DeleteInstance(ctx, params.InstanceID); err != nil {
+		return apperrs.Server("failed to delete instance from database", err)
+	}
+	l.Debug("deleted instance from database", "instance_id", params.InstanceID)
 
 	return nil
 }
@@ -137,73 +147,24 @@ type CreateInstanceParams struct {
 }
 
 func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParams) (*Instance, error) {
-	if err := domainutils.ValidateSubdomain(params.Subdomain); err != nil {
-		return nil, apperrs.Client(apperrs.CodeInvalidSubdomain, "invalid subdomain")
-	}
 
-	var dbInstance db.Instance
-	if err := s.RunInTransaction(ctx, func(tx *db.Queries) error {
+	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_create_%s", params.UserID))
+	defer releaseLock()
 
-		// one customer can have only one instance with trial status
-		instances, err := tx.ListInstancesByUser(ctx, params.UserID)
-		if err != nil {
-			return apperrs.Server("failed to list user instances", err)
-		}
-
-		if len(instances) > 0 {
-			return apperrs.Client(apperrs.CodeInvalidInput, "user already has an instance")
-		}
-
-		// Check if subdomain already exists
-		exists, err := tx.CheckSubdomainExists(ctx, params.Subdomain)
-		if err != nil {
-			return apperrs.Server("failed to check subdomain existence", err)
-		}
-		if exists {
-			return apperrs.Client(apperrs.CodeConflict, "subdomain already taken")
-		}
-
-		namespace, err := s.generateUniqueNamespace(ctx, tx)
-		if err != nil {
-			return err
-		}
-
-		dbInstance, err = tx.CreateInstance(ctx, db.CreateInstanceParams{
-			UserID:    params.UserID,
-			Namespace: namespace,
-			Subdomain: params.Subdomain,
-		})
-		if err != nil {
-			return apperrs.Server("failed to create instance in database", err)
-		}
-
-		// Deploy n8n instance
-		domain := fmt.Sprintf("https://%s.instol.cloud", params.Subdomain)
-		n8nInstance := &n8ntemplates.N8N_V1{
-			Namespace:     namespace,
-			EncryptionKey: lo.RandomString(32, lo.AlphanumericCharset),
-			BaseURL:       domain,
-		}
-
-		if err := s.gke.Apply(ctx, n8nInstance); err != nil {
-			return fmt.Errorf("failed to deploy n8n: %w", err)
-		}
-
-		// Add Cloudflare tunnel route for external access
-		serviceURL := fmt.Sprintf("http://n8n-main.%s.svc.cluster.local", namespace)
-		if err := s.cloudflare.AddTunnelRoute(ctx, domain, serviceURL); err != nil {
-			return apperrs.Server("failed to add Cloudflare tunnel route", err)
-		}
-
-		return nil
-	}); err != nil {
+	if err := s.canCreateInstance(ctx, queries, params.UserID); err != nil {
 		return nil, err
 	}
 
-	// TODO: deploy instance to Kubernetes and create Cloudflare DNS record here
+	// Check if subdomain already exists
+	exists, err := queries.CheckSubdomainExists(ctx, params.Subdomain)
+	if err != nil {
+		return nil, apperrs.Server("failed to check subdomain existence", err)
+	}
+	if exists {
+		return nil, apperrs.Client(apperrs.CodeConflict, "subdomain already taken")
+	}
 
-	instance := toDomainInstance(dbInstance)
-	return &instance, nil
+	return s.createInstanceInternal(ctx, queries, params)
 }
 
 func (s *Service) CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error) {
@@ -266,4 +227,176 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 	}
 
 	return "", apperrs.Server(fmt.Sprintf("failed to generate unique namespace after %d attempts", maxAttempts), nil)
+}
+
+type instanceCreationState struct {
+	instanceID     string
+	userID         string
+	namespace      string
+	subdomain      string
+	subscriptionID string
+}
+
+func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Queries, params CreateInstanceParams) (*Instance, error) {
+	l := appctx.GetLogger(ctx)
+
+	createInstance := func(state *instanceCreationState) (*instanceCreationState, error) {
+		dbInst, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
+			UserID:    state.userID,
+			Namespace: state.namespace,
+			Subdomain: state.subdomain,
+			Status:    InstanceStatusDeployed,
+		})
+		if err != nil {
+			return state, apperrs.Server("failed to create instance in database", err)
+		}
+
+		state.instanceID = dbInst.ID
+		state.namespace = dbInst.Namespace
+		state.subdomain = dbInst.Subdomain
+		return state, nil
+	}
+
+	deleteInstance := func(state *instanceCreationState) *instanceCreationState {
+		if err := queries.DeleteInstance(ctx, state.instanceID); err != nil {
+			l.Error("failed to revert instance creation", "instance_id", state.instanceID, "error", err)
+		} else {
+			l.Debug("reverted instance creation", "instance_id", state.instanceID)
+		}
+		return state
+	}
+
+	createTrialSubscription := func(state *instanceCreationState) (*instanceCreationState, error) {
+		// Check if user already has a subscription
+		subscriptions, err := queries.GetAllSubscriptionsByUserID(ctx, state.userID)
+		if err != nil {
+			return state, apperrs.Server("failed to check existing subscriptions", err)
+		}
+
+		// Only create trial subscription if user has no subscriptions
+		if len(subscriptions) == 0 {
+			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
+			subscription, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+				UserID:              state.userID,
+				InstanceID:          state.instanceID,
+				PolarProductID:      "", // Empty for trial
+				PolarCustomerID:     "", // Empty for trial
+				PolarSubscriptionID: "", // Empty for trial
+				TrialEndsAt: sql.NullTime{
+					Time:  trialEndsAt,
+					Valid: true,
+				},
+				Status: SubscriptionStatusTrial,
+			})
+			if err != nil {
+				return state, apperrs.Server("failed to create trial subscription", err)
+			}
+			state.subscriptionID = subscription.ID
+			l.Debug("created trial subscription", "instance_id", state.instanceID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
+		}
+
+		return state, nil
+	}
+	revertTrialSubscription := func(state *instanceCreationState) *instanceCreationState {
+		// Only delete if we actually created a subscription
+		if state.subscriptionID != "" {
+			if err := queries.DeleteSubscriptionByInstanceID(ctx, state.instanceID); err != nil {
+				l.Error("failed to revert trial subscription creation", "instance_id", state.instanceID, "subscription_id", state.subscriptionID, "error", err)
+			}
+			l.Debug("reverted trial subscription creation", "instance_id", state.instanceID, "subscription_id", state.subscriptionID)
+		}
+		return state
+	}
+
+	deployGke := func(state *instanceCreationState) (*instanceCreationState, error) {
+		// Deploy n8n instance
+		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
+		n8nInstance := &n8ntemplates.N8N_V1{
+			Namespace:     state.namespace,
+			EncryptionKey: lo.RandomString(32, lo.AlphanumericCharset),
+			BaseURL:       domain,
+		}
+
+		if err := s.gke.Apply(ctx, n8nInstance); err != nil {
+			return state, fmt.Errorf("failed to deploy n8n: %w", err)
+		}
+		return state, nil
+	}
+	revertGke := func(state *instanceCreationState) *instanceCreationState {
+		if err := s.gke.DeleteNamespace(ctx, state.namespace); err != nil {
+			l.Error("failed to revert GKE deployment", "namespace", state.namespace, "error", err)
+		} else {
+			l.Debug("reverted GKE deployment", "namespace", state.namespace)
+		}
+		return state
+	}
+
+	addDNSRoute := func(state *instanceCreationState) (*instanceCreationState, error) {
+		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
+		serviceURL := fmt.Sprintf("http://n8n-main.%s.svc.cluster.local", state.namespace)
+		if err := s.cloudflare.AddTunnelRoute(ctx, domain, serviceURL); err != nil {
+			return state, apperrs.Server("failed to add Cloudflare tunnel route", err)
+		}
+		return state, nil
+	}
+	revertDNSRoute := func(state *instanceCreationState) *instanceCreationState {
+		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
+		if err := s.cloudflare.DeleteDNSRecord(ctx, domain); err != nil {
+			l.Error("failed to revert DNS route", "domain", domain, "error", err)
+		} else {
+			l.Debug("reverted DNS route", "domain", domain)
+		}
+		return state
+	}
+
+	namespace, err := s.generateUniqueNamespace(ctx, queries)
+	if err != nil {
+		return nil, err
+	}
+
+	initialState := &instanceCreationState{
+		userID:    params.UserID,
+		subdomain: params.Subdomain,
+		namespace: namespace,
+	}
+	saga := lo.NewTransaction[*instanceCreationState]().
+		Then(deployGke, revertGke).
+		Then(addDNSRoute, revertDNSRoute).
+		Then(createTrialSubscription, revertTrialSubscription).
+		Then(createInstance, deleteInstance)
+
+	finalState, err := saga.Process(initialState)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the full instance from the database to return
+	dbInstance, err := queries.GetInstance(ctx, finalState.instanceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get created instance: %w", err)
+	}
+
+	instance := toDomainInstance(dbInstance)
+	return &instance, nil
+}
+
+func (s *Service) canCreateInstance(ctx context.Context, queries *db.Queries, userID string) error {
+	ss, err := queries.GetAllSubscriptionsByUserID(ctx, userID)
+	if err != nil {
+		return apperrs.Server("failed to get subscriptions for user", err)
+	}
+
+	// if has active subscription, can create instance
+	if lo.SomeBy(ss, func(st db.Subscription) bool {
+		return st.Status == InstanceStatusActive
+	}) {
+		return nil
+	}
+
+	// if no subscriptions, can create instance (trial)
+	if len(ss) == 0 {
+		return nil
+	}
+
+	return apperrs.Client(apperrs.CodeForbidden, "user cannot create instance, no active subscription")
 }
