@@ -1,60 +1,15 @@
 package handler
 
 import (
-	"log/slog"
 	"net/http"
-	"time"
 
-	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
-	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"github.com/samber/lo"
 )
 
 // Home renders the home page
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	lo.Must0(components.HomePage().Render(r.Context(), w))
-}
-
-// Dashboard renders the dashboard page
-func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	user := MustGetUser(r.Context())
-
-	// List instances for the user
-	instances, err := h.services.GetInstancesByUser(r.Context(), user.UserID)
-	if err != nil {
-		appctx.GetLogger(r.Context()).Error("failed to fetch instances", slog.Any("error", err))
-		http.Error(w, "Failed to load instances", http.StatusInternalServerError)
-		return
-	}
-
-	instancesView := lo.Map(instances, func(inst services.Instance, _ int) components.Instance {
-		return components.Instance{
-			ID:          inst.ID,
-			InstanceURL: inst.GetInstanceURL(),
-			Status:      inst.Status,
-			Subdomain:   inst.Subdomain,
-			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
-		}
-	})
-
-	lo.Must0(components.DashboardPage(instancesView).Render(r.Context(), w))
-}
-
-// CreateInstancePage renders the create instance page
-func (h *Handler) CreateInstancePage(w http.ResponseWriter, r *http.Request) {
-	lo.Must0(components.CreateInstancePage().Render(r.Context(), w))
-}
-
-// ProvisioningPage renders the provisioning status page
-func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
-	instanceID := r.URL.Query().Get("instance_id")
-	if instanceID == "" {
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-		return
-	}
-
-	lo.Must0(components.ProvisioningStatusPage(instanceID).Render(r.Context(), w))
 }
 
 // // GetProvisioningStatus returns the provisioning status for HTMX polling
@@ -98,28 +53,6 @@ func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
 // 	// Still pending
 // 	lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
 // }
-
-// BlogIndex renders the blog index page
-func (h *Handler) BlogIndex(w http.ResponseWriter, r *http.Request) {
-	lo.Must0(components.BlogIndexPage().Render(r.Context(), w))
-}
-
-// BlogPost renders a single blog post page
-func (h *Handler) BlogPost(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("slug")
-	if slug == "" {
-		http.Redirect(w, r, "/blog", http.StatusSeeOther)
-		return
-	}
-
-	post := components.GetBlogPostBySlug(slug)
-	if post == nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	lo.Must0(components.BlogPostPage(*post).Render(r.Context(), w))
-}
 
 // NotFound renders the 404 page
 func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {

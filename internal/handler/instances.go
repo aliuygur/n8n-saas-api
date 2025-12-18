@@ -12,6 +12,11 @@ import (
 	"github.com/samber/lo"
 )
 
+// CreateInstancePage renders the create instance page
+func (h *Handler) CreateInstancePage(w http.ResponseWriter, r *http.Request) {
+	lo.Must0(components.CreateInstancePage().Render(r.Context(), w))
+}
+
 // CreateInstance creates a new instance via HTMX
 func (h *Handler) CreateInstance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -72,33 +77,15 @@ func (h *Handler) CheckSubdomain(w http.ResponseWriter, r *http.Request) {
 	lo.Must0(components.SubdomainAvailability(true, "Subdomain is available").Render(r.Context(), w))
 }
 
-// DeleteInstance handles instance deletion via HTMX
-func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	l := appctx.GetLogger(ctx)
-	user := MustGetUser(ctx)
-
-	instanceID := r.PathValue("id")
+// ProvisioningPage renders the provisioning status page
+func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
+	instanceID := r.URL.Query().Get("instance_id")
 	if instanceID == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
 
-	if err := h.services.DeleteInstance(ctx, services.DeleteInstanceParams{
-		UserID:     user.UserID,
-		InstanceID: instanceID,
-	}); err != nil {
-		l.Error("Failed to delete instance", slog.Any("error", err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	l.Info("Instance deleted successfully",
-		slog.String("instance_id", instanceID),
-		slog.String("user_id", user.UserID))
-
-	// Return success - HTMX will handle removing the element
-	w.WriteHeader(http.StatusOK)
+	lo.Must0(components.ProvisioningStatusPage(instanceID).Render(r.Context(), w))
 }
 
 // CheckInstanceStatus checks if the instance URL is active via HTMX polling
@@ -145,6 +132,35 @@ func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Still provisioning
 	lo.Must0(components.ProvisioningPending(instanceID).Render(ctx, w))
+}
+
+// DeleteInstance handles instance deletion via HTMX
+func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	l := appctx.GetLogger(ctx)
+	user := MustGetUser(ctx)
+
+	instanceID := r.PathValue("id")
+	if instanceID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := h.services.DeleteInstance(ctx, services.DeleteInstanceParams{
+		UserID:     user.UserID,
+		InstanceID: instanceID,
+	}); err != nil {
+		l.Error("Failed to delete instance", slog.Any("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	l.Info("Instance deleted successfully",
+		slog.String("instance_id", instanceID),
+		slog.String("user_id", user.UserID))
+
+	// Return success - HTMX will handle removing the element
+	w.WriteHeader(http.StatusOK)
 }
 
 // InstanceDetail renders the instance detail page
