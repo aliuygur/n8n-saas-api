@@ -41,6 +41,11 @@ func GetLogger(ctx context.Context) *slog.Logger {
 	return logger
 }
 
+// WithLogger adds a logger to the context
+func WithLogger(ctx context.Context, logger *slog.Logger) context.Context {
+	return context.WithValue(ctx, loggerContextKey{}, logger)
+}
+
 // generateRequestID generates a simple unique request ID (16 random hex chars)
 func generateRequestID() string {
 	buf := make([]byte, 8)
