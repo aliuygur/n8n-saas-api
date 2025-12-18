@@ -16,5 +16,5 @@ Disallow: /provision
 Disallow: /api/
 Disallow: /auth/
 
-# Sitemap location (uncomment when sitemap is created)
-# Sitemap: https://instol.cloud/sitemap.xml
+# Sitemap location
+Sitemap: https://instol.cloud/sitemap.xml

@@ -45,6 +45,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /blog", h.BlogIndex)
 	mux.HandleFunc("GET /blog/{slug}", h.BlogPost)
 
+	// SEO routes (no auth)
+	mux.HandleFunc("GET /sitemap.xml", h.Sitemap)
+
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
 }
