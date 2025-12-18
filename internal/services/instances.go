@@ -29,7 +29,11 @@ type Instance struct {
 }
 
 func (i *Instance) GetInstanceURL() string {
-	return fmt.Sprintf("https://%s.instol.cloud", i.Subdomain)
+	return InstanceURL(i.Subdomain)
+}
+
+func InstanceURL(subdomain string) string {
+	return fmt.Sprintf("https://%s.instol.cloud", subdomain)
 }
 
 // toDomainInstance maps a db.Instance to a types.Instance (domain layer)
@@ -109,8 +113,8 @@ func (s *Service) DeleteInstance(ctx context.Context, params DeleteInstanceParam
 	}
 	l.Debug("deleted namespace from Kubernetes", "namespace", instance.Namespace)
 
-	domain := fmt.Sprintf("https://%s.instol.cloud", instance.Subdomain)
-	if err := s.cloudflare.DeleteDNSRecord(ctx, domain); err != nil {
+	domain := InstanceURL(instance.Subdomain)
+	if err := s.cloudflare.RemoveTunnelRoute(ctx, domain); err != nil {
 		return apperrs.Server("failed to delete DNS record from Cloudflare", err)
 	}
 	l.Debug("deleted DNS record from Cloudflare", "domain", domain)
@@ -178,15 +182,34 @@ func (s *Service) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 	return exists, nil
 }
 
-func (s *Service) CheckInstanceURLActive(ctx context.Context, instanceURL string) (bool, error) {
+func (s *Service) CheckInstanceURLActive(ctx context.Context, id string) (bool, error) {
+
+	queries := s.getDB(ctx)
+
+	instance, err := queries.GetInstance(ctx, id)
+	if err != nil {
+		return false, fmt.Errorf("failed to get instance: %w", err)
+	}
+
+	// if instance created less than 1 minute ago, skip check
+	if time.Since(instance.CreatedAt.Time) < time.Minute {
+		return false, nil
+	}
+
+	healthURL := fmt.Sprintf("https://%s.instol.cloud/healthz", instance.Subdomain)
+
 	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
 	// Make GET request to instance URL
-	req, err := http.NewRequestWithContext(ctx, "GET", instanceURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", healthURL, nil)
 	if err != nil {
+		// check if context deadline exceeded
+		if ctx.Err() == context.DeadlineExceeded {
+			return false, nil
+		}
 		return false, fmt.Errorf("failed to create request: %w", err)
 	}
 

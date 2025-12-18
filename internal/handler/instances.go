@@ -105,7 +105,6 @@ func (h *Handler) DeleteInstance(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	l := appctx.GetLogger(ctx)
-	user := MustGetUser(ctx)
 
 	instanceID := r.URL.Query().Get("instance_id")
 	if instanceID == "" {
@@ -113,30 +112,26 @@ func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the instance
-	instance, err := h.services.GetInstanceByID(ctx, instanceID)
-	if err != nil {
-		l.Error("Failed to get instance", slog.Any("error", err))
-		lo.Must0(components.ProvisioningFailed("Instance not found").Render(ctx, w))
-		return
-	}
-
-	// Verify the instance belongs to the user
-	if instance.UserID != user.UserID {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-
 	// Check if instance URL is active
-	isActive, err := h.services.CheckInstanceURLActive(ctx, instance.GetInstanceURL())
+	isActive, err := h.services.CheckInstanceURLActive(ctx, instanceID)
 	if err != nil {
 		l.Error("Failed to check instance URL", slog.Any("error", err))
-		// Continue polling - don't show error yet
-		lo.Must0(components.ProvisioningPending(instanceID).Render(ctx, w))
+		lo.Must0(components.ProvisioningFailed(err.Error()).Render(ctx, w))
 		return
 	}
 
+	l.Debug("Checked instance URL status",
+		slog.String("instance_id", instanceID),
+		slog.Bool("is_active", isActive))
+
 	if isActive {
+		instance, err := h.services.GetInstanceByID(ctx, instanceID)
+		if err != nil {
+			l.Error("Failed to get instance after URL active", slog.Any("error", err))
+			lo.Must0(components.ProvisioningFailed(err.Error()).Render(ctx, w))
+			return
+		}
+
 		// Instance is ready!
 		componentInstance := &components.Instance{
 			ID:          instance.ID,

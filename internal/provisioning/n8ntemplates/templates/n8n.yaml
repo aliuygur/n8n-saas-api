@@ -84,6 +84,22 @@ spec:
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         resources:
           requests:
             cpu: 100m
@@ -93,6 +109,8 @@ spec:
             memory: 512Mi
       - name: task-runner
         image: n8nio/runners:2.0.3
+        ports:
+        - containerPort: 5680
         env:
         - name: N8N_RUNNERS_TASK_BROKER_URI
           value: "http://localhost:5679"
@@ -101,6 +119,22 @@ spec:
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5680
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5680
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         resources:
           requests:
             cpu: 100m

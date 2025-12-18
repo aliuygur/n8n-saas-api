@@ -253,6 +253,9 @@ func (c *Client) RemoveTunnelRoute(ctx context.Context, hostname string) error {
 		return fmt.Errorf("failed to get current tunnel config: %w", err)
 	}
 
+	// clean hostname
+	hostname = cleanHostname(hostname)
+
 	// Remove the route from configuration
 	updatedConfig := c.removeRouteFromConfig(currentConfig, hostname)
 
@@ -323,12 +326,13 @@ func (c *Client) ResetTunnelConfig(ctx context.Context) error {
 
 // DNSRecord represents a Cloudflare DNS record
 type DNSRecord struct {
-	ID      string `json:"id,omitempty"`
-	Type    string `json:"type"`
-	Name    string `json:"name"`
-	Content string `json:"content"`
-	Proxied bool   `json:"proxied"`
-	TTL     int    `json:"ttl,omitempty"`
+	ID      string   `json:"id,omitempty"`
+	Type    string   `json:"type"`
+	Name    string   `json:"name"`
+	Content string   `json:"content"`
+	Proxied bool     `json:"proxied"`
+	TTL     int      `json:"ttl,omitempty"`
+	Tags    []string `json:"tags,omitempty"`
 }
 
 // DNSRecordResponse represents the DNS record API response
@@ -349,8 +353,7 @@ func (c *Client) CreateCNAMERecord(ctx context.Context, hostname string) error {
 	}
 
 	// Clean hostname (remove https:// if present)
-	hostname = strings.TrimPrefix(hostname, "https://")
-	hostname = strings.TrimPrefix(hostname, "http://")
+	hostname = cleanHostname(hostname)
 
 	// The CNAME should point to the tunnel ID
 	tunnelTarget := fmt.Sprintf("%s.cfargotunnel.com", c.config.TunnelID)
@@ -375,6 +378,7 @@ func (c *Client) CreateCNAMERecord(ctx context.Context, hostname string) error {
 		Content: tunnelTarget,
 		Proxied: true,
 		TTL:     1, // Auto TTL when proxied
+		Tags:    []string{"n8n-instance"},
 	}
 
 	recordJSON, err := json.Marshal(record)
@@ -475,8 +479,7 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, hostname string) error {
 	}
 
 	// Clean hostname
-	hostname = strings.TrimPrefix(hostname, "https://")
-	hostname = strings.TrimPrefix(hostname, "http://")
+	hostname = cleanHostname(hostname)
 
 	// Get the DNS record ID
 	record, err := c.getDNSRecord(ctx, hostname)
@@ -529,4 +532,10 @@ func (c *Client) DeleteDNSRecord(ctx context.Context, hostname string) error {
 
 	slog.Info("Successfully deleted DNS record", "hostname", hostname, "record_id", record.ID)
 	return nil
+}
+
+func cleanHostname(hostname string) string {
+	hostname = strings.TrimPrefix(hostname, "https://")
+	hostname = strings.TrimPrefix(hostname, "http://")
+	return hostname
 }
