@@ -24,6 +24,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /dashboard", h.requireAuth(h.Dashboard))
 	mux.HandleFunc("GET /create-instance", h.requireAuth(h.CreateInstancePage))
 	mux.HandleFunc("GET /provision", h.requireAuth(h.ProvisioningPage))
+	mux.HandleFunc("GET /instances/{id}", h.requireAuth(h.InstanceDetail))
+	mux.HandleFunc("GET /subscription", h.requireAuth(h.SubscriptionDetail))
 
 	// Auth required - API endpoints (returns 401)
 	mux.HandleFunc("GET /api/auth/logout", h.requireAuthAPI(h.Logout))
@@ -32,7 +34,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/check-subdomain", h.requireAuthAPI(h.CheckSubdomain))
 	mux.HandleFunc("GET /api/check-instance-status", h.requireAuthAPI(h.CheckInstanceStatus))
 	mux.HandleFunc("DELETE /instances/{id}", h.requireAuthAPI(h.DeleteInstance))
-	mux.HandleFunc("GET /api/delete-modal/{id}", h.requireAuthAPI(h.DeleteModal))
 
 	// Legal pages (no auth)
 	mux.HandleFunc("GET /pricing", PricingHandler)

@@ -3,6 +3,7 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
@@ -149,4 +150,41 @@ func (h *Handler) CheckInstanceStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Still provisioning
 	lo.Must0(components.ProvisioningPending(instanceID).Render(ctx, w))
+}
+
+// InstanceDetail renders the instance detail page
+func (h *Handler) InstanceDetail(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	l := appctx.GetLogger(ctx)
+	user := MustGetUser(ctx)
+
+	instanceID := r.PathValue("id")
+	if instanceID == "" {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	// Get the instance
+	instance, err := h.services.GetInstanceByID(ctx, instanceID)
+	if err != nil {
+		l.Error("Failed to get instance", slog.Any("error", err))
+		http.NotFound(w, r)
+		return
+	}
+
+	// Verify the instance belongs to the user
+	if instance.UserID != user.UserID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	instanceView := components.Instance{
+		ID:          instance.ID,
+		InstanceURL: instance.GetInstanceURL(),
+		Status:      instance.Status,
+		Subdomain:   instance.Subdomain,
+		CreatedAt:   instance.CreatedAt.Format(time.RFC3339),
+	}
+
+	lo.Must0(components.InstanceDetailPage(instanceView).Render(ctx, w))
 }

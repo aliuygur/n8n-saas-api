@@ -151,9 +151,9 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_create_%s", params.UserID))
 	defer releaseLock()
 
-	if err := s.canCreateInstance(ctx, queries, params.UserID); err != nil {
-		return nil, err
-	}
+	// if err := s.canCreateInstance(ctx, queries, params.UserID); err != nil {
+	// 	return nil, err
+	// }
 
 	// Check if subdomain already exists
 	exists, err := queries.CheckSubdomainExists(ctx, params.Subdomain)
@@ -360,10 +360,10 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		namespace: namespace,
 	}
 	saga := lo.NewTransaction[*instanceCreationState]().
-		Then(deployGke, revertGke).
-		Then(addDNSRoute, revertDNSRoute).
+		Then(createInstance, deleteInstance).
 		Then(createTrialSubscription, revertTrialSubscription).
-		Then(createInstance, deleteInstance)
+		Then(deployGke, revertGke).
+		Then(addDNSRoute, revertDNSRoute)
 
 	finalState, err := saga.Process(initialState)
 	if err != nil {

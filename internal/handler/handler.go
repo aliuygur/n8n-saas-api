@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/aliuygur/n8n-saas-api/internal/config"
-	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -10,7 +9,6 @@ import (
 
 // Handler holds all dependencies for HTTP handlers
 type Handler struct {
-	db                 *db.Queries
 	oauth2Config       *oauth2.Config
 	jwtSecret          []byte
 	config             *config.Config

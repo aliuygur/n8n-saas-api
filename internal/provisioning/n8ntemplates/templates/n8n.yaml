@@ -41,9 +41,10 @@ spec:
         fsGroup: 1000
       containers:
       - name: n8n
-        image: n8nio/n8n:latest
+        image: n8nio/n8n:2.0.3
         ports:
         - containerPort: 5678
+        - containerPort: 5679
         env:
         - name: N8N_USER_FOLDER
           value: "/data"
@@ -67,6 +68,16 @@ spec:
           value: "warn"
         - name: NODE_FUNCTION_ALLOW_BUILTIN
           value: "*"
+        - name: N8N_RUNNERS_ENABLED
+          value: "true"
+        - name: N8N_RUNNERS_MODE
+          value: "external"
+        - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+          value: "0.0.0.0"
+        - name: N8N_RUNNERS_BROKER_PORT
+          value: "5679"
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          value: "PLACEHOLDER_ENCRYPTION_KEY"
         volumeMounts:
         - name: n8n-data
           mountPath: /data
@@ -80,6 +91,23 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
+      - name: task-runner
+        image: n8nio/runners:2.0.3
+        env:
+        - name: N8N_RUNNERS_TASK_BROKER_URI
+          value: "http://localhost:5679"
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          value: "PLACEHOLDER_ENCRYPTION_KEY"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
       volumes:
       - name: n8n-data
         persistentVolumeClaim:

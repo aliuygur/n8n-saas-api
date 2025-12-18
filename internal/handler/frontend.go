@@ -33,6 +33,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 			ID:          inst.ID,
 			InstanceURL: inst.GetInstanceURL(),
 			Status:      inst.Status,
+			Subdomain:   inst.Subdomain,
 			CreatedAt:   inst.CreatedAt.Format(time.RFC3339),
 		}
 	})
@@ -97,25 +98,6 @@ func (h *Handler) ProvisioningPage(w http.ResponseWriter, r *http.Request) {
 // 	// Still pending
 // 	lo.Must0(components.ProvisioningPending(checkoutID).Render(r.Context(), w))
 // }
-
-// DeleteModal renders the delete confirmation modal for an instance
-func (h *Handler) DeleteModal(w http.ResponseWriter, r *http.Request) {
-	instanceID := r.PathValue("id")
-	if instanceID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	// Get instance details to show the subdomain
-	instance, err := h.services.GetInstanceByID(r.Context(), instanceID)
-	if err != nil {
-		appctx.GetLogger(r.Context()).Error("failed to get instance", slog.Any("error", err))
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	lo.Must0(components.DeleteModal(instanceID, instance.Subdomain).Render(r.Context(), w))
-}
 
 // BlogIndex renders the blog index page
 func (h *Handler) BlogIndex(w http.ResponseWriter, r *http.Request) {

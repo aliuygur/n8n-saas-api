@@ -27,7 +27,6 @@ templ DashboardPage(instances []Instance) {
 				} else {
 					@InstancesList(instances)
 				}
-				<div id="modal-container"></div>
 			</main>
 		</div>
 	}
@@ -86,9 +85,11 @@ templ InstanceCard(instance Instance) {
 	<div class="bg-gray-900/50 rounded-xl p-6 border border-gray-800 hover:border-gray-700 backdrop-blur-sm transition-all" id={ "instance-" + instance.ID }>
 		<div class="flex justify-between items-start mb-4">
 			<div>
-				<h3 class="text-xl font-semibold text-white mb-2">
-					{ strings.Replace(instance.InstanceURL, "https://", "", 1) }
-				</h3>
+				<a href={ templ.SafeURL("/instances/" + instance.ID) } class="block group">
+					<h3 class="text-xl font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors">
+						{ strings.Replace(instance.InstanceURL, "https://", "", 1) }
+					</h3>
+				</a>
 				if instance.Status == "running" {
 					<span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
 						{ instance.Status }
@@ -105,6 +106,16 @@ templ InstanceCard(instance Instance) {
 		</p>
 		<div class="flex gap-2">
 			<a
+				href={ templ.SafeURL("/instances/" + instance.ID) }
+				class="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-center py-2 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+			>
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+				</svg>
+				View Details
+			</a>
+			<a
 				href={ templ.SafeURL(instance.InstanceURL) }
 				target="_blank"
 				rel="noopener noreferrer"
@@ -113,72 +124,8 @@ templ InstanceCard(instance Instance) {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
 				</svg>
-				Open Instance
+				Open
 			</a>
-			<button
-				type="button"
-				hx-get={ "/api/delete-modal/" + instance.ID }
-				hx-target="#modal-container"
-				hx-swap="innerHTML"
-				class="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium border border-red-500/20"
-			>
-				Delete
-			</button>
-		</div>
-	</div>
-}
-
-templ DeleteModal(instanceID, subdomain string) {
-	<div id="delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-		<div class="bg-gray-900 rounded-2xl border border-gray-800 max-w-md w-full p-6 shadow-2xl">
-			<div class="flex items-start gap-4 mb-4">
-				<div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-					<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-					</svg>
-				</div>
-				<div class="flex-1">
-					<h3 class="text-xl font-semibold text-white mb-1">Delete Instance</h3>
-					<p class="text-gray-400 text-sm">This action cannot be undone.</p>
-				</div>
-			</div>
-			<form hx-delete={ "/instances/" + instanceID } hx-target={ "#instance-" + instanceID } hx-swap="outerHTML swap:0.3s" hx-on::after-request="if(event.detail.successful) window.location.href = '/dashboard'">
-				<div class="mb-6">
-					<p class="text-gray-300 mb-4">
-						You are about to delete <span class="font-semibold text-white">{ subdomain }.instol.cloud</span>
-					</p>
-					<p class="text-gray-400 text-sm mb-3">
-						Type <span class="font-mono font-semibold text-white">{ subdomain }</span> to confirm:
-					</p>
-					<input
-						type="text"
-						id="delete-confirmation"
-						name="confirmation"
-						data-subdomain={ subdomain }
-						class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
-						placeholder="Type subdomain to confirm"
-						autofocus
-						oninput="document.getElementById('delete-btn').disabled = this.value !== this.dataset.subdomain"
-					/>
-				</div>
-				<div class="flex gap-3">
-					<button
-						type="button"
-						onclick="document.getElementById('modal-container').innerHTML = ''"
-						class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2.5 rounded-lg transition-colors font-medium"
-					>
-						Cancel
-					</button>
-					<button
-						id="delete-btn"
-						type="submit"
-						disabled
-						class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2.5 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600"
-					>
-						Delete Instance
-					</button>
-				</div>
-			</form>
 		</div>
 	</div>
 }

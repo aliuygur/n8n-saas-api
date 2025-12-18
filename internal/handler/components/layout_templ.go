@@ -111,7 +111,7 @@ func AuthenticatedNavigation() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">instol.cloud</h1></a> <a href=\"/api/auth/logout\" class=\"text-gray-400 hover:text-white transition-colors font-medium\">Logout</a></div></div></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">instol.cloud</h1></a><div class=\"flex items-center gap-6\"><a href=\"/dashboard\" class=\"text-gray-400 hover:text-white transition-colors font-medium\">Dashboard</a> <a href=\"/subscription\" class=\"text-gray-400 hover:text-white transition-colors font-medium\">Subscription</a> <a href=\"/api/auth/logout\" class=\"text-gray-400 hover:text-white transition-colors font-medium\">Logout</a></div></div></div></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -194,7 +194,7 @@ func ErrorPage(message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/layout.templ`, Line: 210, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/layout.templ`, Line: 224, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
