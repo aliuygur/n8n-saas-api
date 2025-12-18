@@ -326,13 +326,13 @@ func (c *Client) ResetTunnelConfig(ctx context.Context) error {
 
 // DNSRecord represents a Cloudflare DNS record
 type DNSRecord struct {
-	ID      string   `json:"id,omitempty"`
-	Type    string   `json:"type"`
-	Name    string   `json:"name"`
-	Content string   `json:"content"`
-	Proxied bool     `json:"proxied"`
-	TTL     int      `json:"ttl,omitempty"`
-	Tags    []string `json:"tags,omitempty"`
+	ID      string `json:"id,omitempty"`
+	Type    string `json:"type"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Proxied bool   `json:"proxied"`
+	TTL     int    `json:"ttl,omitempty"`
+	// Tags    []string `json:"tags,omitempty"` // the free plan does not support tags
 }
 
 // DNSRecordResponse represents the DNS record API response
@@ -378,7 +378,7 @@ func (c *Client) CreateCNAMERecord(ctx context.Context, hostname string) error {
 		Content: tunnelTarget,
 		Proxied: true,
 		TTL:     1, // Auto TTL when proxied
-		Tags:    []string{"n8n-instance"},
+		// Tags:    []string{"n8n-instance"},
 	}
 
 	recordJSON, err := json.Marshal(record)
