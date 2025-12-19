@@ -369,24 +369,6 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		return state
 	}
 
-	addDNSRoute := func(state *instanceCreationState) (*instanceCreationState, error) {
-		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
-		serviceURL := fmt.Sprintf("http://n8n-main.%s.svc.cluster.local", state.namespace)
-		if err := s.cloudflare.AddTunnelRoute(ctx, domain, serviceURL); err != nil {
-			return state, apperrs.Server("failed to add Cloudflare tunnel route", err)
-		}
-		return state, nil
-	}
-	revertDNSRoute := func(state *instanceCreationState) *instanceCreationState {
-		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
-		if err := s.cloudflare.DeleteDNSRecord(ctx, domain); err != nil {
-			l.Error("failed to revert DNS route", "domain", domain, "error", err)
-		} else {
-			l.Debug("reverted DNS route", "domain", domain)
-		}
-		return state
-	}
-
 	namespace, err := s.generateUniqueNamespace(ctx, queries)
 	if err != nil {
 		return nil, err
@@ -400,8 +382,7 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 	saga := lo.NewTransaction[*instanceCreationState]().
 		Then(createInstance, deleteInstance).
 		Then(createTrialSubscription, revertTrialSubscription).
-		Then(deployGke, revertGke).
-		Then(addDNSRoute, revertDNSRoute)
+		Then(deployGke, revertGke)
 
 	finalState, err := saga.Process(initialState)
 	if err != nil {
