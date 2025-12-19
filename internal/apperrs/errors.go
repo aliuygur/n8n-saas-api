@@ -1,5 +1,7 @@
 package apperrs
 
+import "errors"
+
 type Kind string
 
 const (
@@ -61,4 +63,12 @@ func Server(msg string, err error) *Error {
 		Msg:  msg,
 		Err:  err,
 	}
+}
+
+func CodeIs(err error, code string) bool {
+	var appErr *Error
+	if ok := errors.As(err, &appErr); ok {
+		return appErr.Code == code
+	}
+	return false
 }

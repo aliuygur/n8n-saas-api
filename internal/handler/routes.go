@@ -15,7 +15,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 
 	// Public routes (no auth required)
-	mux.HandleFunc("GET /", h.Home)
+	mux.HandleFunc("/", h.HomeHandler)
 	mux.HandleFunc("GET /login", h.Login)
 	mux.HandleFunc("GET /auth/google", h.HandleGoogleLogin)
 	mux.HandleFunc("GET /auth/google/callback", h.HandleGoogleCallback)

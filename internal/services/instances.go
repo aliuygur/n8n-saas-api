@@ -85,6 +85,21 @@ func (s *Service) GetInstanceByID(ctx context.Context, instanceID string) (*Inst
 	return &instance, nil
 }
 
+func (s *Service) GetInstanceBySubdomain(ctx context.Context, subdomain string) (*Instance, error) {
+	queries := db.New(s.db)
+
+	dbInstance, err := queries.GetInstanceBySubdomain(ctx, subdomain)
+	if err != nil {
+		if db.IsNotFoundError(err) {
+			return nil, apperrs.Client(apperrs.CodeNotFound, "instance not found")
+		}
+
+		return nil, fmt.Errorf("failed to get instance: %w", err)
+	}
+	instance := toDomainInstance(dbInstance)
+	return &instance, nil
+}
+
 type DeleteInstanceParams struct {
 	UserID     string
 	InstanceID string
