@@ -25,7 +25,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /create-instance", h.requireAuth(h.CreateInstancePage))
 	mux.HandleFunc("GET /provision", h.requireAuth(h.ProvisioningPage))
 	mux.HandleFunc("GET /instances/{id}", h.requireAuth(h.InstanceDetail))
-	mux.HandleFunc("GET /subscription", h.requireAuth(h.SubscriptionDetail))
+	mux.HandleFunc("GET /account", h.requireAuth(h.Account))
+	// Keep old subscription route for backwards compatibility, redirect to account
+	mux.HandleFunc("GET /subscription", h.requireAuth(h.Account))
 
 	// Auth required - API endpoints (returns 401)
 	mux.HandleFunc("GET /api/auth/logout", h.requireAuthAPI(h.Logout))

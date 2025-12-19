@@ -8,7 +8,7 @@
 [*] add loading spinners to deploy instance page at the create instance page.
 [*] check instace url after deploy because it takes some time to the dns to propagate
 [] use golang migrations tool instead of raw sql files
-[] make log/slog compatible with the gcp cloud logging log level etc.
+[*] make log/slog compatible with the gcp cloud logging log level etc.
 [] create cloud build pipeline for automatic deployments on push to main branch
 [] keep deployed yaml file name in the instances table to keep track of deployed files
 [] improve frontend for better mobile experience

@@ -12,6 +12,7 @@ import (
 type User struct {
 	ID        string
 	Email     string
+	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -30,6 +31,29 @@ func (s *Service) GetUserByEmail(ctx context.Context, email string) (*User, erro
 	user := &User{
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
+		Name:      dbUser.Name,
+		CreatedAt: dbUser.CreatedAt,
+		UpdatedAt: dbUser.UpdatedAt,
+	}
+
+	return user, nil
+}
+
+func (s *Service) GetUser(ctx context.Context, userID string) (*User, error) {
+	queries := db.New(s.db)
+
+	dbUser, err := queries.GetUserByID(ctx, userID)
+	if err != nil {
+		if db.IsNotFoundError(err) {
+			return nil, apperrs.Client(apperrs.CodeNotFound, "user not found")
+		}
+		return nil, fmt.Errorf("failed to get user by ID: %w", err)
+	}
+
+	user := &User{
+		ID:        dbUser.ID,
+		Email:     dbUser.Email,
+		Name:      dbUser.Name,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 	}
@@ -67,6 +91,7 @@ func (s *Service) CreateUser(ctx context.Context, params CreateUserParams) (*Use
 	user := &User{
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
+		Name:      dbUser.Name,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 	}
@@ -108,6 +133,7 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 	user := &User{
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
+		Name:      dbUser.Name,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 	}

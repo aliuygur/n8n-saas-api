@@ -196,7 +196,7 @@ func (s *Service) CheckInstanceURLActive(ctx context.Context, id string) (bool, 
 		return false, nil
 	}
 
-	healthURL := fmt.Sprintf("https://%s.instol.cloud/healthz", instance.Subdomain)
+	healthURL := fmt.Sprintf("https://%s.instol.cloud/healthz/readiness", instance.Subdomain)
 
 	// Create HTTP client with timeout
 	client := &http.Client{

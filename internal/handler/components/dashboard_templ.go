@@ -57,7 +57,7 @@ func DashboardPage(instances []Instance) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<main class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12\"><div class=\"mb-8 flex justify-between items-start\"><div><h2 class=\"text-3xl font-bold text-white mb-2\">Your Instances</h2><p class=\"text-gray-400\">Manage your workflow automation instances</p></div><a href=\"/create-instance\" class=\"bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-500 transition-all font-medium shadow-lg shadow-indigo-500/20\">Create Instance</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<main class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12\"><div class=\"mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4\"><div><h2 class=\"text-2xl sm:text-3xl font-bold text-white mb-2\">Your Instances</h2><p class=\"text-sm sm:text-base text-gray-400\">Manage your workflow automation instances</p></div><a href=\"/create-instance\" class=\"bg-indigo-600 text-white px-6 py-2.5 sm:py-2 rounded-lg hover:bg-indigo-500 transition-all font-medium shadow-lg shadow-indigo-500/20 text-center sm:whitespace-nowrap touch-manipulation\">Create Instance</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -107,7 +107,7 @@ func EmptyInstancesState() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"bg-gray-900/50 rounded-2xl p-16 text-center border border-gray-800 backdrop-blur-sm\"><div class=\"max-w-md mx-auto\"><div class=\"relative mb-8\"><div class=\"absolute inset-0 flex items-center justify-center\"><div class=\"w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl\"></div></div><svg class=\"w-20 h-20 text-gray-700 mx-auto relative\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01\"></path></svg></div><h3 class=\"text-2xl font-bold text-white mb-3\">No instances yet</h3><p class=\"text-gray-400 mb-8 leading-relaxed\">Get started by deploying your first workflow automation instance. It takes less than a minute to get up and running.</p><a href=\"/create-instance\" class=\"inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-lg hover:bg-indigo-500 transition-all font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:scale-105\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 4v16m8-8H4\"></path></svg> Create Your First Instance</a><div class=\"mt-10 pt-8 border-t border-gray-800\"><div class=\"grid grid-cols-3 gap-6 text-sm\"><div><div class=\"text-indigo-400 font-semibold mb-1\">Fast Deploy</div><div class=\"text-gray-500\">Ready in minutes</div></div><div><div class=\"text-indigo-400 font-semibold mb-1\">Auto SSL</div><div class=\"text-gray-500\">Secure by default</div></div><div><div class=\"text-indigo-400 font-semibold mb-1\">Scalable</div><div class=\"text-gray-500\">Cloud-powered</div></div></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"bg-gray-900/50 rounded-2xl p-6 sm:p-12 lg:p-16 text-center border border-gray-800 backdrop-blur-sm\"><div class=\"max-w-md mx-auto\"><div class=\"relative mb-6 sm:mb-8\"><div class=\"absolute inset-0 flex items-center justify-center\"><div class=\"w-24 h-24 sm:w-32 sm:h-32 bg-indigo-500/10 rounded-full blur-2xl\"></div></div><svg class=\"w-16 h-16 sm:w-20 sm:h-20 text-gray-700 mx-auto relative\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01\"></path></svg></div><h3 class=\"text-xl sm:text-2xl font-bold text-white mb-3\">No instances yet</h3><p class=\"text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 leading-relaxed px-2\">Get started by deploying your first workflow automation instance. It takes less than a minute to get up and running.</p><a href=\"/create-instance\" class=\"inline-flex items-center gap-2 bg-indigo-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg hover:bg-indigo-500 active:bg-indigo-600 transition-all font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:scale-105 touch-manipulation text-sm sm:text-base\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 4v16m8-8H4\"></path></svg> Create Your First Instance</a><div class=\"mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-gray-800\"><div class=\"grid grid-cols-3 gap-3 sm:gap-6 text-xs sm:text-sm\"><div><div class=\"text-indigo-400 font-semibold mb-1\">Fast Deploy</div><div class=\"text-gray-500\">Ready in minutes</div></div><div><div class=\"text-indigo-400 font-semibold mb-1\">Auto SSL</div><div class=\"text-gray-500\">Secure by default</div></div><div><div class=\"text-indigo-400 font-semibold mb-1\">Scalable</div><div class=\"text-gray-500\">Cloud-powered</div></div></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -175,20 +175,20 @@ func InstanceCard(instance Instance) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"bg-gray-900/50 rounded-xl p-6 border border-gray-800 hover:border-gray-700 backdrop-blur-sm transition-all\" id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"bg-gray-900/50 rounded-xl p-4 sm:p-6 border border-gray-800 hover:border-gray-700 backdrop-blur-sm transition-all\" id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("instance-" + instance.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/dashboard.templ`, Line: 85, Col: 151}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/dashboard.templ`, Line: 85, Col: 158}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"><div class=\"flex justify-between items-start mb-4\"><div><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"><div class=\"flex justify-between items-start mb-4\"><div class=\"min-w-0 flex-1\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +201,7 @@ func InstanceCard(instance Instance) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"block group\"><h3 class=\"text-xl font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"block group\"><h3 class=\"text-base sm:text-xl font-semibold text-white mb-2 group-hover:text-indigo-400 transition-colors break-all\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -219,7 +219,7 @@ func InstanceCard(instance Instance) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if instance.Status == "running" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<span class=\"inline-block px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<span class=\"inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -237,7 +237,7 @@ func InstanceCard(instance Instance) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span class=\"inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span class=\"inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -255,7 +255,7 @@ func InstanceCard(instance Instance) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div><p class=\"text-gray-400 text-sm mb-6\">Created ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div><p class=\"text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6\">Created ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -268,7 +268,7 @@ func InstanceCard(instance Instance) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p><div class=\"flex gap-2\"><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p><div class=\"flex flex-col sm:flex-row gap-2\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -281,7 +281,7 @@ func InstanceCard(instance Instance) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"flex-1 bg-gray-800 hover:bg-gray-700 text-white text-center py-2 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\"></path></svg> View Details</a> <a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" class=\"flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-800 text-white text-center py-2.5 sm:py-2 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2 touch-manipulation\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path> <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\"></path></svg> View Details</a> <a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -294,7 +294,7 @@ func InstanceCard(instance Instance) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-center py-2 rounded-lg transition-colors text-sm font-medium shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> Open</a></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"flex-1 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 text-white text-center py-2.5 sm:py-2 rounded-lg transition-colors text-sm font-medium shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 touch-manipulation\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> Open</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
