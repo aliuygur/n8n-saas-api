@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/apperrs"
+	"github.com/aliuygur/n8n-saas-api/internal/services"
 )
 
 // ProxyHandler proxies requests to n8n instances based on subdomain
@@ -19,19 +22,8 @@ func (h *Handler) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	l := appctx.GetLogger(ctx)
 
-	// Extract subdomain from Host header
-	host := r.Host
-	subdomain := resolveTenant(host)
-	if subdomain == "" {
-		l.Warn("Invalid host format", slog.String("host", host))
-		http.Error(w, "Invalid host", http.StatusBadRequest)
-		return
-	}
-
-	l.Debug("Resolving tenant", slog.String("host", host), slog.String("subdomain", subdomain))
-
-	// Query database for instance
-	instance, err := h.services.GetInstanceBySubdomain(ctx, subdomain)
+	// Extract subdomain and get instance (with caching)
+	instance, subdomain, err := h.resolveTenant(ctx, r.Host)
 	if err != nil {
 		if ok := apperrs.CodeIs(err, apperrs.CodeNotFound); ok {
 			l.Warn("Instance not found", slog.String("subdomain", subdomain))
@@ -67,18 +59,52 @@ func (h *Handler) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 				slog.Any("error", err))
 			http.Error(w, "Bad Gateway", http.StatusBadGateway)
 		},
+		FlushInterval: -1, // WebSocket support
 	}
 
 	proxy.ServeHTTP(w, r)
 }
 
-// resolveTenant extracts subdomain from host
+// resolveTenant extracts subdomain from host and retrieves the instance
 // Example: ali.n8n.instol.cloud -> ali
-func resolveTenant(host string) string {
+// Uses in-memory cache with TTL to reduce database queries
+func (h *Handler) resolveTenant(ctx context.Context, host string) (*services.Instance, string, error) {
 	// Remove port if present
 	if idx := strings.Index(host, ":"); idx != -1 {
 		host = host[:idx]
 	}
+
 	parts := strings.Split(host, ".")
-	return parts[0]
+	subdomain := parts[0]
+
+	if subdomain == "" {
+		return nil, "", apperrs.Client(apperrs.CodeInvalidInput, "invalid host format")
+	}
+
+	// Check cache first
+	if cached, ok := h.instanceCache.Load(subdomain); ok {
+		if entry, ok := cached.(*instanceCacheEntry); ok {
+			// Check if cache entry is still valid
+			if time.Now().Before(entry.expiresAt) {
+				return entry.instance, subdomain, nil
+			}
+			// Cache expired, remove it
+			h.instanceCache.Delete(subdomain)
+		}
+	}
+
+	// Cache miss or expired - fetch from database
+	instance, err := h.services.GetInstanceBySubdomain(ctx, subdomain)
+	if err != nil {
+		return nil, subdomain, err
+	}
+
+	// Store in cache with expiration
+	entry := &instanceCacheEntry{
+		instance:  instance,
+		expiresAt: time.Now().Add(instanceCacheTTL),
+	}
+	h.instanceCache.Store(subdomain, entry)
+
+	return instance, subdomain, nil
 }
