@@ -1,4 +1,4 @@
-# robots.txt for instol.cloud
+# robots.txt for ranx.cloud
 
 User-agent: *
 Allow: /
@@ -17,4 +17,4 @@ Disallow: /api/
 Disallow: /auth/
 
 # Sitemap location
-Sitemap: https://instol.cloud/sitemap.xml
+Sitemap: https://ranx.cloud/sitemap.xml

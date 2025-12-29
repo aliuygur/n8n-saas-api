@@ -10,11 +10,11 @@ import templruntime "github.com/a-h/templ/runtime"
 
 // Blog index page showing all blog posts
 var blogIndexSEO = SEOMetadata{
-	Title:        "n8n Workflow Automation Blog | instol.cloud",
+	Title:        "n8n Workflow Automation Blog | ranx.cloud",
 	Description:  "Learn about n8n workflow automation, tutorials, comparisons, and best practices. Discover how to automate your business with n8n.",
 	Keywords:     []string{"n8n blog", "workflow automation blog", "n8n tutorials", "automation guides"},
-	CanonicalURL: "https://instol.cloud/blog",
-	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+	CanonicalURL: "https://ranx.cloud/blog",
+	OGImage:      "https://ranx.cloud/static/android-chrome-512x512.png",
 }
 
 func BlogIndexPage() templ.Component {
@@ -495,10 +495,10 @@ func BlogPostPage(post BlogPost) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = Layout(SEOMetadata{
-			Title:        post.Title + " | instol.cloud",
+			Title:        post.Title + " | ranx.cloud",
 			Description:  post.Description,
 			Keywords:     post.Keywords,
-			CanonicalURL: "https://instol.cloud/blog/" + post.Slug,
+			CanonicalURL: "https://ranx.cloud/blog/" + post.Slug,
 			OGImage:      post.OGImage,
 			OGType:       "article",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
@@ -545,7 +545,7 @@ func ArticleSchema(post BlogPost) templ.Component {
 			templ_7745c5c3_Var25 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"BlogPosting\",\n\t\t\"headline\": \"{ post.Title }\",\n\t\t\"description\": \"{ post.Description }\",\n\t\t\"author\": {\n\t\t\t\"@type\": \"Organization\",\n\t\t\t\"name\": \"{ post.Author }\"\n\t\t},\n\t\t\"datePublished\": \"{ post.Date.Format(\"2006-01-02\") }\",\n\t\t\"dateModified\": \"{ post.Date.Format(\"2006-01-02\") }\",\n\t\t\"publisher\": {\n\t\t\t\"@type\": \"Organization\",\n\t\t\t\"name\": \"instol.cloud\",\n\t\t\t\"logo\": {\n\t\t\t\t\"@type\": \"ImageObject\",\n\t\t\t\t\"url\": \"https://instol.cloud/static/android-chrome-512x512.png\"\n\t\t\t}\n\t\t},\n\t\t\"mainEntityOfPage\": {\n\t\t\t\"@type\": \"WebPage\",\n\t\t\t\"@id\": \"https://instol.cloud/blog/{ post.Slug }\"\n\t\t}\n\t\tif post.OGImage != \"\" {\n\t\t\t,\n\t\t\t\"image\": \"{ post.OGImage }\"\n\t\t}\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"BlogPosting\",\n\t\t\"headline\": \"{ post.Title }\",\n\t\t\"description\": \"{ post.Description }\",\n\t\t\"author\": {\n\t\t\t\"@type\": \"Organization\",\n\t\t\t\"name\": \"{ post.Author }\"\n\t\t},\n\t\t\"datePublished\": \"{ post.Date.Format(\"2006-01-02\") }\",\n\t\t\"dateModified\": \"{ post.Date.Format(\"2006-01-02\") }\",\n\t\t\"publisher\": {\n\t\t\t\"@type\": \"Organization\",\n\t\t\t\"name\": \"ranx.cloud\",\n\t\t\t\"logo\": {\n\t\t\t\t\"@type\": \"ImageObject\",\n\t\t\t\t\"url\": \"https://ranx.cloud/static/android-chrome-512x512.png\"\n\t\t\t}\n\t\t},\n\t\t\"mainEntityOfPage\": {\n\t\t\t\"@type\": \"WebPage\",\n\t\t\t\"@id\": \"https://ranx.cloud/blog/{ post.Slug }\"\n\t\t}\n\t\tif post.OGImage != \"\" {\n\t\t\t,\n\t\t\t\"image\": \"{ post.OGImage }\"\n\t\t}\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

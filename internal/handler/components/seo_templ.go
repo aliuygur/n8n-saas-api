@@ -245,7 +245,7 @@ func SEOHead(meta SEOMetadata) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<meta property=\"og:site_name\" content=\"instol.cloud\"><!-- Twitter Card --><meta property=\"twitter:card\" content=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<meta property=\"og:site_name\" content=\"ranx.cloud\"><!-- Twitter Card --><meta property=\"twitter:card\" content=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

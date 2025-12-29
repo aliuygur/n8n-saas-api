@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "strings"
 
 var instanceDetailPageSEO = SEOMetadata{
-	Title:       "Instance Details - Manage Your n8n Instance | instol.cloud",
+	Title:       "Instance Details - Manage Your n8n Instance | ranx.cloud",
 	Description: "View and manage your n8n workflow automation instance details.",
 	NoIndex:     true,
 }
@@ -207,9 +207,9 @@ func InstanceDetailPage(instance Instance) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("Are you sure you want to delete " + instance.Subdomain + ".instol.cloud? This action cannot be undone.")
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("Are you sure you want to delete " + instance.Subdomain + ".ranx.cloud? This action cannot be undone.")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 143, Col: 125}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 143, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {

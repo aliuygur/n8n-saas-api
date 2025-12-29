@@ -15,7 +15,7 @@ import (
 )
 
 // ProxyHandler proxies requests to n8n instances based on subdomain
-// Extracts subdomain from Host header (e.g., subdomain.n8n.instol.cloud)
+// Extracts subdomain from Host header (e.g., subdomain.n8n.ranx.cloud)
 // Queries instances table to find namespace
 // Forwards request to http://n8n-main.{namespace}.svc.cluster.local
 func (h *Handler) ProxyHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (h *Handler) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // resolveTenant extracts subdomain from host and retrieves the instance
-// Example: ali.n8n.instol.cloud -> ali
+// Example: ali.n8n.ranx.cloud -> ali
 // Uses in-memory cache with TTL to reduce database queries
 func (h *Handler) resolveTenant(ctx context.Context, host string) (*services.Instance, string, error) {
 	// Remove port if present

@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "strings"
 
 var accountPageSEO = SEOMetadata{
-	Title:       "Account - Manage Your Profile & Subscription | instol.cloud",
+	Title:       "Account - Manage Your Profile & Subscription | ranx.cloud",
 	Description: "View and manage your account details and subscription.",
 	NoIndex:     true,
 }

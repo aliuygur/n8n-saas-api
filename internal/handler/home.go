@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Host != "www.instol.cloud" && strings.HasSuffix(r.Host, ".instol.cloud") {
+	if r.Host != "www.ranx.cloud" && strings.HasSuffix(r.Host, ".ranx.cloud") {
 		h.ProxyHandler(w, r)
 		return
 	}

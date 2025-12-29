@@ -1,7 +1,7 @@
 
 N8N is an open-source workflow automation tool that allows you to connect various applications and services to automate tasks and processes.
 
-N8N Cloud is expensive for some users, and self-hosting can be complex and time-consuming. To address these challenges, we offer a solution: instol.cloud a one-click deployable n8n instance on Google Cloud Platform (GCP).
+N8N Cloud is expensive for some users, and self-hosting can be complex and time-consuming. To address these challenges, we offer a solution: ranx.cloud a one-click deployable n8n instance on Google Cloud Platform (GCP).
 
 
 The benefits are;

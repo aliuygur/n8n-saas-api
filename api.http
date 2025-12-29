@@ -8,5 +8,5 @@ Content-Type: application/json
 
 GET {{baseUrl}}/
 Content-Type: text/html
-Host: test-subdomain.instol.cloud
+Host: test-subdomain.ranx.cloud
 

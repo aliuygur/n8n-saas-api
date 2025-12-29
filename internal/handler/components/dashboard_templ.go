@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "strings"
 
 var dashboardPageSEO = SEOMetadata{
-	Title:       "Dashboard - Manage Your n8n Instances | instol.cloud",
+	Title:       "Dashboard - Manage Your n8n Instances | ranx.cloud",
 	Description: "View and manage your n8n workflow automation instances.",
 	NoIndex:     true,
 }

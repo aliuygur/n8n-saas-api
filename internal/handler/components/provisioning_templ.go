@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 var provisioningPageSEO = SEOMetadata{
-	Title:       "Provisioning Instance | instol.cloud",
+	Title:       "Provisioning Instance | ranx.cloud",
 	Description: "Your n8n instance is being provisioned.",
 	NoIndex:     true,
 }
@@ -47,7 +47,7 @@ func ProvisioningStatusPage(instanceID string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-gray-950\"><nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">instol.cloud</h1></a></div></div></nav><main class=\"max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-gray-950\"><nav class=\"border-b border-gray-800 bg-gray-900/50 backdrop-blur-lg\"><div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\"><div class=\"flex justify-between items-center h-16\"><a href=\"/\" class=\"flex items-center gap-2 hover:opacity-80 transition-opacity\"><svg class=\"w-8 h-8 text-indigo-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><h1 class=\"text-2xl font-bold text-white\">ranx.cloud</h1></a></div></div></nav><main class=\"max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -223,7 +223,7 @@ func ProvisioningFailed(errorMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"flex gap-3\"><a href=\"/create-instance\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Try Again</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Back to Dashboard</a></div></div></div></div><div class=\"bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div class=\"text-sm text-yellow-300\"><p class=\"font-semibold mb-1\">Need help?</p><p>Contact our support team at support@instol.cloud or try creating a new instance.</p></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"flex gap-3\"><a href=\"/create-instance\" class=\"flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-500 transition-all text-center shadow-lg shadow-indigo-500/20\">Try Again</a> <a href=\"/dashboard\" class=\"flex-1 bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-700 transition-all text-center\">Back to Dashboard</a></div></div></div></div><div class=\"bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4\"><div class=\"flex items-start gap-3\"><svg class=\"w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div class=\"text-sm text-yellow-300\"><p class=\"font-semibold mb-1\">Need help?</p><p>Contact our support team at support@ranx.cloud or try creating a new instance.</p></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

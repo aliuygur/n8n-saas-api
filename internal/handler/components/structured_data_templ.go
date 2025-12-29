@@ -30,7 +30,7 @@ func OrganizationSchema() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"Organization\",\n\t\t\"name\": \"instol.cloud\",\n\t\t\"url\": \"https://instol.cloud\",\n\t\t\"logo\": \"https://instol.cloud/static/android-chrome-512x512.png\",\n\t\t\"description\": \"One-Click n8n Workflow Automation Hosting on Google Cloud Platform\"\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"Organization\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"url\": \"https://ranx.cloud\",\n\t\t\"logo\": \"https://ranx.cloud/static/android-chrome-512x512.png\",\n\t\t\"description\": \"One-Click n8n Workflow Automation Hosting on Google Cloud Platform\"\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,7 +60,7 @@ func WebApplicationSchema() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"WebApplication\",\n\t\t\"name\": \"instol.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"Offer\",\n\t\t\t\"price\": \"0\",\n\t\t\t\"priceCurrency\": \"USD\"\n\t\t},\n\t\t\"operatingSystem\": \"Web Browser\",\n\t\t\"description\": \"Deploy and manage n8n workflow automation instances on GCP with one click\"\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"WebApplication\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"Offer\",\n\t\t\t\"price\": \"0\",\n\t\t\t\"priceCurrency\": \"USD\"\n\t\t},\n\t\t\"operatingSystem\": \"Web Browser\",\n\t\t\"description\": \"Deploy and manage n8n workflow automation instances on GCP with one click\"\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -90,7 +90,7 @@ func SoftwareApplicationSchema() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"SoftwareApplication\",\n\t\t\"name\": \"n8n on instol.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"operatingSystem\": \"Cloud\",\n\t\t\"description\": \"Hosted n8n workflow automation platform\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"AggregateOffer\",\n\t\t\t\"priceCurrency\": \"USD\",\n\t\t\t\"lowPrice\": \"0\",\n\t\t\t\"url\": \"https://instol.cloud/pricing\"\n\t\t}\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"SoftwareApplication\",\n\t\t\"name\": \"n8n on ranx.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"operatingSystem\": \"Cloud\",\n\t\t\"description\": \"Hosted n8n workflow automation platform\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"AggregateOffer\",\n\t\t\t\"priceCurrency\": \"USD\",\n\t\t\t\"lowPrice\": \"0\",\n\t\t\t\"url\": \"https://ranx.cloud/pricing\"\n\t\t}\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

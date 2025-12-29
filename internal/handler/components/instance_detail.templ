@@ -3,7 +3,7 @@ package components
 import "strings"
 
 var instanceDetailPageSEO = SEOMetadata{
-	Title:       "Instance Details - Manage Your n8n Instance | instol.cloud",
+	Title:       "Instance Details - Manage Your n8n Instance | ranx.cloud",
 	Description: "View and manage your n8n workflow automation instance details.",
 	NoIndex:     true,
 }
@@ -140,7 +140,7 @@ templ InstanceDetailPage(instance Instance) {
 							<button
 								type="button"
 								hx-delete={ "/instances/" + instance.ID }
-								hx-confirm={ "Are you sure you want to delete " + instance.Subdomain + ".instol.cloud? This action cannot be undone." }
+								hx-confirm={ "Are you sure you want to delete " + instance.Subdomain + ".ranx.cloud? This action cannot be undone." }
 								hx-on::after-request="if(event.detail.successful) window.location.href = '/dashboard'"
 								class="flex items-center gap-4 p-4 bg-gray-950 hover:bg-red-500/5 border border-gray-800 hover:border-red-500/20 rounded-xl transition-all group text-left"
 							>

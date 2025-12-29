@@ -1,15 +1,15 @@
 Yes, understood 👍
-Below is a **clear, professional English description** of **instol.cloud’s** business model, pricing, and cancellation/refund policies. You can use this on your website, in onboarding emails, or for payment providers.
+Below is a **clear, professional English description** of **ranx.cloud’s** business model, pricing, and cancellation/refund policies. You can use this on your website, in onboarding emails, or for payment providers.
 
 ---
 
-## instol.cloud – Business Model, Pricing, and Policies
+## ranx.cloud – Business Model, Pricing, and Policies
 
 ### Business Model
 
-instol.cloud is a **managed hosting SaaS platform** that enables customers to deploy and run open-source applications (such as **n8n**) with just a few clicks — **without requiring DevOps or advanced software knowledge**.
+ranx.cloud is a **managed hosting SaaS platform** that enables customers to deploy and run open-source applications (such as **n8n**) with just a few clicks — **without requiring DevOps or advanced software knowledge**.
 
-Instead of dealing with servers, infrastructure, updates, and maintenance, customers can focus on using their applications, while instol.cloud handles:
+Instead of dealing with servers, infrastructure, updates, and maintenance, customers can focus on using their applications, while ranx.cloud handles:
 
 * Application provisioning
 * Hosting and infrastructure management
@@ -82,9 +82,9 @@ Just tell me 👍
 Perfect — Paddle is basically asking you for **public, copy-paste-ready legal pages**.
 Below are **clean, Paddle-compliant texts** you can publish directly on:
 
-* `https://instol.cloud/terms`
-* `https://instol.cloud/privacy`
-* `https://instol.cloud/refund-policy`
+* `https://ranx.cloud/terms`
+* `https://ranx.cloud/privacy`
+* `https://ranx.cloud/refund-policy`
 
 You can also **merge Refund Policy into Terms**, but Paddle accepts it cleaner when separated.
 
@@ -96,7 +96,7 @@ You can also **merge Refund Policy into Terms**, but Paddle accepts it cleaner w
 
 ## 1. Service Description
 
-instol.cloud (“Service”) is a managed hosting platform that allows users to deploy and run open-source software applications (such as n8n) without requiring DevOps or advanced technical expertise.
+ranx.cloud (“Service”) is a managed hosting platform that allows users to deploy and run open-source software applications (such as n8n) without requiring DevOps or advanced technical expertise.
 
 Each deployed application is provided as an independent hosted instance.
 
@@ -112,7 +112,7 @@ Each deployed application is provided as an independent hosted instance.
 
 ## 3. Free Trial
 
-* instol.cloud offers a **3-day free trial**.
+* ranx.cloud offers a **3-day free trial**.
 * **No credit card is required** during the trial.
 * The trial provides full access to the Service.
 * After the trial ends, continued use requires an active paid subscription.
@@ -161,7 +161,7 @@ We reserve the right to suspend or terminate accounts violating these rules.
 ## 8. Limitation of Liability
 
 The Service is provided “as is” and “as available”.
-instol.cloud shall not be liable for indirect, incidental, or consequential damages.
+ranx.cloud shall not be liable for indirect, incidental, or consequential damages.
 
 ---
 
@@ -175,7 +175,7 @@ Continued use of the Service constitutes acceptance of the updated Terms.
 ## 10. Contact
 
 For questions regarding these Terms, contact:
-📧 **[support@instol.cloud](mailto:support@instol.cloud)**
+📧 **[support@ranx.cloud](mailto:support@ranx.cloud)**
 
 ---
 
@@ -196,7 +196,7 @@ We collect only the data necessary to provide the Service:
 ## 2. Payment Processing
 
 Payments are processed by **Paddle**.
-instol.cloud **does not store credit card information**.
+ranx.cloud **does not store credit card information**.
 
 ---
 
@@ -231,7 +231,7 @@ You may request access, correction, or deletion of your data by contacting us.
 
 ## 7. Contact
 
-📧 **[support@instol.cloud](mailto:support@instol.cloud)**
+📧 **[support@ranx.cloud](mailto:support@ranx.cloud)**
 
 ---
 
@@ -263,7 +263,7 @@ All payments and refunds (if applicable by law) are handled by **Paddle**.
 
 ## Contact
 
-📧 **[support@instol.cloud](mailto:support@instol.cloud)**
+📧 **[support@ranx.cloud](mailto:support@ranx.cloud)**
 
 ---
 

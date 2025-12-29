@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import "strings"
 
 var subscriptionDetailPageSEO = SEOMetadata{
-	Title:       "Subscription Details - Manage Your Subscription | instol.cloud",
+	Title:       "Subscription Details - Manage Your Subscription | ranx.cloud",
 	Description: "View and manage your subscription details.",
 	NoIndex:     true,
 }

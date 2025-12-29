@@ -32,10 +32,6 @@ spec:
     metadata:
       labels:
         app: n8n-main
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        run.googleapis.com/cpu-throttling: "false"
-        run.googleapis.com/execution-environment: "gen2"
     spec:
       securityContext:
         fsGroup: 1000
@@ -100,11 +96,11 @@ spec:
           failureThreshold: 3
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 256m
+            memory: 512Mi
           limits:
             cpu: 500m
-            memory: 512Mi
+            memory: 1Gi
       - name: task-runner
         image: n8nio/runners:2.0.3
         ports:

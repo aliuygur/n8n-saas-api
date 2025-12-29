@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 var notFoundPageSEO = SEOMetadata{
-	Title:       "Page Not Found - 404 | instol.cloud",
+	Title:       "Page Not Found - 404 | ranx.cloud",
 	Description: "The page you're looking for doesn't exist.",
 	NoIndex:     true,
 }

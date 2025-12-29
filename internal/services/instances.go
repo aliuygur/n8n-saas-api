@@ -33,7 +33,7 @@ func (i *Instance) GetInstanceURL() string {
 }
 
 func InstanceURL(subdomain string) string {
-	return fmt.Sprintf("https://%s.instol.cloud", subdomain)
+	return fmt.Sprintf("https://%s.ranx.cloud", subdomain)
 }
 
 // toDomainInstance maps a db.Instance to a types.Instance (domain layer)
@@ -211,7 +211,7 @@ func (s *Service) CheckInstanceURLActive(ctx context.Context, id string) (bool, 
 		return false, nil
 	}
 
-	healthURL := fmt.Sprintf("https://%s.instol.cloud/healthz/readiness", instance.Subdomain)
+	healthURL := fmt.Sprintf("https://%s.ranx.cloud/healthz/readiness", instance.Subdomain)
 
 	// Create HTTP client with timeout
 	client := &http.Client{
@@ -348,7 +348,7 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 
 	deployGke := func(state *instanceCreationState) (*instanceCreationState, error) {
 		// Deploy n8n instance
-		domain := fmt.Sprintf("https://%s.instol.cloud", state.subdomain)
+		domain := fmt.Sprintf("https://%s.ranx.cloud", state.subdomain)
 		n8nInstance := &n8ntemplates.N8N_V1{
 			Namespace:     state.namespace,
 			EncryptionKey: lo.RandomString(32, lo.AlphanumericCharset),

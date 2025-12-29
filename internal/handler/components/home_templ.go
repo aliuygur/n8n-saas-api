@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 var homePageSEO = SEOMetadata{
-	Title:        "instol.cloud - One-Click n8n Workflow Automation Hosting on GCP",
+	Title:        "ranx.cloud - One-Click n8n Workflow Automation Hosting on GCP",
 	Description:  "Deploy n8n workflow automation in seconds on Google Cloud Platform. No setup required. Start automating your workflows with our managed n8n hosting.",
 	Keywords:     []string{"n8n hosting", "workflow automation", "GCP hosting", "n8n cloud", "automation platform", "self-hosted n8n"},
-	CanonicalURL: "https://instol.cloud",
-	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+	CanonicalURL: "https://ranx.cloud",
+	OGImage:      "https://ranx.cloud/static/android-chrome-512x512.png",
 	OGType:       "website",
 }
 

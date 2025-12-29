@@ -42,10 +42,10 @@ func GetBlogContent(slug string) string {
 	<p>n8n offers two deployment options:</p>
 	<p><strong>Self-Hosted:</strong> You manage the infrastructure, giving you complete control and data privacy. Great for security-conscious organizations.</p>
 	<p><strong>n8n Cloud:</strong> Fully managed by the n8n team, perfect for quick setup without infrastructure management.</p>
-	<p>With <strong>instol.cloud</strong>, you get the best of both worlds: the control of self-hosting with the ease of managed infrastructure on Google Cloud Platform.</p>
+	<p>With <strong>ranx.cloud</strong>, you get the best of both worlds: the control of self-hosting with the ease of managed infrastructure on Google Cloud Platform.</p>
 
 	<h2>Getting Started with n8n</h2>
-	<p>Ready to try n8n? With instol.cloud, you can deploy your own n8n instance in under 2 minutes:</p>
+	<p>Ready to try n8n? With ranx.cloud, you can deploy your own n8n instance in under 2 minutes:</p>
 	<ol>
 		<li>Sign up for a free 3-day trial</li>
 		<li>Choose your subdomain</li>
@@ -53,7 +53,7 @@ func GetBlogContent(slug string) string {
 	</ol>
 
 	<div class="bg-indigo-900/30 border border-indigo-500/30 rounded-lg p-6 my-8">
-		<h3 class="text-white mt-0">Try n8n on instol.cloud</h3>
+		<h3 class="text-white mt-0">Try n8n on ranx.cloud</h3>
 		<p class="mb-4">Deploy your managed n8n instance on Google Cloud in minutes. No DevOps experience required.</p>
 		<a href="/pricing" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition-colors font-semibold">Start Free Trial</a>
 	</div>
@@ -72,7 +72,7 @@ func GetBlogContent(slug string) string {
 	<h3>Pricing</h3>
 	<p><strong>Zapier:</strong> Starts at $29.99/month for 750 tasks. Premium plans can cost $103.50/month or more.</p>
 	<p><strong>n8n Cloud:</strong> Starts at €20/month for 2,500 executions.</p>
-	<p><strong>Self-Hosted n8n (via instol.cloud):</strong> Just $9.99/month with unlimited executions.</p>
+	<p><strong>Self-Hosted n8n (via ranx.cloud):</strong> Just $9.99/month with unlimited executions.</p>
 
 	<h3>Integrations</h3>
 	<p><strong>Zapier:</strong> 6,000+ app integrations</p>
@@ -108,14 +108,14 @@ func GetBlogContent(slug string) string {
 	<ul>
 		<li><strong>Zapier:</strong> ~$103.50/month (Professional plan)</li>
 		<li><strong>n8n Cloud:</strong> ~€50/month</li>
-		<li><strong>instol.cloud:</strong> $9.99/month (unlimited executions)</li>
+		<li><strong>ranx.cloud:</strong> $9.99/month (unlimited executions)</li>
 	</ul>
 
 	<h2>Migration from Zapier to n8n</h2>
 	<p>Many users successfully migrate from Zapier to n8n. While there's no automatic migration tool, most workflows can be rebuilt in n8n within a few hours, often with improved performance and more features.</p>
 
 	<div class="bg-green-900/30 border border-green-500/30 rounded-lg p-6 my-8">
-		<h3 class="text-white mt-0">Save Money with n8n on instol.cloud</h3>
+		<h3 class="text-white mt-0">Save Money with n8n on ranx.cloud</h3>
 		<p class="mb-4">Run unlimited workflows for just $9.99/month. Perfect for businesses looking to reduce automation costs.</p>
 		<a href="/create-instance" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-500 transition-colors font-semibold">Deploy n8n Now</a>
 	</div>
@@ -129,13 +129,13 @@ func GetBlogContent(slug string) string {
 	<h2>Prerequisites</h2>
 	<p>Before we begin, you'll need:</p>
 	<ul>
-		<li>An n8n instance (deploy one on instol.cloud in 2 minutes)</li>
+		<li>An n8n instance (deploy one on ranx.cloud in 2 minutes)</li>
 		<li>A Gmail account (for our example workflow)</li>
 		<li>A Slack workspace (optional, but recommended)</li>
 	</ul>
 
 	<h2>Step 1: Access Your n8n Instance</h2>
-	<p>Once you've deployed n8n on instol.cloud, you'll receive your unique URL (e.g., yourname.instol.cloud). Open it in your browser to access the n8n interface.</p>
+	<p>Once you've deployed n8n on ranx.cloud, you'll receive your unique URL (e.g., yourname.ranx.cloud). Open it in your browser to access the n8n interface.</p>
 
 	<h2>Step 2: Create Your First Workflow</h2>
 	<p>Click the <strong>"Create Workflow"</strong> button. You'll see a blank canvas with a single "+" button. This is where the magic happens!</p>
@@ -196,7 +196,7 @@ func GetBlogContent(slug string) string {
 
 	<div class="bg-blue-900/30 border border-blue-500/30 rounded-lg p-6 my-8">
 		<h3 class="text-white mt-0">Ready to Build More Workflows?</h3>
-		<p class="mb-4">Get your own n8n instance on instol.cloud with 3-day free trial. No credit card required.</p>
+		<p class="mb-4">Get your own n8n instance on ranx.cloud with 3-day free trial. No credit card required.</p>
 		<a href="/login" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-500 transition-colors font-semibold">Start Building</a>
 	</div>
 </article>
@@ -261,7 +261,7 @@ func GetBlogContent(slug string) string {
 
 	<div class="bg-purple-900/30 border border-purple-500/30 rounded-lg p-6 my-8">
 		<h3 class="text-white mt-0">Start Automating Today</h3>
-		<p class="mb-4">Deploy your own n8n instance on instol.cloud and start building these automations in minutes.</p>
+		<p class="mb-4">Deploy your own n8n instance on ranx.cloud and start building these automations in minutes.</p>
 		<a href="/pricing" class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-500 transition-colors font-semibold">View Pricing</a>
 	</div>
 </article>
@@ -273,7 +273,7 @@ func GetBlogContent(slug string) string {
 
 	<h2>What's the Difference?</h2>
 	<p><strong>n8n Cloud</strong> is a fully managed service run by the n8n team. You don't worry about servers, updates, or infrastructure.</p>
-	<p><strong>Self-Hosted n8n</strong> means you deploy n8n on your own infrastructure (or use a managed service like instol.cloud), giving you complete control.</p>
+	<p><strong>Self-Hosted n8n</strong> means you deploy n8n on your own infrastructure (or use a managed service like ranx.cloud), giving you complete control.</p>
 
 	<h2>Comparison Table</h2>
 	<div class="overflow-x-auto">
@@ -288,12 +288,12 @@ func GetBlogContent(slug string) string {
 			<tbody>
 				<tr>
 					<td>Setup Time</td>
-					<td>2 minutes (instol.cloud)</td>
+					<td>2 minutes (ranx.cloud)</td>
 					<td>Instant</td>
 				</tr>
 				<tr>
 					<td>Monthly Cost</td>
-					<td>$9.99 (instol.cloud)</td>
+					<td>$9.99 (ranx.cloud)</td>
 					<td>€20+</td>
 				</tr>
 				<tr>
@@ -308,7 +308,7 @@ func GetBlogContent(slug string) string {
 				</tr>
 				<tr>
 					<td>Updates</td>
-					<td>Automatic (instol.cloud)</td>
+					<td>Automatic (ranx.cloud)</td>
 					<td>Automatic</td>
 				</tr>
 				<tr>
@@ -328,7 +328,7 @@ func GetBlogContent(slug string) string {
 	<h2>Benefits of Self-Hosted n8n</h2>
 
 	<h3>1. Cost Efficiency</h3>
-	<p>With self-hosting via instol.cloud, you pay a flat $9.99/month with unlimited executions. As your automation grows, you save significantly compared to execution-based pricing.</p>
+	<p>With self-hosting via ranx.cloud, you pay a flat $9.99/month with unlimited executions. As your automation grows, you save significantly compared to execution-based pricing.</p>
 
 	<h3>2. Data Privacy & Security</h3>
 	<p>Your data stays in your infrastructure. Perfect for healthcare, finance, or any industry with strict compliance requirements.</p>
@@ -351,7 +351,7 @@ func GetBlogContent(slug string) string {
 	<p>Automatically scales to handle traffic spikes without any configuration.</p>
 
 	<h2>The Middle Ground: Managed Self-Hosting</h2>
-	<p>Services like <strong>instol.cloud</strong> offer the best of both worlds:</p>
+	<p>Services like <strong>ranx.cloud</strong> offer the best of both worlds:</p>
 	<ul>
 		<li>✅ Easy deployment (2 minutes)</li>
 		<li>✅ Automatic updates</li>
@@ -364,7 +364,7 @@ func GetBlogContent(slug string) string {
 
 	<h2>Which Should You Choose?</h2>
 
-	<h3>Choose Self-Hosted (via instol.cloud) if:</h3>
+	<h3>Choose Self-Hosted (via ranx.cloud) if:</h3>
 	<ul>
 		<li>You run high-volume workflows (>10,000/month)</li>
 		<li>Data privacy is critical</li>
@@ -389,9 +389,9 @@ func GetBlogContent(slug string) string {
 </article>
 `,
 
-		"why-choose-instol-cloud-for-n8n": `
+		"why-choose-ranx-cloud-for-n8n": `
 <article class="prose prose-invert prose-lg max-w-none">
-	<p class="lead text-xl text-gray-300 mb-8">Looking for the easiest way to deploy and manage n8n? Discover why instol.cloud is the perfect solution for self-hosting n8n on Google Cloud Platform.</p>
+	<p class="lead text-xl text-gray-300 mb-8">Looking for the easiest way to deploy and manage n8n? Discover why ranx.cloud is the perfect solution for self-hosting n8n on Google Cloud Platform.</p>
 
 	<h2>The Problem with Traditional Self-Hosting</h2>
 	<p>Self-hosting n8n gives you control and saves money, but traditionally comes with challenges:</p>
@@ -404,8 +404,8 @@ func GetBlogContent(slug string) string {
 	</ul>
 	<p>These tasks require DevOps expertise and take hours to set up correctly.</p>
 
-	<h2>The instol.cloud Solution</h2>
-	<p>instol.cloud handles all the technical complexity while giving you the benefits of self-hosting:</p>
+	<h2>The ranx.cloud Solution</h2>
+	<p>ranx.cloud handles all the technical complexity while giving you the benefits of self-hosting:</p>
 
 	<h3>1. Deploy in Under 2 Minutes</h3>
 	<p>No terminal commands, no configuration files, no complicated setup. Just:</p>
@@ -414,7 +414,7 @@ func GetBlogContent(slug string) string {
 		<li>Choose your subdomain</li>
 		<li>Click deploy</li>
 	</ol>
-	<p>Your n8n instance is ready at yourname.instol.cloud with automatic SSL.</p>
+	<p>Your n8n instance is ready at yourname.ranx.cloud with automatic SSL.</p>
 
 	<h3>2. Powered by Google Cloud Platform</h3>
 	<p>Your n8n instance runs on Google's enterprise-grade infrastructure:</p>
@@ -441,11 +441,11 @@ func GetBlogContent(slug string) string {
 		<li><strong>n8n Cloud:</strong> ~€150/month</li>
 		<li><strong>Zapier:</strong> ~$250/month</li>
 		<li><strong>DIY Self-Hosting:</strong> ~$30/month (plus 10+ hours of setup/maintenance)</li>
-		<li><strong>instol.cloud:</strong> $9.99/month (2-minute setup, zero maintenance)</li>
+		<li><strong>ranx.cloud:</strong> $9.99/month (2-minute setup, zero maintenance)</li>
 	</ul>
 
 	<h2>Perfect for Teams</h2>
-	<p>instol.cloud is ideal for:</p>
+	<p>ranx.cloud is ideal for:</p>
 	<ul>
 		<li><strong>Startups</strong> - Cost-effective automation without execution limits</li>
 		<li><strong>Agencies</strong> - Deploy separate instances for each client</li>
@@ -455,7 +455,7 @@ func GetBlogContent(slug string) string {
 
 	<h2>What Our Users Say</h2>
 	<blockquote>
-		<p>"I switched from Zapier to n8n on instol.cloud and I'm saving $200/month while running more complex workflows. Setup took literally 2 minutes."</p>
+		<p>"I switched from Zapier to n8n on ranx.cloud and I'm saving $200/month while running more complex workflows. Setup took literally 2 minutes."</p>
 	</blockquote>
 
 	<h2>Security & Compliance</h2>
@@ -469,7 +469,7 @@ func GetBlogContent(slug string) string {
 	</ul>
 
 	<h2>Getting Started is Risk-Free</h2>
-	<p>Try instol.cloud with zero risk:</p>
+	<p>Try ranx.cloud with zero risk:</p>
 	<ul>
 		<li>✅ 3-day free trial</li>
 		<li>✅ No credit card required</li>
@@ -480,14 +480,14 @@ func GetBlogContent(slug string) string {
 	<h2>Support When You Need It</h2>
 	<p>While we've made deployment simple, we're here to help:</p>
 	<ul>
-		<li>Email support at support@instol.cloud</li>
+		<li>Email support at support@ranx.cloud</li>
 		<li>Comprehensive documentation</li>
 		<li>Active community</li>
 	</ul>
 
 	<div class="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-lg p-8 my-8">
 		<h3 class="text-white mt-0 text-2xl">Ready to Deploy n8n?</h3>
-		<p class="mb-6 text-lg">Join hundreds of teams automating their workflows on instol.cloud. Start your free trial today.</p>
+		<p class="mb-6 text-lg">Join hundreds of teams automating their workflows on ranx.cloud. Start your free trial today.</p>
 		<div class="flex gap-4 flex-wrap">
 			<a href="/create-instance" class="inline-block bg-indigo-600 text-white px-8 py-4 rounded-lg hover:bg-indigo-500 transition-colors font-semibold text-lg">Start Free Trial</a>
 			<a href="/pricing" class="inline-block bg-gray-700 text-white px-8 py-4 rounded-lg hover:bg-gray-600 transition-colors font-semibold text-lg">View Pricing</a>

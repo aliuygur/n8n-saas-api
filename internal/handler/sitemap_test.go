@@ -13,7 +13,7 @@ func TestSitemap(t *testing.T) {
 	// Create a test config
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			APIBaseURL: "https://instol.cloud",
+			APIBaseURL: "https://ranx.cloud",
 		},
 	}
 
@@ -55,11 +55,11 @@ func TestSitemap(t *testing.T) {
 
 	// Check for required URLs
 	expectedURLs := []string{
-		"<loc>https://instol.cloud/</loc>",
-		"<loc>https://instol.cloud/pricing</loc>",
-		"<loc>https://instol.cloud/blog</loc>",
-		"<loc>https://instol.cloud/blog/what-is-n8n-workflow-automation</loc>",
-		"<loc>https://instol.cloud/blog/n8n-vs-zapier-comparison</loc>",
+		"<loc>https://ranx.cloud/</loc>",
+		"<loc>https://ranx.cloud/pricing</loc>",
+		"<loc>https://ranx.cloud/blog</loc>",
+		"<loc>https://ranx.cloud/blog/what-is-n8n-workflow-automation</loc>",
+		"<loc>https://ranx.cloud/blog/n8n-vs-zapier-comparison</loc>",
 	}
 
 	for _, expected := range expectedURLs {

@@ -2,11 +2,11 @@ package components
 
 // Blog index page showing all blog posts
 var blogIndexSEO = SEOMetadata{
-	Title:        "n8n Workflow Automation Blog | instol.cloud",
+	Title:        "n8n Workflow Automation Blog | ranx.cloud",
 	Description:  "Learn about n8n workflow automation, tutorials, comparisons, and best practices. Discover how to automate your business with n8n.",
 	Keywords:     []string{"n8n blog", "workflow automation blog", "n8n tutorials", "automation guides"},
-	CanonicalURL: "https://instol.cloud/blog",
-	OGImage:      "https://instol.cloud/static/android-chrome-512x512.png",
+	CanonicalURL: "https://ranx.cloud/blog",
+	OGImage:      "https://ranx.cloud/static/android-chrome-512x512.png",
 }
 
 templ BlogIndexPage() {
@@ -85,10 +85,10 @@ templ BlogPostCard(post BlogPost) {
 // Individual blog post page
 templ BlogPostPage(post BlogPost) {
 	@Layout(SEOMetadata{
-		Title:        post.Title + " | instol.cloud",
+		Title:        post.Title + " | ranx.cloud",
 		Description:  post.Description,
 		Keywords:     post.Keywords,
-		CanonicalURL: "https://instol.cloud/blog/" + post.Slug,
+		CanonicalURL: "https://ranx.cloud/blog/" + post.Slug,
 		OGImage:      post.OGImage,
 		OGType:       "article",
 	}) {
@@ -215,15 +215,15 @@ templ ArticleSchema(post BlogPost) {
 		"dateModified": "{ post.Date.Format("2006-01-02") }",
 		"publisher": {
 			"@type": "Organization",
-			"name": "instol.cloud",
+			"name": "ranx.cloud",
 			"logo": {
 				"@type": "ImageObject",
-				"url": "https://instol.cloud/static/android-chrome-512x512.png"
+				"url": "https://ranx.cloud/static/android-chrome-512x512.png"
 			}
 		},
 		"mainEntityOfPage": {
 			"@type": "WebPage",
-			"@id": "https://instol.cloud/blog/{ post.Slug }"
+			"@id": "https://ranx.cloud/blog/{ post.Slug }"
 		}
 		if post.OGImage != "" {
 			,
