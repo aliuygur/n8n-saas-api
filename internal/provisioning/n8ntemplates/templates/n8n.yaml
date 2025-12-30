@@ -15,7 +15,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 5Gi
   storageClassName: premium-rwo
 ---
 apiVersion: apps/v1
@@ -37,11 +37,11 @@ spec:
         fsGroup: 1000
       containers:
       - name: n8n
-        image: n8nio/n8n:2.0.3
+        image: n8nio/n8n:2.1.4
         ports:
         - containerPort: 5678
-        - containerPort: 5679
         env:
+        # Basic Configuration
         - name: N8N_USER_FOLDER
           value: "/data"
         - name: N8N_ENCRYPTION_KEY
@@ -52,26 +52,39 @@ spec:
           value: "production"
         - name: N8N_EDITOR_BASE_URL
           value: "PLACEHOLDER_BASE_URL"
+        - name: WEBHOOK_URL
+          value: "PLACEHOLDER_BASE_URL"
+
+        # Database Configuration
         - name: DB_TYPE
           value: "sqlite"
         - name: DB_SQLITE_DATABASE
           value: "/data/database.sqlite"
+
+        # Executions & Logging
         - name: EXECUTIONS_DATA_MAX_AGE
           value: "168"
         - name: N8N_LOG_LEVEL
           value: "warn"
+
+        # Node.js Code Node - Allowed Modules
         - name: NODE_FUNCTION_ALLOW_BUILTIN
-          value: "*"
+          value: "crypto,url,util,querystring,zlib,buffer,string_decoder,stream,events,assert,punycode,timers,console,perf_hooks"
+        - name: NODE_FUNCTION_ALLOW_EXTERNAL
+          value: "axios,lodash,moment,date-fns,uuid,jsonwebtoken,bcrypt,nanoid,validator,cheerio"
+
+        # Task Runners Configuration
         - name: N8N_RUNNERS_ENABLED
+          value: "false"
+        - name: N8N_RUNNERS_STDLIB_ALLOW
+          value: "json,datetime,re,math,random,base64,hashlib,hmac,urllib,uuid,collections,itertools,functools,operator,string,decimal,fractions,statistics,enum,dataclasses,typing"
+
+        # Security Configuration
+        - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
           value: "true"
-        - name: N8N_RUNNERS_MODE
-          value: "external"
-        - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
-          value: "0.0.0.0"
-        - name: N8N_RUNNERS_BROKER_PORT
-          value: "5679"
-        - name: N8N_RUNNERS_AUTH_TOKEN
-          value: "PLACEHOLDER_ENCRYPTION_KEY"
+        - name: NODES_EXCLUDE
+          value: "n8n-nodes-base.executeCommand,n8n-nodes-base.localFileTrigger"
+
         volumeMounts:
         - name: n8n-data
           mountPath: /data
@@ -101,25 +114,6 @@ spec:
           limits:
             cpu: 500m
             memory: 1Gi
-      - name: task-runner
-        image: n8nio/runners:2.0.3
-        ports:
-        - containerPort: 5680
-        env:
-        - name: N8N_RUNNERS_TASK_BROKER_URI
-          value: "http://localhost:5679"
-        - name: N8N_RUNNERS_AUTH_TOKEN
-          value: "PLACEHOLDER_ENCRYPTION_KEY"
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
       volumes:
       - name: n8n-data
         persistentVolumeClaim:
