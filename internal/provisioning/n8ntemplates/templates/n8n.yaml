@@ -67,17 +67,17 @@ spec:
         - name: N8N_LOG_LEVEL
           value: "warn"
 
-        # Node.js Code Node - Allowed Modules
-        - name: NODE_FUNCTION_ALLOW_BUILTIN
-          value: "crypto,url,util,querystring,zlib,buffer,string_decoder,stream,events,assert,punycode,timers,console,perf_hooks"
-        - name: NODE_FUNCTION_ALLOW_EXTERNAL
-          value: "axios,lodash,moment,date-fns,uuid,jsonwebtoken,bcrypt,nanoid,validator,cheerio"
-
         # Task Runners Configuration
         - name: N8N_RUNNERS_ENABLED
-          value: "false"
-        - name: N8N_RUNNERS_STDLIB_ALLOW
-          value: "json,datetime,re,math,random,base64,hashlib,hmac,urllib,uuid,collections,itertools,functools,operator,string,decimal,fractions,statistics,enum,dataclasses,typing"
+          value: "true"
+        - name: N8N_RUNNERS_MODE
+          value: "external"
+        - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+          value: "0.0.0.0"
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          value: "PLACEHOLDER_ENCRYPTION_KEY"
+        - name: N8N_NATIVE_PYTHON_RUNNER
+          value: "true"
 
         # Security Configuration
         - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
@@ -114,6 +114,30 @@ spec:
           limits:
             cpu: 500m
             memory: 1Gi
+      - name: task-runner
+        image: n8nio/runners:2.1.4
+        env:
+        - name: N8N_RUNNERS_TASK_BROKER_URI
+          value: "http://localhost:5679"
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          value: "PLACEHOLDER_ENCRYPTION_KEY"
+        # JavaScript Task Runner - Allowed Modules
+        - name: NODE_FUNCTION_ALLOW_BUILTIN
+          value: "crypto,url,util,querystring,zlib,buffer,string_decoder,stream,events,assert,punycode,timers,console,perf_hooks"
+        - name: NODE_FUNCTION_ALLOW_EXTERNAL
+          value: "axios,lodash,moment,date-fns,uuid,jsonwebtoken,nanoid,validator,cheerio"
+        # Python Task Runner - Allowed Modules
+        - name: N8N_RUNNERS_STDLIB_ALLOW
+          value: "json,datetime,re,math,random,base64,hashlib,hmac,urllib,uuid,collections,itertools,functools,operator,string,decimal,fractions,statistics,enum,dataclasses,typing"
+        - name: GENERIC_TIMEZONE
+          value: "UTC"
+        resources:
+          requests:
+            cpu: 128m
+            memory: 256Mi
+          limits:
+            cpu: 256m
+            memory: 512Mi
       volumes:
       - name: n8n-data
         persistentVolumeClaim:
