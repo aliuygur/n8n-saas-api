@@ -3,6 +3,7 @@ package handler
 import (
 	"embed"
 	"net/http"
+	"strings"
 )
 
 //go:embed static/*
@@ -55,8 +56,23 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 // NotFoundHandlerWrapper wraps the mux to intercept 404 responses and render custom page
+// Also handles subdomain routing to proxy n8n instances
 func (h *Handler) NotFoundHandlerWrapper(mux *http.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if this is a subdomain request that should be proxied to n8n
+		// This must happen BEFORE any route matching to avoid conflicts with /static/ routes
+		host := r.Host
+		// Remove port if present
+		if idx := strings.Index(host, ":"); idx != -1 {
+			host = host[:idx]
+		}
+
+		// If it's a subdomain (not www.ranx.cloud), proxy to n8n instance
+		if host != "www.ranx.cloud" && host != "ranx.cloud" && strings.HasSuffix(host, ".ranx.cloud") {
+			h.ProxyHandler(w, r)
+			return
+		}
+
 		// In Go 1.22, GET / matches everything as a catch-all
 		// We need to check if the path is exactly "/" for home, or if it's a known route
 		// For any other path, check if it would return 404

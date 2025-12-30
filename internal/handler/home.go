@@ -2,18 +2,14 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/aliuygur/n8n-saas-api/internal/handler/components"
 	"github.com/samber/lo"
 )
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Host != "www.ranx.cloud" && strings.HasSuffix(r.Host, ".ranx.cloud") {
-		h.ProxyHandler(w, r)
-		return
-	}
-
+	// Subdomain routing is now handled in NotFoundHandlerWrapper
+	// This handler only processes requests for www.ranx.cloud and ranx.cloud
 	lo.Must0(components.HomePage().Render(r.Context(), w))
 }
 
