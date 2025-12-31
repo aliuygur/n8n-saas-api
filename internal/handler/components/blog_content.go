@@ -42,7 +42,7 @@ func GetBlogContent(slug string) string {
 	<p>n8n offers two deployment options:</p>
 	<p><strong>Self-Hosted:</strong> You manage the infrastructure, giving you complete control and data privacy. Great for security-conscious organizations.</p>
 	<p><strong>n8n Cloud:</strong> Fully managed by the n8n team, perfect for quick setup without infrastructure management.</p>
-	<p>With <strong>ranx.cloud</strong>, you get the best of both worlds: the control of self-hosting with the ease of managed infrastructure on Google Cloud Platform.</p>
+	<p>With <strong>ranx.cloud</strong>, you get the best of both worlds: the control of self-hosting with the ease of managed infrastructure.</p>
 
 	<h2>Getting Started with n8n</h2>
 	<p>Ready to try n8n? With ranx.cloud, you can deploy your own n8n instance in under 2 minutes:</p>
@@ -54,7 +54,7 @@ func GetBlogContent(slug string) string {
 
 	<div class="bg-indigo-900/30 border border-indigo-500/30 rounded-lg p-6 my-8">
 		<h3 class="text-white mt-0">Try n8n on ranx.cloud</h3>
-		<p class="mb-4">Deploy your managed n8n instance on Google Cloud in minutes. No DevOps experience required.</p>
+		<p class="mb-4">Deploy your managed n8n instance in minutes. No DevOps experience required.</p>
 		<a href="/pricing" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition-colors font-semibold">Start Free Trial</a>
 	</div>
 </article>
@@ -356,7 +356,7 @@ func GetBlogContent(slug string) string {
 		<li>✅ Easy deployment (2 minutes)</li>
 		<li>✅ Automatic updates</li>
 		<li>✅ SSL certificates included</li>
-		<li>✅ Your own infrastructure (GCP)</li>
+		<li>✅ Your own cloud infrastructure</li>
 		<li>✅ Full data control</li>
 		<li>✅ Fixed cost ($9.99/month)</li>
 		<li>✅ Unlimited executions</li>
@@ -383,7 +383,7 @@ func GetBlogContent(slug string) string {
 
 	<div class="bg-indigo-900/30 border border-indigo-500/30 rounded-lg p-6 my-8">
 		<h3 class="text-white mt-0">Get Started with Self-Hosted n8n</h3>
-		<p class="mb-4">Deploy your managed n8n instance on Google Cloud in under 2 minutes. 3-day free trial, no credit card required.</p>
+		<p class="mb-4">Deploy your managed n8n instance in under 2 minutes. 3-day free trial, no credit card required.</p>
 		<a href="/create-instance" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-500 transition-colors font-semibold">Start Free Trial</a>
 	</div>
 </article>
@@ -391,7 +391,7 @@ func GetBlogContent(slug string) string {
 
 		"why-choose-ranx-cloud-for-n8n": `
 <article class="prose prose-invert prose-lg max-w-none">
-	<p class="lead text-xl text-gray-300 mb-8">Looking for the easiest way to deploy and manage n8n? Discover why ranx.cloud is the perfect solution for self-hosting n8n on Google Cloud Platform.</p>
+	<p class="lead text-xl text-gray-300 mb-8">Looking for the easiest way to deploy and manage n8n? Discover why ranx.cloud is the perfect solution for self-hosting n8n.</p>
 
 	<h2>The Problem with Traditional Self-Hosting</h2>
 	<p>Self-hosting n8n gives you control and saves money, but traditionally comes with challenges:</p>
@@ -416,8 +416,8 @@ func GetBlogContent(slug string) string {
 	</ol>
 	<p>Your n8n instance is ready at yourname.ranx.cloud with automatic SSL.</p>
 
-	<h3>2. Powered by Google Cloud Platform</h3>
-	<p>Your n8n instance runs on Google's enterprise-grade infrastructure:</p>
+	<h3>2. Enterprise-Grade Infrastructure</h3>
+	<p>Your n8n instance runs on reliable cloud infrastructure:</p>
 	<ul>
 		<li>99.9% uptime SLA</li>
 		<li>Global CDN for fast access</li>
@@ -462,7 +462,7 @@ func GetBlogContent(slug string) string {
 	<p>Your data security is our priority:</p>
 	<ul>
 		<li>All data encrypted in transit and at rest</li>
-		<li>SOC 2 compliant infrastructure (GCP)</li>
+		<li>Enterprise-grade secure infrastructure</li>
 		<li>Regular security audits</li>
 		<li>Isolated instances for each customer</li>
 		<li>No access to your workflow data</li>

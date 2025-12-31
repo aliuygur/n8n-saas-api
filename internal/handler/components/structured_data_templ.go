@@ -30,7 +30,7 @@ func OrganizationSchema() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"Organization\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"url\": \"https://ranx.cloud\",\n\t\t\"logo\": \"https://ranx.cloud/static/android-chrome-512x512.png\",\n\t\t\"description\": \"One-Click n8n Workflow Automation Hosting on Google Cloud Platform\"\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"Organization\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"url\": \"https://ranx.cloud\",\n\t\t\"logo\": \"https://ranx.cloud/static/android-chrome-512x512.png\",\n\t\t\"description\": \"One-Click n8n Workflow Automation Hosting\"\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,7 +60,7 @@ func WebApplicationSchema() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"WebApplication\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"Offer\",\n\t\t\t\"price\": \"0\",\n\t\t\t\"priceCurrency\": \"USD\"\n\t\t},\n\t\t\"operatingSystem\": \"Web Browser\",\n\t\t\"description\": \"Deploy and manage n8n workflow automation instances on GCP with one click\"\n\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script type=\"application/ld+json\">\n\t{\n\t\t\"@context\": \"https://schema.org\",\n\t\t\"@type\": \"WebApplication\",\n\t\t\"name\": \"ranx.cloud\",\n\t\t\"applicationCategory\": \"BusinessApplication\",\n\t\t\"offers\": {\n\t\t\t\"@type\": \"Offer\",\n\t\t\t\"price\": \"0\",\n\t\t\t\"priceCurrency\": \"USD\"\n\t\t},\n\t\t\"operatingSystem\": \"Web Browser\",\n\t\t\"description\": \"Deploy and manage n8n workflow automation instances with one click\"\n\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

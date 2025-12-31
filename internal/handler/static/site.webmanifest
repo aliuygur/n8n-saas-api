@@ -1,7 +1,7 @@
 {
   "name": "ranx.cloud - n8n Workflow Automation Hosting",
   "short_name": "ranx.cloud",
-  "description": "One-Click n8n Workflow Automation Hosting on Google Cloud Platform",
+  "description": "One-Click n8n Workflow Automation Hosting",
   "icons": [
     {
       "src": "/static/android-chrome-192x192.png",
