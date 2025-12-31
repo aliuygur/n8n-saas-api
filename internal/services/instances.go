@@ -128,12 +128,6 @@ func (s *Service) DeleteInstance(ctx context.Context, params DeleteInstanceParam
 	}
 	l.Debug("deleted namespace from Kubernetes", "namespace", instance.Namespace)
 
-	domain := InstanceURL(instance.Subdomain)
-	if err := s.cloudflare.RemoveTunnelRoute(ctx, domain); err != nil {
-		return apperrs.Server("failed to delete DNS record from Cloudflare", err)
-	}
-	l.Debug("deleted DNS record from Cloudflare", "domain", domain)
-
 	if err := queries.DeleteInstance(ctx, params.InstanceID); err != nil {
 		return apperrs.Server("failed to delete instance from database", err)
 	}
