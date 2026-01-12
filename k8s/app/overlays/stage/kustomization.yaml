@@ -3,13 +3,13 @@ kind: Kustomization
 
 namePrefix: stage-
 
-namespace: stage-instol
+namespace: stage-ranx
 
 resources:
   - ../../base
 
 secretGenerator:
-  - name: instol-env
+  - name: ranx-env
     envs:
       - .env.stage
     type: Opaque

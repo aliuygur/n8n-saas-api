@@ -3,13 +3,13 @@ kind: Kustomization
 
 namePrefix: prod-
 
-namespace: prod-instol
+namespace: prod-ranx
 
 resources:
   - ../../base
 
 secretGenerator:
-  - name: instol-env
+  - name: ranx-env
     envs:
       - .env.prod
     type: Opaque

@@ -1,34 +1,34 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: instol
+  name: ranx
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: instol-app
+  name: ranx-app
   labels:
-    app: instol-app
+    app: ranx-app
     component: application
 spec:
   replicas: 1  # Autopilot manages scaling
   selector:
     matchLabels:
-      app: instol-app
+      app: ranx-app
   template:
     metadata:
       labels:
-        app: instol-app
+        app: ranx-app
     spec:
       containers:
-        - name: instol-app
+        - name: ranx-app
           image: us-central1-docker.pkg.dev/instol/n8n-saas/n8n-saas-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
             - secretRef:
-                name: instol-env
+                name: ranx-env
           resources:
             requests:
               cpu: 250m
@@ -41,15 +41,15 @@ spec:
             runAsUser: 65532
             readOnlyRootFilesystem: true
       automountServiceAccountToken: true
-      serviceAccountName: instol-app-sa
+      serviceAccountName: ranx-app-sa
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: instol-app
+  name: ranx-app
 spec:
   selector:
-    app: instol-app
+    app: ranx-app
   ports:
     - port: 80
       targetPort: 8080
@@ -58,6 +58,6 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: instol-app-sa
+  name: ranx-app-sa
   annotations:
     iam.gke.io/gcp-service-account: "n8n-gke-manager@instol.iam.gserviceaccount.com"

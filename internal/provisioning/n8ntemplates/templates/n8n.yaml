@@ -5,25 +5,13 @@ metadata:
   labels:
     name: PLACEHOLDER_NAMESPACE
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: n8n-main-data
-  namespace: PLACEHOLDER_NAMESPACE
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
-  storageClassName: premium-rwo
----
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: n8n-main
   namespace: PLACEHOLDER_NAMESPACE
 spec:
+  serviceName: n8n-main
   replicas: 1
   selector:
     matchLabels:
@@ -138,10 +126,16 @@ spec:
           limits:
             cpu: 256m
             memory: 512Mi
-      volumes:
-      - name: n8n-data
-        persistentVolumeClaim:
-          claimName: n8n-main-data
+  volumeClaimTemplates:
+  - metadata:
+      name: n8n-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: premium-rwo
+      resources:
+        requests:
+          storage: 5Gi
 ---
 apiVersion: v1
 kind: Service
