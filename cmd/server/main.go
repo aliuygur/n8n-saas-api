@@ -83,14 +83,12 @@ func main() {
 	// Register routes
 	h.RegisterRoutes(mux)
 
-	// Wrap mux with custom 404 handler
-	handler := h.NotFoundHandlerWrapper(mux)
-
-	// Create HTTP server
+	// Create HTTP server with logger middleware
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	handler := appctx.Handler(mux, logger)
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      appctx.Handler(handler, logger),
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
