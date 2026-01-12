@@ -71,4 +71,4 @@ env:
 # Build and submit Docker image to Google Cloud Build
 gcloud-build:
 	@echo "Building and submitting Docker image with Google Cloud Build..."
-	gcloud builds submit --tag us-central1-docker.pkg.dev/instol/n8n-saas/n8n-saas-api:latest .
+	gcloud builds submit --tag us-central1-docker.pkg.dev/instol/n8n-saas/n8n-saas-api:latest --machine-type=E2_HIGHCPU_8 .

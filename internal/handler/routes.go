@@ -3,7 +3,6 @@ package handler
 import (
 	"embed"
 	"net/http"
-	"strings"
 )
 
 //go:embed static/*
@@ -16,7 +15,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 
 	// Public routes (no auth required)
-	mux.HandleFunc("/", h.HomeHandler)
+	mux.HandleFunc("GET /", h.Home)
 	mux.HandleFunc("GET /login", h.Login)
 	mux.HandleFunc("GET /auth/google", h.HandleGoogleLogin)
 	mux.HandleFunc("GET /auth/google/callback", h.HandleGoogleCallback)
@@ -53,43 +52,4 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
-}
-
-// NotFoundHandlerWrapper wraps the mux to intercept 404 responses and render custom page
-// Also handles subdomain routing to proxy n8n instances
-func (h *Handler) NotFoundHandlerWrapper(mux *http.ServeMux) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if this is a subdomain request that should be proxied to n8n
-		// This must happen BEFORE any route matching to avoid conflicts with /static/ routes
-		host := r.Host
-		// Remove port if present
-		if idx := strings.Index(host, ":"); idx != -1 {
-			host = host[:idx]
-		}
-
-		// If it's a subdomain (not www.ranx.cloud), proxy to n8n instance
-		if host != "www.ranx.cloud" && host != "ranx.cloud" && strings.HasSuffix(host, ".ranx.cloud") {
-			h.ProxyHandler(w, r)
-			return
-		}
-
-		// In Go 1.22, GET / matches everything as a catch-all
-		// We need to check if the path is exactly "/" for home, or if it's a known route
-		// For any other path, check if it would return 404
-
-		if r.URL.Path != "/" && r.Method == "GET" {
-			// Check if this exact path has a registered handler
-			_, pattern := mux.Handler(r)
-
-			// If it falls back to "GET /", it means no specific route matched
-			// (since GET / is our catch-all home route)
-			if pattern == "GET /" {
-				h.NotFound(w, r)
-				return
-			}
-		}
-
-		// Serve normally
-		mux.ServeHTTP(w, r)
-	})
 }
