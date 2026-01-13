@@ -13,46 +13,46 @@ import (
 const createSubscription = `-- name: CreateSubscription :one
 INSERT INTO subscriptions (
     user_id,
-    instance_id,
     product_id,
     customer_id,
     subscription_id,
     trial_ends_at,
-    status
+    status,
+    quantity
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, user_id, instance_id, product_id, customer_id, subscription_id, status, trial_ends_at, created_at, updated_at
+) RETURNING id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
 `
 
 type CreateSubscriptionParams struct {
 	UserID         string       `json:"user_id"`
-	InstanceID     string       `json:"instance_id"`
 	ProductID      string       `json:"product_id"`
 	CustomerID     string       `json:"customer_id"`
 	SubscriptionID string       `json:"subscription_id"`
 	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
 	Status         string       `json:"status"`
+	Quantity       int32        `json:"quantity"`
 }
 
 func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error) {
 	row := q.db.QueryRowContext(ctx, createSubscription,
 		arg.UserID,
-		arg.InstanceID,
 		arg.ProductID,
 		arg.CustomerID,
 		arg.SubscriptionID,
 		arg.TrialEndsAt,
 		arg.Status,
+		arg.Quantity,
 	)
 	var i Subscription
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.InstanceID,
 		&i.ProductID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
+		&i.Quantity,
 		&i.TrialEndsAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -60,82 +60,18 @@ func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscription
 	return i, err
 }
 
-const deleteSubscriptionByInstanceID = `-- name: DeleteSubscriptionByInstanceID :exec
+const deleteSubscriptionByID = `-- name: DeleteSubscriptionByID :exec
 DELETE FROM subscriptions
-WHERE instance_id = $1
+WHERE id = $1
 `
 
-func (q *Queries) DeleteSubscriptionByInstanceID(ctx context.Context, instanceID string) error {
-	_, err := q.db.ExecContext(ctx, deleteSubscriptionByInstanceID, instanceID)
+func (q *Queries) DeleteSubscriptionByID(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteSubscriptionByID, id)
 	return err
 }
 
-const getAllSubscriptionsByUserID = `-- name: GetAllSubscriptionsByUserID :many
-SELECT id, user_id, instance_id, product_id, customer_id, subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
-WHERE user_id = $1
-ORDER BY created_at DESC
-`
-
-func (q *Queries) GetAllSubscriptionsByUserID(ctx context.Context, userID string) ([]Subscription, error) {
-	rows, err := q.db.QueryContext(ctx, getAllSubscriptionsByUserID, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Subscription
-	for rows.Next() {
-		var i Subscription
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.InstanceID,
-			&i.ProductID,
-			&i.CustomerID,
-			&i.SubscriptionID,
-			&i.Status,
-			&i.TrialEndsAt,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getSubscriptionByInstanceID = `-- name: GetSubscriptionByInstanceID :one
-SELECT id, user_id, instance_id, product_id, customer_id, subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
-WHERE instance_id = $1
-LIMIT 1
-`
-
-func (q *Queries) GetSubscriptionByInstanceID(ctx context.Context, instanceID string) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, getSubscriptionByInstanceID, instanceID)
-	var i Subscription
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.InstanceID,
-		&i.ProductID,
-		&i.CustomerID,
-		&i.SubscriptionID,
-		&i.Status,
-		&i.TrialEndsAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const getSubscriptionByProviderID = `-- name: GetSubscriptionByProviderID :one
-SELECT id, user_id, instance_id, product_id, customer_id, subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
+SELECT id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
 WHERE subscription_id = $1
 LIMIT 1
 `
@@ -146,11 +82,11 @@ func (q *Queries) GetSubscriptionByProviderID(ctx context.Context, subscriptionI
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.InstanceID,
 		&i.ProductID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
+		&i.Quantity,
 		&i.TrialEndsAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -158,28 +94,23 @@ func (q *Queries) GetSubscriptionByProviderID(ctx context.Context, subscriptionI
 	return i, err
 }
 
-const getSubscriptionByUserIDAndProductID = `-- name: GetSubscriptionByUserIDAndProductID :one
-SELECT id, user_id, instance_id, product_id, customer_id, subscription_id, status, trial_ends_at, created_at, updated_at FROM subscriptions
-WHERE user_id = $1 AND product_id = $2
+const getSubscriptionByUserID = `-- name: GetSubscriptionByUserID :one
+SELECT id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
+WHERE user_id = $1
 LIMIT 1
 `
 
-type GetSubscriptionByUserIDAndProductIDParams struct {
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
-}
-
-func (q *Queries) GetSubscriptionByUserIDAndProductID(ctx context.Context, arg GetSubscriptionByUserIDAndProductIDParams) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, getSubscriptionByUserIDAndProductID, arg.UserID, arg.ProductID)
+func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (Subscription, error) {
+	row := q.db.QueryRowContext(ctx, getSubscriptionByUserID, userID)
 	var i Subscription
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.InstanceID,
 		&i.ProductID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
+		&i.Quantity,
 		&i.TrialEndsAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -187,46 +118,20 @@ func (q *Queries) GetSubscriptionByUserIDAndProductID(ctx context.Context, arg G
 	return i, err
 }
 
-const updateSubscriptionProviderInfo = `-- name: UpdateSubscriptionProviderInfo :exec
+const updateSubscriptionQuantity = `-- name: UpdateSubscriptionQuantity :exec
 UPDATE subscriptions
-SET customer_id = $2,
-    subscription_id = $3,
-    product_id = $4,
+SET quantity = $2,
     updated_at = NOW()
-WHERE instance_id = $1
+WHERE id = $1
 `
 
-type UpdateSubscriptionProviderInfoParams struct {
-	InstanceID     string `json:"instance_id"`
-	CustomerID     string `json:"customer_id"`
-	SubscriptionID string `json:"subscription_id"`
-	ProductID      string `json:"product_id"`
+type UpdateSubscriptionQuantityParams struct {
+	ID       string `json:"id"`
+	Quantity int32  `json:"quantity"`
 }
 
-func (q *Queries) UpdateSubscriptionProviderInfo(ctx context.Context, arg UpdateSubscriptionProviderInfoParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionProviderInfo,
-		arg.InstanceID,
-		arg.CustomerID,
-		arg.SubscriptionID,
-		arg.ProductID,
-	)
-	return err
-}
-
-const updateSubscriptionStatus = `-- name: UpdateSubscriptionStatus :exec
-UPDATE subscriptions
-SET status = $1,
-    updated_at = NOW()
-WHERE id = $2
-`
-
-type UpdateSubscriptionStatusParams struct {
-	Status string `json:"status"`
-	ID     string `json:"id"`
-}
-
-func (q *Queries) UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionStatus, arg.Status, arg.ID)
+func (q *Queries) UpdateSubscriptionQuantity(ctx context.Context, arg UpdateSubscriptionQuantityParams) error {
+	_, err := q.db.ExecContext(ctx, updateSubscriptionQuantity, arg.ID, arg.Quantity)
 	return err
 }
 
@@ -244,17 +149,5 @@ type UpdateSubscriptionStatusByProviderIDParams struct {
 
 func (q *Queries) UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error {
 	_, err := q.db.ExecContext(ctx, updateSubscriptionStatusByProviderID, arg.SubscriptionID, arg.Status)
-	return err
-}
-
-const updateSubscriptionToExpired = `-- name: UpdateSubscriptionToExpired :exec
-UPDATE subscriptions
-SET status = 'expired',
-    updated_at = NOW()
-WHERE id = $1
-`
-
-func (q *Queries) UpdateSubscriptionToExpired(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionToExpired, id)
 	return err
 }

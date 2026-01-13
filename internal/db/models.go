@@ -47,11 +47,11 @@ type Session struct {
 type Subscription struct {
 	ID             string       `json:"id"`
 	UserID         string       `json:"user_id"`
-	InstanceID     string       `json:"instance_id"`
 	ProductID      string       `json:"product_id"`
 	CustomerID     string       `json:"customer_id"`
 	SubscriptionID string       `json:"subscription_id"`
 	Status         string       `json:"status"`
+	Quantity       int32        `json:"quantity"`
 	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
 	CreatedAt      time.Time    `json:"created_at"`
 	UpdatedAt      time.Time    `json:"updated_at"`

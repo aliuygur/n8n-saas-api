@@ -46,24 +46,25 @@ CREATE INDEX idx_instances_namespace ON instances(namespace);
 CREATE UNIQUE INDEX instances_namespace_active_key ON instances(namespace) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX instances_subdomain_active_key ON instances(subdomain) WHERE deleted_at IS NULL;
 
--- Create subscriptions table
+-- Create subscriptions table (one subscription per user with quantity field for instance limits)
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    instance_id UUID NOT NULL,
-    polar_product_id VARCHAR NOT NULL DEFAULT '',
-    polar_customer_id VARCHAR NOT NULL DEFAULT '',
-    polar_subscription_id VARCHAR NOT NULL DEFAULT '',
+    product_id VARCHAR NOT NULL DEFAULT '',
+    customer_id VARCHAR NOT NULL DEFAULT '',
+    subscription_id VARCHAR NOT NULL DEFAULT '',
     status VARCHAR NOT NULL DEFAULT 'trial',
+    quantity INTEGER NOT NULL DEFAULT 1,  -- Number of instances allowed
     trial_ends_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- unique index on instance_id (one subscription per instance)
-CREATE UNIQUE INDEX idx_subscriptions_instance_id ON subscriptions(instance_id);
+-- Indexes for subscriptions
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
+-- Ensure one active subscription per user per product (prevents duplicate active subscriptions)
+CREATE UNIQUE INDEX idx_subscriptions_user_product ON subscriptions(user_id, product_id) WHERE status NOT IN ('cancelled', 'expired');
 
 -- Subscription status can be: 'trial', 'active', 'expired', 'canceled', 'past_due'
 
@@ -77,14 +78,14 @@ CREATE TABLE checkout_sessions (
     status VARCHAR NOT NULL DEFAULT 'pending',
     success_url VARCHAR NOT NULL,
     return_url VARCHAR NOT NULL,
-    polar_checkout_id VARCHAR NOT NULL UNIQUE,
+    checkout_id VARCHAR NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     completed_at TIMESTAMP
 );
 
 CREATE INDEX idx_checkout_sessions_user_id ON checkout_sessions(user_id);
-CREATE INDEX idx_checkout_sessions_polar_checkout_id ON checkout_sessions(polar_checkout_id);
+CREATE INDEX idx_checkout_sessions_checkout_id ON checkout_sessions(checkout_id);
 CREATE INDEX idx_checkout_sessions_status ON checkout_sessions(status);
 
 -- Checkout session status can be: 'pending', 'completed', 'expired', 'failed'

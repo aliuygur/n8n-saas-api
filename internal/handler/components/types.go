@@ -24,4 +24,5 @@ type Subscription struct {
 	TrialEndsAt    string
 	CreatedAt      string
 	UpdatedAt      string
+	Quantity       int32
 }

@@ -25,7 +25,7 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the user's subscription
-	subscriptions, err := h.services.GetUserSubscriptions(ctx, user.UserID)
+	sub, err := h.services.GetUserSubscription(ctx, user.UserID)
 	if err != nil {
 		l.Error("Failed to get subscription", slog.Any("error", err))
 		http.Error(w, "Failed to load subscription", http.StatusInternalServerError)
@@ -33,13 +33,10 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if user has a subscription
-	if len(subscriptions) == 0 {
+	if sub == nil {
 		http.Error(w, "No subscription found", http.StatusNotFound)
 		return
 	}
-
-	// Use the first subscription (one subscription per user)
-	sub := subscriptions[0]
 
 	trialEndsAt := ""
 	if sub.TrialEndsAt != nil {
@@ -63,6 +60,7 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 			TrialEndsAt:    trialEndsAt,
 			CreatedAt:      sub.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:      sub.UpdatedAt.Format(time.RFC3339),
+			Quantity:       sub.Quantity,
 		},
 	}
 

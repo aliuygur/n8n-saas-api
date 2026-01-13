@@ -164,7 +164,7 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_create_%s", params.UserID))
 	defer releaseLock()
 
-	// if err := s.canCreateInstance(ctx, queries, params.UserID); err != nil {
+	// if err := s.canCreateInstance(ctx, params.UserID); err != nil {
 	// 	return nil, err
 	// }
 
@@ -299,18 +299,17 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 	}
 
 	createTrialSubscription := func(state *instanceCreationState) (*instanceCreationState, error) {
-		// Check if user already has a subscription
-		subscriptions, err := queries.GetAllSubscriptionsByUserID(ctx, state.userID)
+		// Check if user already has a subscription (only one subscription per user)
+		existingSub, err := s.GetUserSubscription(ctx, state.userID)
 		if err != nil {
-			return state, apperrs.Server("failed to check existing subscriptions", err)
+			return state, apperrs.Server("failed to check existing subscription", err)
 		}
 
-		// Only create trial subscription if user has no subscriptions
-		if len(subscriptions) == 0 {
+		// Only create trial subscription if user has no subscription yet
+		if existingSub == nil {
 			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
 			subscription, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
 				UserID:         state.userID,
-				InstanceID:     state.instanceID,
 				ProductID:      "", // Empty for trial
 				CustomerID:     "", // Empty for trial
 				SubscriptionID: "", // Empty for trial
@@ -318,13 +317,17 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 					Time:  trialEndsAt,
 					Valid: true,
 				},
-				Status: SubscriptionStatusTrial,
+				Status:   SubscriptionStatusTrial,
+				Quantity: 1, // Default quantity for trial
 			})
 			if err != nil {
 				return state, apperrs.Server("failed to create trial subscription", err)
 			}
 			state.subscriptionID = subscription.ID
-			l.Debug("created trial subscription", "instance_id", state.instanceID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
+			l.Debug("created trial subscription", "user_id", state.userID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
+		} else {
+			// User already has a subscription, just log it
+			l.Debug("user already has subscription, skipping trial creation", "user_id", state.userID, "subscription_id", existingSub.ID)
 		}
 
 		return state, nil
@@ -332,10 +335,10 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 	revertTrialSubscription := func(state *instanceCreationState) *instanceCreationState {
 		// Only delete if we actually created a subscription
 		if state.subscriptionID != "" {
-			if err := queries.DeleteSubscriptionByInstanceID(ctx, state.instanceID); err != nil {
-				l.Error("failed to revert trial subscription creation", "instance_id", state.instanceID, "subscription_id", state.subscriptionID, "error", err)
+			if err := queries.DeleteSubscriptionByID(ctx, state.subscriptionID); err != nil {
+				l.Error("failed to revert trial subscription creation", "user_id", state.userID, "subscription_id", state.subscriptionID, "error", err)
 			}
-			l.Debug("reverted trial subscription creation", "instance_id", state.instanceID, "subscription_id", state.subscriptionID)
+			l.Debug("reverted trial subscription creation", "user_id", state.userID, "subscription_id", state.subscriptionID)
 		}
 		return state
 	}
@@ -393,21 +396,19 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 	return &instance, nil
 }
 
-func (s *Service) canCreateInstance(ctx context.Context, queries *db.Queries, userID string) error {
-	ss, err := queries.GetAllSubscriptionsByUserID(ctx, userID)
+func (s *Service) canCreateInstance(ctx context.Context, userID string) error {
+	subscription, err := s.GetUserSubscription(ctx, userID)
 	if err != nil {
-		return apperrs.Server("failed to get subscriptions for user", err)
+		return apperrs.Server("failed to get subscription for user", err)
 	}
 
-	// if has active subscription, can create instance
-	if lo.SomeBy(ss, func(st db.Subscription) bool {
-		return st.Status == InstanceStatusActive
-	}) {
+	// if no subscription, can create instance (will create trial)
+	if subscription == nil {
 		return nil
 	}
 
-	// if no subscriptions, can create instance (trial)
-	if len(ss) == 0 {
+	// Check if subscription is active
+	if subscription.Status == SubscriptionStatusActive {
 		return nil
 	}
 

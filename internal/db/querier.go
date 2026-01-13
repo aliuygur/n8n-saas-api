@@ -20,9 +20,8 @@ type Querier interface {
 	DeleteExpiredSessions(ctx context.Context) error
 	DeleteInstance(ctx context.Context, id string) error
 	DeleteSession(ctx context.Context, token string) error
-	DeleteSubscriptionByInstanceID(ctx context.Context, instanceID string) error
+	DeleteSubscriptionByID(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
-	GetAllSubscriptionsByUserID(ctx context.Context, userID string) ([]Subscription, error)
 	GetCheckoutSessionByID(ctx context.Context, id string) (CheckoutSession, error)
 	GetCheckoutSessionByProviderID(ctx context.Context, checkoutID string) (CheckoutSession, error)
 	GetInstance(ctx context.Context, id string) (Instance, error)
@@ -30,9 +29,8 @@ type Querier interface {
 	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
 	GetInstanceForUpdate(ctx context.Context, id string) (Instance, error)
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
-	GetSubscriptionByInstanceID(ctx context.Context, instanceID string) (Subscription, error)
 	GetSubscriptionByProviderID(ctx context.Context, subscriptionID string) (Subscription, error)
-	GetSubscriptionByUserIDAndProductID(ctx context.Context, arg GetSubscriptionByUserIDAndProductIDParams) (Subscription, error)
+	GetSubscriptionByUserID(ctx context.Context, userID string) (Subscription, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error)
@@ -44,10 +42,8 @@ type Querier interface {
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
 	UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error)
-	UpdateSubscriptionProviderInfo(ctx context.Context, arg UpdateSubscriptionProviderInfoParams) error
-	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
+	UpdateSubscriptionQuantity(ctx context.Context, arg UpdateSubscriptionQuantityParams) error
 	UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error
-	UpdateSubscriptionToExpired(ctx context.Context, id string) error
 	UpdateUserLastLogin(ctx context.Context, id string) (User, error)
 }
 

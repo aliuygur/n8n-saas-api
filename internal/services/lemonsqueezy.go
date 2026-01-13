@@ -102,8 +102,7 @@ type LemonSqueezyWebhookPayload struct {
 
 // CustomData represents custom data passed in the webhook
 type CustomData struct {
-	UserID     string `json:"user_id"`
-	InstanceID string `json:"instance_id"`
+	UserID string `json:"user_id"`
 }
 
 // PauseInfo represents pause information for a subscription
@@ -186,12 +185,11 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	log := appctx.GetLogger(ctx)
 	queries := db.New(s.db)
 
-	// Get user ID and instance ID from custom data
+	// Get user ID from custom data
 	userID := payload.Meta.CustomData.UserID
-	instanceID := payload.Meta.CustomData.InstanceID
 
-	if userID == "" || instanceID == "" {
-		return fmt.Errorf("missing user_id or instance_id in custom_data")
+	if userID == "" {
+		return fmt.Errorf("missing user_id in custom_data")
 	}
 
 	// Parse trial end date if present
@@ -206,15 +204,21 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	// Map Lemon Squeezy status to internal status
 	status := mapLemonSqueezyStatus(payload.Data.Attributes.Status)
 
+	// Get quantity from first subscription item
+	quantity := int32(1)
+	if payload.Data.Attributes.FirstSubscriptionItem != nil {
+		quantity = int32(payload.Data.Attributes.FirstSubscriptionItem.Quantity)
+	}
+
 	// Create subscription record
 	_, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-		UserID:              userID,
-		InstanceID:          instanceID,
+		UserID:         userID,
 		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.ProductID),
 		CustomerID:     fmt.Sprintf("%d", payload.Data.Attributes.CustomerID),
 		SubscriptionID: payload.Data.ID,
-		TrialEndsAt:         trialEndsAt,
-		Status:              status,
+		TrialEndsAt:    trialEndsAt,
+		Status:         status,
+		Quantity:       quantity,
 	})
 
 	if err != nil {
@@ -225,7 +229,7 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	log.Info("Subscription created",
 		"subscription_id", payload.Data.ID,
 		"user_id", userID,
-		"instance_id", instanceID,
+		"quantity", quantity,
 		"status", status)
 
 	return nil
