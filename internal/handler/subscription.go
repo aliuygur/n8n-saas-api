@@ -97,14 +97,14 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 
 	// Store checkout session in database
 	checkoutSession, err := h.db.CreateCheckoutSession(ctx, db.CreateCheckoutSessionParams{
-		UserID:          req.UserID,
-		InstanceID:      req.InstanceID,
-		PolarCheckoutID: resp.Checkout.ID,
-		Subdomain:       req.Subdomain,
-		UserEmail:       req.UserEmail,
-		SuccessUrl:      req.SuccessURL,
-		ReturnUrl:       req.ReturnURL,
-		Status:          "pending",
+		UserID:     req.UserID,
+		InstanceID: req.InstanceID,
+		CheckoutID: resp.Checkout.ID,
+		Subdomain:  req.Subdomain,
+		UserEmail:  req.UserEmail,
+		SuccessUrl: req.SuccessURL,
+		ReturnUrl:  req.ReturnURL,
+		Status:     "pending",
 	})
 	if err != nil {
 		applogs.GetLogger(ctx).Error("Failed to store checkout session in database", slog.Any("error", err))
@@ -113,7 +113,7 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 
 	applogs.GetLogger(ctx).Info("Checkout session stored in database",
 		slog.String("checkout_session_id", checkoutSession.ID),
-		slog.String("polar_checkout_id", checkoutSession.PolarCheckoutID))
+		slog.String("checkout_id", checkoutSession.CheckoutID))
 
 	return &CreateCheckoutResponse{
 		CheckoutURL: resp.Checkout.URL,
@@ -121,18 +121,18 @@ func (h *Handler) createCheckoutInternal(ctx context.Context, req CreateCheckout
 	}, nil
 }
 
-// getCheckoutSessionByPolarIDInternal retrieves a checkout session by Polar ID
-func (h *Handler) getCheckoutSessionByPolarIDInternal(ctx context.Context, polarCheckoutID string) (*CheckoutSession, error) {
-	checkoutSession, err := h.db.GetCheckoutSessionByPolarID(ctx, polarCheckoutID)
+// getCheckoutSessionByProviderIDInternal retrieves a checkout session by provider checkout ID
+func (h *Handler) getCheckoutSessionByProviderIDInternal(ctx context.Context, providerCheckoutID string) (*CheckoutSession, error) {
+	checkoutSession, err := h.db.GetCheckoutSessionByProviderID(ctx, providerCheckoutID)
 	if err != nil {
 		applogs.GetLogger(ctx).Error("Failed to get checkout session from database",
 			slog.Any("error", err),
-			slog.String("polar_checkout_id", polarCheckoutID))
+			slog.String("provider_checkout_id", providerCheckoutID))
 		return nil, fmt.Errorf("failed to get checkout session: %w", err)
 	}
 
 	return &CheckoutSession{
-		CheckoutID: checkoutSession.PolarCheckoutID,
+		CheckoutID: checkoutSession.CheckoutID,
 		UserID:     checkoutSession.UserID,
 		InstanceID: checkoutSession.InstanceID,
 		Status:     checkoutSession.Status,
@@ -276,7 +276,7 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 	}
 
 	// Get checkout session from database
-	checkoutSession, err := h.db.GetCheckoutSessionByPolarID(ctx, *order.CheckoutID)
+	checkoutSession, err := h.db.GetCheckoutSessionByProviderID(ctx, *order.CheckoutID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch checkout session: %w", err)
 	}
@@ -317,12 +317,12 @@ func (h *Handler) handleOrderPaid(ctx context.Context, data json.RawMessage) err
 
 	// Create active subscription for this instance
 	sub, err := h.db.CreateSubscription(ctx, db.CreateSubscriptionParams{
-		UserID:              checkoutSession.UserID,
-		InstanceID:          instance.ID,
-		PolarCustomerID:     order.CustomerID,
-		PolarSubscriptionID: *order.SubscriptionID,
-		PolarProductID:      *order.ProductID,
-		Status:              mapPolarStatusToInternal(order.Subscription.Status),
+		UserID:         checkoutSession.UserID,
+		InstanceID:     instance.ID,
+		CustomerID:     order.CustomerID,
+		SubscriptionID: *order.SubscriptionID,
+		ProductID:      *order.ProductID,
+		Status:         mapPolarStatusToInternal(order.Subscription.Status),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create subscription: %w", err)

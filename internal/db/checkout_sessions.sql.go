@@ -13,7 +13,7 @@ const createCheckoutSession = `-- name: CreateCheckoutSession :one
 INSERT INTO checkout_sessions (
     user_id,
     instance_id,
-    polar_checkout_id,
+    checkout_id,
     subdomain,
     user_email,
     success_url,
@@ -21,25 +21,25 @@ INSERT INTO checkout_sessions (
     status
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at
+) RETURNING id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, checkout_id, created_at, updated_at, completed_at
 `
 
 type CreateCheckoutSessionParams struct {
-	UserID          string `json:"user_id"`
-	InstanceID      string `json:"instance_id"`
-	PolarCheckoutID string `json:"polar_checkout_id"`
-	Subdomain       string `json:"subdomain"`
-	UserEmail       string `json:"user_email"`
-	SuccessUrl      string `json:"success_url"`
-	ReturnUrl       string `json:"return_url"`
-	Status          string `json:"status"`
+	UserID     string `json:"user_id"`
+	InstanceID string `json:"instance_id"`
+	CheckoutID string `json:"checkout_id"`
+	Subdomain  string `json:"subdomain"`
+	UserEmail  string `json:"user_email"`
+	SuccessUrl string `json:"success_url"`
+	ReturnUrl  string `json:"return_url"`
+	Status     string `json:"status"`
 }
 
 func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error) {
 	row := q.db.QueryRowContext(ctx, createCheckoutSession,
 		arg.UserID,
 		arg.InstanceID,
-		arg.PolarCheckoutID,
+		arg.CheckoutID,
 		arg.Subdomain,
 		arg.UserEmail,
 		arg.SuccessUrl,
@@ -56,7 +56,7 @@ func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutS
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
-		&i.PolarCheckoutID,
+		&i.CheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -65,7 +65,7 @@ func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutS
 }
 
 const getCheckoutSessionByID = `-- name: GetCheckoutSessionByID :one
-SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
 WHERE id = $1
 LIMIT 1
 `
@@ -82,7 +82,7 @@ func (q *Queries) GetCheckoutSessionByID(ctx context.Context, id string) (Checko
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
-		&i.PolarCheckoutID,
+		&i.CheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -90,14 +90,14 @@ func (q *Queries) GetCheckoutSessionByID(ctx context.Context, id string) (Checko
 	return i, err
 }
 
-const getCheckoutSessionByPolarID = `-- name: GetCheckoutSessionByPolarID :one
-SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
-WHERE polar_checkout_id = $1
+const getCheckoutSessionByProviderID = `-- name: GetCheckoutSessionByProviderID :one
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
+WHERE checkout_id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetCheckoutSessionByPolarID(ctx context.Context, polarCheckoutID string) (CheckoutSession, error) {
-	row := q.db.QueryRowContext(ctx, getCheckoutSessionByPolarID, polarCheckoutID)
+func (q *Queries) GetCheckoutSessionByProviderID(ctx context.Context, checkoutID string) (CheckoutSession, error) {
+	row := q.db.QueryRowContext(ctx, getCheckoutSessionByProviderID, checkoutID)
 	var i CheckoutSession
 	err := row.Scan(
 		&i.ID,
@@ -108,7 +108,7 @@ func (q *Queries) GetCheckoutSessionByPolarID(ctx context.Context, polarCheckout
 		&i.Status,
 		&i.SuccessUrl,
 		&i.ReturnUrl,
-		&i.PolarCheckoutID,
+		&i.CheckoutID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompletedAt,
@@ -117,7 +117,7 @@ func (q *Queries) GetCheckoutSessionByPolarID(ctx context.Context, polarCheckout
 }
 
 const listCheckoutSessions = `-- name: ListCheckoutSessions :many
-SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, polar_checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
+SELECT id, user_id, instance_id, subdomain, user_email, status, success_url, return_url, checkout_id, created_at, updated_at, completed_at FROM checkout_sessions
 ORDER BY created_at DESC
 LIMIT $1
 `
@@ -140,7 +140,7 @@ func (q *Queries) ListCheckoutSessions(ctx context.Context, limit int32) ([]Chec
 			&i.Status,
 			&i.SuccessUrl,
 			&i.ReturnUrl,
-			&i.PolarCheckoutID,
+			&i.CheckoutID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CompletedAt,

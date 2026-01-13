@@ -2,7 +2,7 @@
 INSERT INTO checkout_sessions (
     user_id,
     instance_id,
-    polar_checkout_id,
+    checkout_id,
     subdomain,
     user_email,
     success_url,
@@ -12,9 +12,9 @@ INSERT INTO checkout_sessions (
     $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
--- name: GetCheckoutSessionByPolarID :one
+-- name: GetCheckoutSessionByProviderID :one
 SELECT * FROM checkout_sessions
-WHERE polar_checkout_id = $1
+WHERE checkout_id = $1
 LIMIT 1;
 
 -- name: UpdateCheckoutSessionStatus :exec

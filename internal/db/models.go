@@ -10,18 +10,18 @@ import (
 )
 
 type CheckoutSession struct {
-	ID              string       `json:"id"`
-	UserID          string       `json:"user_id"`
-	InstanceID      string       `json:"instance_id"`
-	Subdomain       string       `json:"subdomain"`
-	UserEmail       string       `json:"user_email"`
-	Status          string       `json:"status"`
-	SuccessUrl      string       `json:"success_url"`
-	ReturnUrl       string       `json:"return_url"`
-	PolarCheckoutID string       `json:"polar_checkout_id"`
-	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       time.Time    `json:"updated_at"`
-	CompletedAt     sql.NullTime `json:"completed_at"`
+	ID          string       `json:"id"`
+	UserID      string       `json:"user_id"`
+	InstanceID  string       `json:"instance_id"`
+	Subdomain   string       `json:"subdomain"`
+	UserEmail   string       `json:"user_email"`
+	Status      string       `json:"status"`
+	SuccessUrl  string       `json:"success_url"`
+	ReturnUrl   string       `json:"return_url"`
+	CheckoutID  string       `json:"checkout_id"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	CompletedAt sql.NullTime `json:"completed_at"`
 }
 
 type Instance struct {
@@ -45,16 +45,16 @@ type Session struct {
 }
 
 type Subscription struct {
-	ID                  string       `json:"id"`
-	UserID              string       `json:"user_id"`
-	InstanceID          string       `json:"instance_id"`
-	PolarProductID      string       `json:"polar_product_id"`
-	PolarCustomerID     string       `json:"polar_customer_id"`
-	PolarSubscriptionID string       `json:"polar_subscription_id"`
-	Status              string       `json:"status"`
-	TrialEndsAt         sql.NullTime `json:"trial_ends_at"`
-	CreatedAt           time.Time    `json:"created_at"`
-	UpdatedAt           time.Time    `json:"updated_at"`
+	ID             string       `json:"id"`
+	UserID         string       `json:"user_id"`
+	InstanceID     string       `json:"instance_id"`
+	ProductID      string       `json:"product_id"`
+	CustomerID     string       `json:"customer_id"`
+	SubscriptionID string       `json:"subscription_id"`
+	Status         string       `json:"status"`
+	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
 }
 
 type User struct {

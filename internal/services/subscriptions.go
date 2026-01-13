@@ -12,9 +12,9 @@ type Subscription struct {
 	ID                  string
 	UserID              string
 	InstanceID          string
-	PolarProductID      string
-	PolarCustomerID     string
-	PolarSubscriptionID string
+	ProductID      string
+	CustomerID     string
+	SubscriptionID string
 	Status              string
 	TrialEndsAt         *time.Time
 	CreatedAt           time.Time
@@ -41,9 +41,9 @@ func (s *Service) GetUserSubscriptions(ctx context.Context, userID string) ([]Su
 			ID:                  sub.ID,
 			UserID:              sub.UserID,
 			InstanceID:          sub.InstanceID,
-			PolarProductID:      sub.PolarProductID,
-			PolarCustomerID:     sub.PolarCustomerID,
-			PolarSubscriptionID: sub.PolarSubscriptionID,
+			ProductID:      sub.ProductID,
+			CustomerID:     sub.CustomerID,
+			SubscriptionID: sub.SubscriptionID,
 			Status:              sub.Status,
 			TrialEndsAt:         trialEndsAt,
 			CreatedAt:           sub.CreatedAt,

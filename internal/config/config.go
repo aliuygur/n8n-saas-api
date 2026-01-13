@@ -9,13 +9,14 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	Server     ServerConfig
-	Database   DatabaseConfig
-	Google     GoogleConfig
-	JWT        JWTConfig
-	GCP        GCPConfig
-	Cloudflare CloudflareConfig
-	Polar      PolarConfig
+	Server       ServerConfig
+	Database     DatabaseConfig
+	Google       GoogleConfig
+	JWT          JWTConfig
+	GCP          GCPConfig
+	Cloudflare   CloudflareConfig
+	Polar        PolarConfig
+	LemonSqueezy LemonSqueezyConfig
 }
 
 // ServerConfig holds server configuration
@@ -89,6 +90,13 @@ type PolarConfig struct {
 	Server        string
 }
 
+// LemonSqueezyConfig holds Lemon Squeezy payment configuration
+type LemonSqueezyConfig struct {
+	APIKey        string
+	StoreID       string
+	WebhookSecret string
+}
+
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	// Load .env file if it exists (ignore error if file doesn't exist)
@@ -128,6 +136,11 @@ func Load() (*Config, error) {
 			ProductID:     getEnv("POLAR_PRODUCT_ID", ""),
 			WebhookSecret: getEnv("POLAR_WEBHOOK_SECRET", ""),
 			Server:        getEnv("POLAR_SERVER", "sandbox"),
+		},
+		LemonSqueezy: LemonSqueezyConfig{
+			APIKey:        getEnv("LEMONSQUEEZY_API_KEY", ""),
+			StoreID:       getEnv("LEMONSQUEEZY_STORE_ID", ""),
+			WebhookSecret: getEnv("LEMONSQUEEZY_WEBHOOK_SECRET", ""),
 		},
 	}
 

@@ -39,15 +39,15 @@ func (h *Handler) SubscriptionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subscriptionView := components.Subscription{
-		ID:                  sub.ID,
-		UserID:              sub.UserID,
-		PolarProductID:      sub.PolarProductID,
-		PolarCustomerID:     sub.PolarCustomerID,
-		PolarSubscriptionID: sub.PolarSubscriptionID,
-		Status:              sub.Status,
-		TrialEndsAt:         trialEndsAt,
-		CreatedAt:           sub.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:           sub.UpdatedAt.Format(time.RFC3339),
+		ID:             sub.ID,
+		UserID:         sub.UserID,
+		ProductID:      sub.ProductID,
+		CustomerID:     sub.CustomerID,
+		SubscriptionID: sub.SubscriptionID,
+		Status:         sub.Status,
+		TrialEndsAt:    trialEndsAt,
+		CreatedAt:      sub.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:      sub.UpdatedAt.Format(time.RFC3339),
 	}
 
 	lo.Must0(components.SubscriptionDetailPage(subscriptionView).Render(ctx, w))

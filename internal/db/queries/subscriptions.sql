@@ -2,9 +2,9 @@
 INSERT INTO subscriptions (
     user_id,
     instance_id,
-    polar_product_id,
-    polar_customer_id,
-    polar_subscription_id,
+    product_id,
+    customer_id,
+    subscription_id,
     trial_ends_at,
     status
 ) VALUES (
@@ -16,9 +16,9 @@ SELECT * FROM subscriptions
 WHERE instance_id = $1
 LIMIT 1;
 
--- name: GetSubscriptionByPolarID :one
+-- name: GetSubscriptionByProviderID :one
 SELECT * FROM subscriptions
-WHERE polar_subscription_id = $1
+WHERE subscription_id = $1
 LIMIT 1;
 
 -- name: GetAllSubscriptionsByUserID :many
@@ -28,7 +28,7 @@ ORDER BY created_at DESC;
 
 -- name: GetSubscriptionByUserIDAndProductID :one
 SELECT * FROM subscriptions
-WHERE user_id = $1 AND polar_product_id = $2
+WHERE user_id = $1 AND product_id = $2
 LIMIT 1;
 
 -- name: UpdateSubscriptionStatus :exec
@@ -37,11 +37,11 @@ SET status = $1,
     updated_at = NOW()
 WHERE id = $2;
 
--- name: UpdateSubscriptionPolarInfo :exec
+-- name: UpdateSubscriptionProviderInfo :exec
 UPDATE subscriptions
-SET polar_customer_id = $2,
-    polar_subscription_id = $3,
-    polar_product_id = $4,
+SET customer_id = $2,
+    subscription_id = $3,
+    product_id = $4,
     updated_at = NOW()
 WHERE instance_id = $1;
 
@@ -51,11 +51,11 @@ SET status = 'expired',
     updated_at = NOW()
 WHERE id = $1;
 
--- name: UpdateSubscriptionStatusByPolarID :exec
+-- name: UpdateSubscriptionStatusByProviderID :exec
 UPDATE subscriptions
 SET status = $2,
     updated_at = NOW()
-WHERE polar_subscription_id = $1;
+WHERE subscription_id = $1;
 
 -- name: DeleteSubscriptionByInstanceID :exec
 DELETE FROM subscriptions

@@ -24,14 +24,14 @@ type Querier interface {
 	DeleteUserSessions(ctx context.Context, userID string) error
 	GetAllSubscriptionsByUserID(ctx context.Context, userID string) ([]Subscription, error)
 	GetCheckoutSessionByID(ctx context.Context, id string) (CheckoutSession, error)
-	GetCheckoutSessionByPolarID(ctx context.Context, polarCheckoutID string) (CheckoutSession, error)
+	GetCheckoutSessionByProviderID(ctx context.Context, checkoutID string) (CheckoutSession, error)
 	GetInstance(ctx context.Context, id string) (Instance, error)
 	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
 	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
 	GetInstanceForUpdate(ctx context.Context, id string) (Instance, error)
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
 	GetSubscriptionByInstanceID(ctx context.Context, instanceID string) (Subscription, error)
-	GetSubscriptionByPolarID(ctx context.Context, polarSubscriptionID string) (Subscription, error)
+	GetSubscriptionByProviderID(ctx context.Context, subscriptionID string) (Subscription, error)
 	GetSubscriptionByUserIDAndProductID(ctx context.Context, arg GetSubscriptionByUserIDAndProductIDParams) (Subscription, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
@@ -44,9 +44,9 @@ type Querier interface {
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
 	UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error)
-	UpdateSubscriptionPolarInfo(ctx context.Context, arg UpdateSubscriptionPolarInfoParams) error
+	UpdateSubscriptionProviderInfo(ctx context.Context, arg UpdateSubscriptionProviderInfoParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
-	UpdateSubscriptionStatusByPolarID(ctx context.Context, arg UpdateSubscriptionStatusByPolarIDParams) error
+	UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error
 	UpdateSubscriptionToExpired(ctx context.Context, id string) error
 	UpdateUserLastLogin(ctx context.Context, id string) (User, error)
 }

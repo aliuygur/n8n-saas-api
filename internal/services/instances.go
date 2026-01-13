@@ -309,11 +309,11 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		if len(subscriptions) == 0 {
 			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
 			subscription, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-				UserID:              state.userID,
-				InstanceID:          state.instanceID,
-				PolarProductID:      "", // Empty for trial
-				PolarCustomerID:     "", // Empty for trial
-				PolarSubscriptionID: "", // Empty for trial
+				UserID:         state.userID,
+				InstanceID:     state.instanceID,
+				ProductID:      "", // Empty for trial
+				CustomerID:     "", // Empty for trial
+				SubscriptionID: "", // Empty for trial
 				TrialEndsAt: sql.NullTime{
 					Time:  trialEndsAt,
 					Valid: true,

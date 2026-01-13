@@ -52,4 +52,5 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Public webhooks (no auth)
 	// mux.HandleFunc("POST /api/webhooks/polar", h.PolarWebhook)
+	mux.HandleFunc("POST /api/webhooks/lemonsqueezy", h.LemonSqueezyWebhook)
 }
