@@ -42,8 +42,10 @@ type Querier interface {
 	UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error)
 	UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error)
 	UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error)
+	UpdateSubscriptionByUserID(ctx context.Context, arg UpdateSubscriptionByUserIDParams) error
 	UpdateSubscriptionQuantity(ctx context.Context, arg UpdateSubscriptionQuantityParams) error
 	UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error
+	UpdateSubscriptionTrialEndsAt(ctx context.Context, arg UpdateSubscriptionTrialEndsAtParams) (Subscription, error)
 	UpdateUserLastLogin(ctx context.Context, id string) (User, error)
 }
 

@@ -12,6 +12,7 @@ type Service struct {
 	db         *sql.DB
 	cloudflare *cloudflare.Client
 	gke        *provisioning.Client
+	config     *config.Config
 }
 
 func NewService(db *sql.DB, config *config.Config) (*Service, error) {
@@ -27,5 +28,5 @@ func NewService(db *sql.DB, config *config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	return &Service{db: db, cloudflare: cfClient, gke: gke}, nil
+	return &Service{db: db, cloudflare: cfClient, gke: gke, config: config}, nil
 }

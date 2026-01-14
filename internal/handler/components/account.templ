@@ -9,8 +9,9 @@ var accountPageSEO = SEOMetadata{
 }
 
 type AccountData struct {
-	User         UserAccount
-	Subscription Subscription
+	User               UserAccount
+	Subscription       Subscription
+	UpgradeCheckoutURL string
 }
 
 type UserAccount struct {
@@ -39,36 +40,21 @@ templ AccountPage(data AccountData) {
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div>
 									<label class="text-sm font-medium text-gray-400 mb-2 block">Email</label>
-									<div class="text-sm sm:text-base text-white bg-gray-950 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-800 break-all">
+									<p class="text-sm sm:text-base text-white break-all">
 										{ data.User.Email }
-									</div>
+									</p>
 								</div>
 								<div>
 									<label class="text-sm font-medium text-gray-400 mb-2 block">Name</label>
-									<div class="text-sm sm:text-base text-white bg-gray-950 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-800">
+									<p class="text-sm sm:text-base text-white">
 										{ data.User.Name }
-									</div>
+									</p>
 								</div>
-							</div>
-							<div>
-								<label class="text-sm font-medium text-gray-400 mb-2 block">User ID</label>
-								<div class="flex items-center gap-2">
-									<code id="user-id" class="text-xs sm:text-sm text-white font-mono bg-gray-950 px-3 py-2 rounded-lg border border-gray-800 flex-1 break-all">{ data.User.ID }</code>
-									<button
-										onclick="navigator.clipboard.writeText(document.getElementById('user-id').textContent)"
-										class="p-2 bg-gray-800 hover:bg-gray-700 active:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors flex-shrink-0 touch-manipulation"
-										title="Copy to clipboard"
-									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-										</svg>
-									</button>
-								</div>
-							</div>
-							<div>
-								<label class="text-sm font-medium text-gray-400 mb-2 block">Member Since</label>
-								<div class="text-sm sm:text-base text-white bg-gray-950 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-800">
-									{ formatDate(data.User.CreatedAt) }
+								<div>
+									<label class="text-sm font-medium text-gray-400 mb-2 block">Member Since</label>
+									<p class="text-sm sm:text-base text-white">
+										{ formatDate(data.User.CreatedAt) }
+									</p>
 								</div>
 							</div>
 						</div>
@@ -107,13 +93,27 @@ templ AccountPage(data AccountData) {
 									}
 								</div>
 							</div>
+							if data.UpgradeCheckoutURL != "" {
+								<!-- Upgrade Button -->
+								<div class="mt-4">
+									<a
+										href={ templ.URL(data.UpgradeCheckoutURL) }
+										class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation"
+									>
+										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+										</svg>
+										Upgrade to Paid Plan
+									</a>
+								</div>
+							}
 						</div>
 						<!-- Subscription Metadata -->
 						<div class="grid grid-cols-1 gap-6 pt-6 border-t border-gray-800">
 							<div>
 								<label class="text-sm font-medium text-gray-400 mb-2 block">Subscription ID</label>
 								<div class="flex items-center gap-2">
-									<code id="subscription-id" class="text-xs sm:text-sm text-white font-mono bg-gray-950 px-3 py-2 rounded-lg border border-gray-800 flex-1 break-all">{ data.Subscription.ID }</code>
+									<code id="subscription-id" class="text-xs sm:text-sm text-gray-300 font-mono flex-1 break-all">{ data.Subscription.ID }</code>
 									<button
 										onclick="navigator.clipboard.writeText(document.getElementById('subscription-id').textContent)"
 										class="p-2 bg-gray-800 hover:bg-gray-700 active:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors flex-shrink-0 touch-manipulation"
@@ -129,16 +129,16 @@ templ AccountPage(data AccountData) {
 								if data.Subscription.TrialEndsAt != "" {
 									<div>
 										<label class="text-sm font-medium text-gray-400 mb-2 block">Trial Ends</label>
-										<div class="text-sm sm:text-base text-white bg-gray-950 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-800">
+										<p class="text-sm sm:text-base text-white">
 											{ formatDate(data.Subscription.TrialEndsAt) }
-										</div>
+										</p>
 									</div>
 								}
 								<div>
 									<label class="text-sm font-medium text-gray-400 mb-2 block">Subscription Started</label>
-									<div class="text-sm sm:text-base text-white bg-gray-950 px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-800">
+									<p class="text-sm sm:text-base text-white">
 										{ formatDate(data.Subscription.CreatedAt) }
-									</div>
+									</p>
 								</div>
 							</div>
 						</div>

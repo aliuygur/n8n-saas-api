@@ -21,6 +21,10 @@ type Subscription struct {
 	Quantity       int32
 }
 
+func (s *Subscription) IsTrial() bool {
+	return s.Status == SubscriptionStatusTrial || s.Status == SubscriptionStatusTrialing
+}
+
 // GetUserSubscription returns the subscription for a user (one subscription per user)
 func (s *Service) GetUserSubscription(ctx context.Context, userID string) (*Subscription, error) {
 	queries := db.New(s.db)

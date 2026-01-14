@@ -95,6 +95,7 @@ type LemonSqueezyConfig struct {
 	APIKey        string
 	StoreID       string
 	WebhookSecret string
+	VariantID     string // Product variant ID for paid plan
 }
 
 // Load loads configuration from environment variables
@@ -141,6 +142,7 @@ func Load() (*Config, error) {
 			APIKey:        getEnv("LEMONSQUEEZY_API_KEY", ""),
 			StoreID:       getEnv("LEMONSQUEEZY_STORE_ID", ""),
 			WebhookSecret: getEnv("LEMONSQUEEZY_WEBHOOK_SECRET", ""),
+			VariantID:     getEnv("LEMONSQUEEZY_VARIANT_ID", ""),
 		},
 	}
 

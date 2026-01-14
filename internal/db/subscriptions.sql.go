@@ -118,6 +118,41 @@ func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (S
 	return i, err
 }
 
+const updateSubscriptionByUserID = `-- name: UpdateSubscriptionByUserID :exec
+UPDATE subscriptions
+SET product_id = $2,
+    customer_id = $3,
+    subscription_id = $4,
+    status = $5,
+    trial_ends_at = $6,
+    quantity = $7,
+    updated_at = NOW()
+WHERE user_id = $1
+`
+
+type UpdateSubscriptionByUserIDParams struct {
+	UserID         string       `json:"user_id"`
+	ProductID      string       `json:"product_id"`
+	CustomerID     string       `json:"customer_id"`
+	SubscriptionID string       `json:"subscription_id"`
+	Status         string       `json:"status"`
+	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
+	Quantity       int32        `json:"quantity"`
+}
+
+func (q *Queries) UpdateSubscriptionByUserID(ctx context.Context, arg UpdateSubscriptionByUserIDParams) error {
+	_, err := q.db.ExecContext(ctx, updateSubscriptionByUserID,
+		arg.UserID,
+		arg.ProductID,
+		arg.CustomerID,
+		arg.SubscriptionID,
+		arg.Status,
+		arg.TrialEndsAt,
+		arg.Quantity,
+	)
+	return err
+}
+
 const updateSubscriptionQuantity = `-- name: UpdateSubscriptionQuantity :exec
 UPDATE subscriptions
 SET quantity = $2,
@@ -150,4 +185,35 @@ type UpdateSubscriptionStatusByProviderIDParams struct {
 func (q *Queries) UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error {
 	_, err := q.db.ExecContext(ctx, updateSubscriptionStatusByProviderID, arg.SubscriptionID, arg.Status)
 	return err
+}
+
+const updateSubscriptionTrialEndsAt = `-- name: UpdateSubscriptionTrialEndsAt :one
+UPDATE subscriptions
+SET trial_ends_at = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
+`
+
+type UpdateSubscriptionTrialEndsAtParams struct {
+	ID          string       `json:"id"`
+	TrialEndsAt sql.NullTime `json:"trial_ends_at"`
+}
+
+func (q *Queries) UpdateSubscriptionTrialEndsAt(ctx context.Context, arg UpdateSubscriptionTrialEndsAtParams) (Subscription, error) {
+	row := q.db.QueryRowContext(ctx, updateSubscriptionTrialEndsAt, arg.ID, arg.TrialEndsAt)
+	var i Subscription
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ProductID,
+		&i.CustomerID,
+		&i.SubscriptionID,
+		&i.Status,
+		&i.Quantity,
+		&i.TrialEndsAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

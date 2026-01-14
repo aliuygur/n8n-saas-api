@@ -51,26 +51,26 @@ type LemonSqueezyWebhookPayload struct {
 		Type       string `json:"type"`
 		ID         string `json:"id"`
 		Attributes struct {
-			StoreID                int                    `json:"store_id"`
-			CustomerID             int                    `json:"customer_id"`
-			OrderID                int                    `json:"order_id"`
-			OrderItemID            int                    `json:"order_item_id"`
-			ProductID              int                    `json:"product_id"`
-			VariantID              int                    `json:"variant_id"`
-			ProductName            string                 `json:"product_name"`
-			VariantName            string                 `json:"variant_name"`
-			UserName               string                 `json:"user_name"`
-			UserEmail              string                 `json:"user_email"`
-			Status                 string                 `json:"status"`
-			StatusFormatted        string                 `json:"status_formatted"`
-			CardBrand              string                 `json:"card_brand"`
-			CardLastFour           string                 `json:"card_last_four"`
-			Pause                  *PauseInfo             `json:"pause"`
-			Cancelled              bool                   `json:"cancelled"`
-			TrialEndsAt            *string                `json:"trial_ends_at"`
-			BillingAnchor          int                    `json:"billing_anchor"`
-			FirstSubscriptionItem  *SubscriptionItem      `json:"first_subscription_item"`
-			Urls                   struct {
+			StoreID               int               `json:"store_id"`
+			CustomerID            int               `json:"customer_id"`
+			OrderID               int               `json:"order_id"`
+			OrderItemID           int               `json:"order_item_id"`
+			ProductID             int               `json:"product_id"`
+			VariantID             int               `json:"variant_id"`
+			ProductName           string            `json:"product_name"`
+			VariantName           string            `json:"variant_name"`
+			UserName              string            `json:"user_name"`
+			UserEmail             string            `json:"user_email"`
+			Status                string            `json:"status"`
+			StatusFormatted       string            `json:"status_formatted"`
+			CardBrand             string            `json:"card_brand"`
+			CardLastFour          string            `json:"card_last_four"`
+			Pause                 *PauseInfo        `json:"pause"`
+			Cancelled             bool              `json:"cancelled"`
+			TrialEndsAt           *string           `json:"trial_ends_at"`
+			BillingAnchor         int               `json:"billing_anchor"`
+			FirstSubscriptionItem *SubscriptionItem `json:"first_subscription_item"`
+			Urls                  struct {
 				UpdatePaymentMethod string `json:"update_payment_method"`
 				CustomerPortal      string `json:"customer_portal"`
 			} `json:"urls"`
@@ -192,6 +192,17 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 		return fmt.Errorf("missing user_id in custom_data")
 	}
 
+	// Check if user has a subscription record
+	existingSub, err := queries.GetSubscriptionByUserID(ctx, userID)
+	if err != nil {
+		if db.IsNotFoundError(err) {
+			log.Error("User has no subscription record", "user_id", userID)
+			return fmt.Errorf("user %s has no subscription record", userID)
+		}
+		log.Error("Failed to get user subscription", "error", err)
+		return fmt.Errorf("failed to get user subscription: %w", err)
+	}
+
 	// Parse trial end date if present
 	var trialEndsAt sql.NullTime
 	if payload.Data.Attributes.TrialEndsAt != nil && *payload.Data.Attributes.TrialEndsAt != "" {
@@ -210,25 +221,26 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 		quantity = int32(payload.Data.Attributes.FirstSubscriptionItem.Quantity)
 	}
 
-	// Create subscription record
-	_, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+	// Update existing subscription with provider details
+	err = queries.UpdateSubscriptionByUserID(ctx, db.UpdateSubscriptionByUserIDParams{
 		UserID:         userID,
 		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.ProductID),
 		CustomerID:     fmt.Sprintf("%d", payload.Data.Attributes.CustomerID),
 		SubscriptionID: payload.Data.ID,
-		TrialEndsAt:    trialEndsAt,
 		Status:         status,
+		TrialEndsAt:    trialEndsAt,
 		Quantity:       quantity,
 	})
 
 	if err != nil {
-		log.Error("Failed to create subscription", "error", err)
-		return fmt.Errorf("failed to create subscription: %w", err)
+		log.Error("Failed to update subscription", "error", err)
+		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
-	log.Info("Subscription created",
+	log.Info("Subscription updated from webhook",
 		"subscription_id", payload.Data.ID,
 		"user_id", userID,
+		"existing_sub_id", existingSub.ID,
 		"quantity", quantity,
 		"status", status)
 
@@ -244,7 +256,7 @@ func (s *Service) handleSubscriptionUpdated(ctx context.Context, payload *LemonS
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              status,
+		Status:         status,
 	})
 
 	if err != nil {
@@ -263,7 +275,7 @@ func (s *Service) handleSubscriptionCancelled(ctx context.Context, payload *Lemo
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              "cancelled",
+		Status:         SubscriptionStatusCanceled,
 	})
 
 	if err != nil {
@@ -284,7 +296,7 @@ func (s *Service) handleSubscriptionResumed(ctx context.Context, payload *LemonS
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              status,
+		Status:         status,
 	})
 
 	if err != nil {
@@ -303,7 +315,7 @@ func (s *Service) handleSubscriptionExpired(ctx context.Context, payload *LemonS
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              "expired",
+		Status:         SubscriptionStatusExpired,
 	})
 
 	if err != nil {
@@ -322,7 +334,7 @@ func (s *Service) handleSubscriptionPaused(ctx context.Context, payload *LemonSq
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              "paused",
+		Status:         SubscriptionStatusPaused,
 	})
 
 	if err != nil {
@@ -343,7 +355,7 @@ func (s *Service) handleSubscriptionUnpaused(ctx context.Context, payload *Lemon
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              status,
+		Status:         status,
 	})
 
 	if err != nil {
@@ -363,7 +375,7 @@ func (s *Service) handleSubscriptionPaymentSuccess(ctx context.Context, payload 
 	// Update subscription status to active if payment succeeded
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              "active",
+		Status:         SubscriptionStatusActive,
 	})
 
 	if err != nil {
@@ -383,7 +395,7 @@ func (s *Service) handleSubscriptionPaymentFailed(ctx context.Context, payload *
 	// Update subscription status to past_due when payment fails
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
-		Status:              "past_due",
+		Status:         SubscriptionStatusPastDue,
 	})
 
 	if err != nil {
@@ -399,20 +411,37 @@ func (s *Service) handleSubscriptionPaymentFailed(ctx context.Context, payload *
 func mapLemonSqueezyStatus(lsStatus string) string {
 	switch lsStatus {
 	case LemonSqueezyStatusOnTrial:
-		return "trialing"
+		return SubscriptionStatusTrialing
 	case LemonSqueezyStatusActive:
-		return "active"
+		return SubscriptionStatusActive
 	case LemonSqueezyStatusPaused:
-		return "paused"
+		return SubscriptionStatusPaused
 	case LemonSqueezyStatusPastDue:
-		return "past_due"
+		return SubscriptionStatusPastDue
 	case LemonSqueezyStatusUnpaid:
-		return "unpaid"
+		return SubscriptionStatusUnpaid
 	case LemonSqueezyStatusCancelled:
-		return "cancelled"
+		return SubscriptionStatusCanceled
 	case LemonSqueezyStatusExpired:
-		return "expired"
+		return SubscriptionStatusExpired
 	default:
 		return lsStatus
 	}
+}
+
+// CreateUpgradeCheckoutURL creates a LemonSqueezy checkout URL for upgrading from trial to paid
+func (s *Service) CreateUpgradeCheckoutURL(ctx context.Context, userID string) (string, error) {
+	// Get user details for email
+	queries := db.New(s.db)
+	user, err := queries.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return fmt.Sprintf(
+		"https://ranx.lemonsqueezy.com/buy/%s?checkout[email]=%s&checkout[custom][user_id]=%s",
+		s.config.LemonSqueezy.VariantID,
+		user.Email,
+		user.ID,
+	), nil
 }

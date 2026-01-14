@@ -27,6 +27,17 @@ SET status = $2,
     updated_at = NOW()
 WHERE subscription_id = $1;
 
+-- name: UpdateSubscriptionByUserID :exec
+UPDATE subscriptions
+SET product_id = $2,
+    customer_id = $3,
+    subscription_id = $4,
+    status = $5,
+    trial_ends_at = $6,
+    quantity = $7,
+    updated_at = NOW()
+WHERE user_id = $1;
+
 -- name: DeleteSubscriptionByID :exec
 DELETE FROM subscriptions
 WHERE id = $1;
@@ -36,3 +47,10 @@ UPDATE subscriptions
 SET quantity = $2,
     updated_at = NOW()
 WHERE id = $1;
+
+-- name: UpdateSubscriptionTrialEndsAt :one
+UPDATE subscriptions
+SET trial_ends_at = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;

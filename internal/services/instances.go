@@ -262,15 +262,44 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 }
 
 type instanceCreationState struct {
-	instanceID     string
-	userID         string
-	namespace      string
-	subdomain      string
-	subscriptionID string
+	instanceID string
+	userID     string
+	namespace  string
+	subdomain  string
 }
 
 func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Queries, params CreateInstanceParams) (*Instance, error) {
 	l := appctx.GetLogger(ctx)
+
+	startTrial := func(state *instanceCreationState) (*instanceCreationState, error) {
+		// Check if this is the user's first instance and trial hasn't started yet
+		subscription, err := queries.GetSubscriptionByUserID(ctx, state.userID)
+		if err != nil {
+			if !db.IsNotFoundError(err) {
+				return state, apperrs.Server("failed to get subscription", err)
+			}
+			// No subscription found, continue without starting trial
+			return state, nil
+		}
+
+		// If trial hasn't started yet (trial_ends_at is null), start it now
+		if !subscription.TrialEndsAt.Valid {
+			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
+			_, err = queries.UpdateSubscriptionTrialEndsAt(ctx, db.UpdateSubscriptionTrialEndsAtParams{
+				ID: subscription.ID,
+				TrialEndsAt: sql.NullTime{
+					Time:  trialEndsAt,
+					Valid: true,
+				},
+			})
+			if err != nil {
+				return state, apperrs.Server("failed to start trial", err)
+			}
+			l.Debug("started trial subscription", "user_id", state.userID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
+		}
+
+		return state, nil
+	}
 
 	createInstance := func(state *instanceCreationState) (*instanceCreationState, error) {
 		dbInst, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
@@ -294,51 +323,6 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 			l.Error("failed to revert instance creation", "instance_id", state.instanceID, "error", err)
 		} else {
 			l.Debug("reverted instance creation", "instance_id", state.instanceID)
-		}
-		return state
-	}
-
-	createTrialSubscription := func(state *instanceCreationState) (*instanceCreationState, error) {
-		// Check if user already has a subscription (only one subscription per user)
-		existingSub, err := s.GetUserSubscription(ctx, state.userID)
-		if err != nil {
-			return state, apperrs.Server("failed to check existing subscription", err)
-		}
-
-		// Only create trial subscription if user has no subscription yet
-		if existingSub == nil {
-			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
-			subscription, err := queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
-				UserID:         state.userID,
-				ProductID:      "", // Empty for trial
-				CustomerID:     "", // Empty for trial
-				SubscriptionID: "", // Empty for trial
-				TrialEndsAt: sql.NullTime{
-					Time:  trialEndsAt,
-					Valid: true,
-				},
-				Status:   SubscriptionStatusTrial,
-				Quantity: 1, // Default quantity for trial
-			})
-			if err != nil {
-				return state, apperrs.Server("failed to create trial subscription", err)
-			}
-			state.subscriptionID = subscription.ID
-			l.Debug("created trial subscription", "user_id", state.userID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
-		} else {
-			// User already has a subscription, just log it
-			l.Debug("user already has subscription, skipping trial creation", "user_id", state.userID, "subscription_id", existingSub.ID)
-		}
-
-		return state, nil
-	}
-	revertTrialSubscription := func(state *instanceCreationState) *instanceCreationState {
-		// Only delete if we actually created a subscription
-		if state.subscriptionID != "" {
-			if err := queries.DeleteSubscriptionByID(ctx, state.subscriptionID); err != nil {
-				l.Error("failed to revert trial subscription creation", "user_id", state.userID, "subscription_id", state.subscriptionID, "error", err)
-			}
-			l.Debug("reverted trial subscription creation", "user_id", state.userID, "subscription_id", state.subscriptionID)
 		}
 		return state
 	}
@@ -377,8 +361,8 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		namespace: namespace,
 	}
 	saga := lo.NewTransaction[*instanceCreationState]().
+		Then(startTrial, nil). // Start trial first (no rollback needed, idempotent)
 		Then(createInstance, deleteInstance).
-		Then(createTrialSubscription, revertTrialSubscription).
 		Then(deployGke, revertGke)
 
 	finalState, err := saga.Process(initialState)

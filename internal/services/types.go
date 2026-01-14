@@ -11,7 +11,10 @@ const (
 const (
 	SubscriptionStatusActive   = "active"
 	SubscriptionStatusTrial    = "trial"
+	SubscriptionStatusTrialing = "trialing"
 	SubscriptionStatusPastDue  = "past_due"
 	SubscriptionStatusCanceled = "canceled"
 	SubscriptionStatusUnpaid   = "unpaid"
+	SubscriptionStatusPaused   = "paused"
+	SubscriptionStatusExpired  = "expired"
 )

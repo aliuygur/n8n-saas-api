@@ -43,6 +43,17 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 		trialEndsAt = sub.TrialEndsAt.Format(time.RFC3339)
 	}
 
+	// Generate upgrade checkout URL if user is on trial
+	upgradeCheckoutURL := ""
+	if sub.IsTrial() {
+		var err error
+		upgradeCheckoutURL, err = h.services.CreateUpgradeCheckoutURL(ctx, user.UserID)
+		if err != nil {
+			l.Error("Failed to create upgrade checkout URL", slog.Any("error", err))
+			// Continue without upgrade URL rather than failing the whole page
+		}
+	}
+
 	accountData := components.AccountData{
 		User: components.UserAccount{
 			ID:        userDetails.ID,
@@ -62,6 +73,7 @@ func (h *Handler) Account(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt:      sub.UpdatedAt.Format(time.RFC3339),
 			Quantity:       sub.Quantity,
 		},
+		UpgradeCheckoutURL: upgradeCheckoutURL,
 	}
 
 	lo.Must0(components.AccountPage(accountData).Render(ctx, w))

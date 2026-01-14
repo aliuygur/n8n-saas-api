@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -100,6 +101,7 @@ func (s *Service) CreateUser(ctx context.Context, params CreateUserParams) (*Use
 }
 
 // GetOrCreateUser gets a user by email or creates a new one if not found
+// When creating a new user, also creates a trial subscription
 func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) (*User, error) {
 	queries := db.New(s.db)
 
@@ -114,12 +116,29 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 	dbUser, err := queries.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		if db.IsNotFoundError(err) {
+			// Create new user
 			dbUser, err = queries.CreateUser(ctx, db.CreateUserParams{
 				Email: params.Email,
 				Name:  params.Name,
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to create user: %w", err)
+			}
+
+			// Create trial subscription for new user (trial starts when first instance is created)
+			_, err = queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
+				UserID:         dbUser.ID,
+				ProductID:      "", // Empty for trial
+				CustomerID:     "", // Empty for trial
+				SubscriptionID: "", // Empty for trial
+				TrialEndsAt: sql.NullTime{
+					Valid: false, // Will be set when first instance is created
+				},
+				Status:   SubscriptionStatusTrial,
+				Quantity: 1, // Default quantity for trial
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to create trial subscription: %w", err)
 			}
 		} else {
 			return nil, fmt.Errorf("failed to get user by email: %w", err)
