@@ -5,63 +5,62 @@
 package db
 
 import (
-	"database/sql"
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CheckoutSession struct {
-	ID          string       `json:"id"`
-	UserID      string       `json:"user_id"`
-	InstanceID  string       `json:"instance_id"`
-	Subdomain   string       `json:"subdomain"`
-	UserEmail   string       `json:"user_email"`
-	Status      string       `json:"status"`
-	SuccessUrl  string       `json:"success_url"`
-	ReturnUrl   string       `json:"return_url"`
-	CheckoutID  string       `json:"checkout_id"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
-	CompletedAt sql.NullTime `json:"completed_at"`
+	ID          string           `json:"id"`
+	UserID      string           `json:"user_id"`
+	InstanceID  string           `json:"instance_id"`
+	Subdomain   string           `json:"subdomain"`
+	UserEmail   string           `json:"user_email"`
+	Status      string           `json:"status"`
+	SuccessUrl  string           `json:"success_url"`
+	ReturnUrl   string           `json:"return_url"`
+	CheckoutID  string           `json:"checkout_id"`
+	CreatedAt   pgtype.Timestamp `json:"created_at"`
+	UpdatedAt   pgtype.Timestamp `json:"updated_at"`
+	CompletedAt pgtype.Timestamp `json:"completed_at"`
 }
 
 type Instance struct {
-	ID         string       `json:"id"`
-	UserID     string       `json:"user_id"`
-	Status     string       `json:"status"`
-	Namespace  string       `json:"namespace"`
-	Subdomain  string       `json:"subdomain"`
-	CreatedAt  sql.NullTime `json:"created_at"`
-	UpdatedAt  sql.NullTime `json:"updated_at"`
-	DeployedAt sql.NullTime `json:"deployed_at"`
-	DeletedAt  sql.NullTime `json:"deleted_at"`
+	ID         string           `json:"id"`
+	UserID     string           `json:"user_id"`
+	Status     string           `json:"status"`
+	Namespace  string           `json:"namespace"`
+	Subdomain  string           `json:"subdomain"`
+	CreatedAt  pgtype.Timestamp `json:"created_at"`
+	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
+	DeployedAt pgtype.Timestamp `json:"deployed_at"`
+	DeletedAt  pgtype.Timestamp `json:"deleted_at"`
 }
 
 type Session struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        string           `json:"id"`
+	UserID    string           `json:"user_id"`
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
 
 type Subscription struct {
-	ID             string       `json:"id"`
-	UserID         string       `json:"user_id"`
-	ProductID      string       `json:"product_id"`
-	CustomerID     string       `json:"customer_id"`
-	SubscriptionID string       `json:"subscription_id"`
-	Status         string       `json:"status"`
-	Quantity       int32        `json:"quantity"`
-	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
-	CreatedAt      time.Time    `json:"created_at"`
-	UpdatedAt      time.Time    `json:"updated_at"`
+	ID             string           `json:"id"`
+	UserID         string           `json:"user_id"`
+	ProductID      string           `json:"product_id"`
+	CustomerID     string           `json:"customer_id"`
+	SubscriptionID string           `json:"subscription_id"`
+	Status         string           `json:"status"`
+	Quantity       int32            `json:"quantity"`
+	TrialEndsAt    pgtype.Timestamp `json:"trial_ends_at"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
 type User struct {
-	ID          string       `json:"id"`
-	Email       string       `json:"email"`
-	Name        string       `json:"name"`
-	CreatedAt   time.Time    `json:"created_at"`
-	LastLoginAt sql.NullTime `json:"last_login_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
+	ID          string           `json:"id"`
+	Email       string           `json:"email"`
+	Name        string           `json:"name"`
+	CreatedAt   pgtype.Timestamp `json:"created_at"`
+	LastLoginAt pgtype.Timestamp `json:"last_login_at"`
+	UpdatedAt   pgtype.Timestamp `json:"updated_at"`
 }

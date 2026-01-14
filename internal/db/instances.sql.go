@@ -14,7 +14,7 @@ SELECT EXISTS(SELECT 1 FROM instances WHERE namespace = $1 AND deleted_at IS NUL
 `
 
 func (q *Queries) CheckNamespaceExists(ctx context.Context, namespace string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkNamespaceExists, namespace)
+	row := q.db.QueryRow(ctx, checkNamespaceExists, namespace)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -25,7 +25,7 @@ SELECT EXISTS(SELECT 1 FROM instances WHERE subdomain = $1 AND deleted_at IS NUL
 `
 
 func (q *Queries) CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkSubdomainExists, subdomain)
+	row := q.db.QueryRow(ctx, checkSubdomainExists, subdomain)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -47,7 +47,7 @@ type CreateInstanceParams struct {
 }
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, createInstance,
+	row := q.db.QueryRow(ctx, createInstance,
 		arg.UserID,
 		arg.Namespace,
 		arg.Subdomain,
@@ -76,7 +76,7 @@ RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, dep
 `
 
 func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteInstance, id)
+	_, err := q.db.Exec(ctx, deleteInstance, id)
 	return err
 }
 
@@ -85,7 +85,7 @@ SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deploy
 `
 
 func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, getInstance, id)
+	row := q.db.QueryRow(ctx, getInstance, id)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -106,7 +106,7 @@ SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deploy
 `
 
 func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, getInstanceByNamespace, namespace)
+	row := q.db.QueryRow(ctx, getInstanceByNamespace, namespace)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -127,7 +127,7 @@ SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deploy
 `
 
 func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, getInstanceBySubdomain, subdomain)
+	row := q.db.QueryRow(ctx, getInstanceBySubdomain, subdomain)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -148,7 +148,7 @@ SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deploy
 `
 
 func (q *Queries) GetInstanceForUpdate(ctx context.Context, id string) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, getInstanceForUpdate, id)
+	row := q.db.QueryRow(ctx, getInstanceForUpdate, id)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -177,7 +177,7 @@ type ListAllInstancesParams struct {
 }
 
 func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesParams) ([]Instance, error) {
-	rows, err := q.db.QueryContext(ctx, listAllInstances, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAllInstances, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -199,9 +199,6 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -216,7 +213,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Instance, error) {
-	rows, err := q.db.QueryContext(ctx, listInstancesByUser, userID)
+	rows, err := q.db.Query(ctx, listInstancesByUser, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -238,9 +235,6 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -261,7 +255,7 @@ type UpdateInstanceDeployedParams struct {
 }
 
 func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstanceDeployedParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, updateInstanceDeployed, arg.ID, arg.Status)
+	row := q.db.QueryRow(ctx, updateInstanceDeployed, arg.ID, arg.Status)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -290,7 +284,7 @@ type UpdateInstanceNamespaceParams struct {
 }
 
 func (q *Queries) UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanceNamespaceParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, updateInstanceNamespace, arg.ID, arg.Namespace)
+	row := q.db.QueryRow(ctx, updateInstanceNamespace, arg.ID, arg.Namespace)
 	var i Instance
 	err := row.Scan(
 		&i.ID,
@@ -319,7 +313,7 @@ type UpdateInstanceStatusParams struct {
 }
 
 func (q *Queries) UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceStatusParams) (Instance, error) {
-	row := q.db.QueryRowContext(ctx, updateInstanceStatus, arg.ID, arg.Status)
+	row := q.db.QueryRow(ctx, updateInstanceStatus, arg.ID, arg.Status)
 	var i Instance
 	err := row.Scan(
 		&i.ID,

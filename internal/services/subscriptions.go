@@ -27,7 +27,7 @@ func (s *Subscription) IsTrial() bool {
 
 // GetUserSubscription returns the subscription for a user (one subscription per user)
 func (s *Service) GetUserSubscription(ctx context.Context, userID string) (*Subscription, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	sub, err := queries.GetSubscriptionByUserID(ctx, userID)
 	if err != nil {
@@ -50,8 +50,8 @@ func (s *Service) GetUserSubscription(ctx context.Context, userID string) (*Subs
 		SubscriptionID: sub.SubscriptionID,
 		Status:         sub.Status,
 		TrialEndsAt:    trialEndsAt,
-		CreatedAt:      sub.CreatedAt,
-		UpdatedAt:      sub.UpdatedAt,
+		CreatedAt:      sub.CreatedAt.Time,
+		UpdatedAt:      sub.UpdatedAt.Time,
 		Quantity:       sub.Quantity,
 	}, nil
 }

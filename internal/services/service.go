@@ -1,21 +1,20 @@
 package services
 
 import (
-	"database/sql"
-
 	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/provisioning"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
-	db         *sql.DB
+	pool       *pgxpool.Pool
 	cloudflare *cloudflare.Client
 	gke        *provisioning.Client
 	config     *config.Config
 }
 
-func NewService(db *sql.DB, config *config.Config) (*Service, error) {
+func NewService(pool *pgxpool.Pool, config *config.Config) (*Service, error) {
 	cfClient := cloudflare.NewClient(cloudflare.Config{
 		APIToken:  config.Cloudflare.APIToken,
 		TunnelID:  config.Cloudflare.TunnelID,
@@ -28,5 +27,5 @@ func NewService(db *sql.DB, config *config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	return &Service{db: db, cloudflare: cfClient, gke: gke, config: config}, nil
+	return &Service{pool: pool, cloudflare: cfClient, gke: gke, config: config}, nil
 }

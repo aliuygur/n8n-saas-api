@@ -2,12 +2,12 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/apperrs"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type User struct {
@@ -19,7 +19,7 @@ type User struct {
 }
 
 func (s *Service) GetUserByEmail(ctx context.Context, email string) (*User, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbUser, err := queries.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -33,15 +33,15 @@ func (s *Service) GetUserByEmail(ctx context.Context, email string) (*User, erro
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
 		Name:      dbUser.Name,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		CreatedAt: dbUser.CreatedAt.Time,
+		UpdatedAt: dbUser.UpdatedAt.Time,
 	}
 
 	return user, nil
 }
 
 func (s *Service) GetUser(ctx context.Context, userID string) (*User, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbUser, err := queries.GetUserByID(ctx, userID)
 	if err != nil {
@@ -55,15 +55,15 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*User, error) {
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
 		Name:      dbUser.Name,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		CreatedAt: dbUser.CreatedAt.Time,
+		UpdatedAt: dbUser.UpdatedAt.Time,
 	}
 
 	return user, nil
 }
 
 func (s *Service) UpdateUserLastLogin(ctx context.Context, userID string) error {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	_, err := queries.UpdateUserLastLogin(ctx, userID)
 	if err != nil {
@@ -79,7 +79,7 @@ type CreateUserParams struct {
 }
 
 func (s *Service) CreateUser(ctx context.Context, params CreateUserParams) (*User, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbUser, err := queries.CreateUser(ctx, db.CreateUserParams{
 		Email: params.Email,
@@ -93,8 +93,8 @@ func (s *Service) CreateUser(ctx context.Context, params CreateUserParams) (*Use
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
 		Name:      dbUser.Name,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		CreatedAt: dbUser.CreatedAt.Time,
+		UpdatedAt: dbUser.UpdatedAt.Time,
 	}
 
 	return user, nil
@@ -103,15 +103,13 @@ func (s *Service) CreateUser(ctx context.Context, params CreateUserParams) (*Use
 // GetOrCreateUser gets a user by email or creates a new one if not found
 // When creating a new user, also creates a trial subscription
 func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) (*User, error) {
-	queries := db.New(s.db)
-
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer tx.Rollback(ctx)
 
-	queries = queries.WithTx(tx)
+	queries := db.New(tx)
 
 	dbUser, err := queries.GetUserByEmail(ctx, params.Email)
 	if err != nil {
@@ -131,7 +129,7 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 				ProductID:      "", // Empty for trial
 				CustomerID:     "", // Empty for trial
 				SubscriptionID: "", // Empty for trial
-				TrialEndsAt: sql.NullTime{
+				TrialEndsAt: pgtype.Timestamp{
 					Valid: false, // Will be set when first instance is created
 				},
 				Status:   SubscriptionStatusTrial,
@@ -145,7 +143,7 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -153,8 +151,8 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 		ID:        dbUser.ID,
 		Email:     dbUser.Email,
 		Name:      dbUser.Name,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		CreatedAt: dbUser.CreatedAt.Time,
+		UpdatedAt: dbUser.UpdatedAt.Time,
 	}
 
 	return user, nil

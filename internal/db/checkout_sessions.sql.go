@@ -36,7 +36,7 @@ type CreateCheckoutSessionParams struct {
 }
 
 func (q *Queries) CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error) {
-	row := q.db.QueryRowContext(ctx, createCheckoutSession,
+	row := q.db.QueryRow(ctx, createCheckoutSession,
 		arg.UserID,
 		arg.InstanceID,
 		arg.CheckoutID,
@@ -71,7 +71,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetCheckoutSessionByID(ctx context.Context, id string) (CheckoutSession, error) {
-	row := q.db.QueryRowContext(ctx, getCheckoutSessionByID, id)
+	row := q.db.QueryRow(ctx, getCheckoutSessionByID, id)
 	var i CheckoutSession
 	err := row.Scan(
 		&i.ID,
@@ -97,7 +97,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetCheckoutSessionByProviderID(ctx context.Context, checkoutID string) (CheckoutSession, error) {
-	row := q.db.QueryRowContext(ctx, getCheckoutSessionByProviderID, checkoutID)
+	row := q.db.QueryRow(ctx, getCheckoutSessionByProviderID, checkoutID)
 	var i CheckoutSession
 	err := row.Scan(
 		&i.ID,
@@ -123,7 +123,7 @@ LIMIT $1
 `
 
 func (q *Queries) ListCheckoutSessions(ctx context.Context, limit int32) ([]CheckoutSession, error) {
-	rows, err := q.db.QueryContext(ctx, listCheckoutSessions, limit)
+	rows, err := q.db.Query(ctx, listCheckoutSessions, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -149,9 +149,6 @@ func (q *Queries) ListCheckoutSessions(ctx context.Context, limit int32) ([]Chec
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -173,7 +170,7 @@ type UpdateCheckoutSessionCompletedParams struct {
 }
 
 func (q *Queries) UpdateCheckoutSessionCompleted(ctx context.Context, arg UpdateCheckoutSessionCompletedParams) error {
-	_, err := q.db.ExecContext(ctx, updateCheckoutSessionCompleted, arg.ID, arg.InstanceID)
+	_, err := q.db.Exec(ctx, updateCheckoutSessionCompleted, arg.ID, arg.InstanceID)
 	return err
 }
 
@@ -190,6 +187,6 @@ type UpdateCheckoutSessionStatusParams struct {
 }
 
 func (q *Queries) UpdateCheckoutSessionStatus(ctx context.Context, arg UpdateCheckoutSessionStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateCheckoutSessionStatus, arg.Status, arg.ID)
+	_, err := q.db.Exec(ctx, updateCheckoutSessionStatus, arg.Status, arg.ID)
 	return err
 }

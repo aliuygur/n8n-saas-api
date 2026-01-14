@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // LemonSqueezy webhook event types
@@ -187,7 +187,7 @@ func (s *Service) HandleLemonSqueezyEvent(ctx context.Context, payload *LemonSqu
 // handleSubscriptionCreated handles subscription creation
 func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	// Get user ID from custom data
 	userID := payload.Meta.CustomData.UserID
@@ -208,11 +208,11 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	}
 
 	// Parse trial end date if present
-	var trialEndsAt sql.NullTime
+	var trialEndsAt pgtype.Timestamp
 	if payload.Data.Attributes.TrialEndsAt != nil && *payload.Data.Attributes.TrialEndsAt != "" {
 		t, err := time.Parse(time.RFC3339, *payload.Data.Attributes.TrialEndsAt)
 		if err == nil {
-			trialEndsAt = sql.NullTime{Time: t, Valid: true}
+			trialEndsAt = pgtype.Timestamp{Time: t, Valid: true}
 		}
 	}
 
@@ -254,7 +254,7 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 // handleSubscriptionUpdated handles subscription updates
 func (s *Service) handleSubscriptionUpdated(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	status := mapLemonSqueezyStatus(payload.Data.Attributes.Status)
 
@@ -275,7 +275,7 @@ func (s *Service) handleSubscriptionUpdated(ctx context.Context, payload *LemonS
 // handleSubscriptionCancelled handles subscription cancellation
 func (s *Service) handleSubscriptionCancelled(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
@@ -294,7 +294,7 @@ func (s *Service) handleSubscriptionCancelled(ctx context.Context, payload *Lemo
 // handleSubscriptionResumed handles subscription resumption
 func (s *Service) handleSubscriptionResumed(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	status := mapLemonSqueezyStatus(payload.Data.Attributes.Status)
 
@@ -315,7 +315,7 @@ func (s *Service) handleSubscriptionResumed(ctx context.Context, payload *LemonS
 // handleSubscriptionExpired handles subscription expiration
 func (s *Service) handleSubscriptionExpired(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
@@ -334,7 +334,7 @@ func (s *Service) handleSubscriptionExpired(ctx context.Context, payload *LemonS
 // handleSubscriptionPaused handles subscription pause
 func (s *Service) handleSubscriptionPaused(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
@@ -353,7 +353,7 @@ func (s *Service) handleSubscriptionPaused(ctx context.Context, payload *LemonSq
 // handleSubscriptionUnpaused handles subscription unpause
 func (s *Service) handleSubscriptionUnpaused(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	status := mapLemonSqueezyStatus(payload.Data.Attributes.Status)
 
@@ -374,7 +374,7 @@ func (s *Service) handleSubscriptionUnpaused(ctx context.Context, payload *Lemon
 // handleSubscriptionPaymentSuccess handles successful payment
 func (s *Service) handleSubscriptionPaymentSuccess(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	// Update subscription status to active if payment succeeded
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
@@ -394,7 +394,7 @@ func (s *Service) handleSubscriptionPaymentSuccess(ctx context.Context, payload 
 // handleSubscriptionPaymentFailed handles failed payment
 func (s *Service) handleSubscriptionPaymentFailed(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	// Update subscription status to past_due when payment fails
 	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
@@ -436,7 +436,7 @@ func mapLemonSqueezyStatus(lsStatus string) string {
 // CreateUpgradeCheckoutURL creates a LemonSqueezy checkout URL for upgrading from trial to paid
 func (s *Service) CreateUpgradeCheckoutURL(ctx context.Context, userID string) (string, error) {
 	// Get user details for email
-	queries := db.New(s.db)
+	queries := s.getDB()
 	user, err := queries.GetUserByID(ctx, userID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get user: %w", err)

@@ -1,14 +1,11 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func IsNotFoundError(err error) bool {
-	if errors.Is(err, sql.ErrNoRows) {
-		return true
-	}
-
-	return false
+	return errors.Is(err, pgx.ErrNoRows)
 }

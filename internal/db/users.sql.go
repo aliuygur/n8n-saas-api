@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const acquireLock = `-- name: AcquireLock :exec
@@ -15,7 +16,7 @@ SELECT pg_advisory_lock(hashtext($1))
 `
 
 func (q *Queries) AcquireLock(ctx context.Context, hashtext string) error {
-	_, err := q.db.ExecContext(ctx, acquireLock, hashtext)
+	_, err := q.db.Exec(ctx, acquireLock, hashtext)
 	return err
 }
 
@@ -28,13 +29,13 @@ INSERT INTO sessions (
 `
 
 type CreateSessionParams struct {
-	UserID    string    `json:"user_id"`
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
+	UserID    string           `json:"user_id"`
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
-	row := q.db.QueryRowContext(ctx, createSession, arg.UserID, arg.Token, arg.ExpiresAt)
+	row := q.db.QueryRow(ctx, createSession, arg.UserID, arg.Token, arg.ExpiresAt)
 	var i Session
 	err := row.Scan(
 		&i.ID,
@@ -60,7 +61,7 @@ type CreateUserParams struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Name)
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.Name)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -78,7 +79,7 @@ DELETE FROM sessions WHERE expires_at <= NOW()
 `
 
 func (q *Queries) DeleteExpiredSessions(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, deleteExpiredSessions)
+	_, err := q.db.Exec(ctx, deleteExpiredSessions)
 	return err
 }
 
@@ -87,7 +88,7 @@ DELETE FROM sessions WHERE token = $1
 `
 
 func (q *Queries) DeleteSession(ctx context.Context, token string) error {
-	_, err := q.db.ExecContext(ctx, deleteSession, token)
+	_, err := q.db.Exec(ctx, deleteSession, token)
 	return err
 }
 
@@ -96,7 +97,7 @@ DELETE FROM sessions WHERE user_id = $1
 `
 
 func (q *Queries) DeleteUserSessions(ctx context.Context, userID string) error {
-	_, err := q.db.ExecContext(ctx, deleteUserSessions, userID)
+	_, err := q.db.Exec(ctx, deleteUserSessions, userID)
 	return err
 }
 
@@ -113,7 +114,7 @@ type GetSessionByTokenRow struct {
 }
 
 func (q *Queries) GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error) {
-	row := q.db.QueryRowContext(ctx, getSessionByToken, token)
+	row := q.db.QueryRow(ctx, getSessionByToken, token)
 	var i GetSessionByTokenRow
 	err := row.Scan(
 		&i.Session.ID,
@@ -136,7 +137,7 @@ SELECT id, email, name, created_at, last_login_at, updated_at FROM users WHERE e
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -154,7 +155,7 @@ SELECT id, email, name, created_at, last_login_at, updated_at FROM users WHERE i
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -172,7 +173,7 @@ SELECT pg_advisory_unlock(hashtext($1))
 `
 
 func (q *Queries) ReleaseLock(ctx context.Context, hashtext string) error {
-	_, err := q.db.ExecContext(ctx, releaseLock, hashtext)
+	_, err := q.db.Exec(ctx, releaseLock, hashtext)
 	return err
 }
 
@@ -184,7 +185,7 @@ RETURNING id, email, name, created_at, last_login_at, updated_at
 `
 
 func (q *Queries) UpdateUserLastLogin(ctx context.Context, id string) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserLastLogin, id)
+	row := q.db.QueryRow(ctx, updateUserLastLogin, id)
 	var i User
 	err := row.Scan(
 		&i.ID,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -15,7 +14,7 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
@@ -33,13 +32,6 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Connect to database
-	database, err := sql.Open("pgx", cfg.Database.URL)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer database.Close()
-
 	// Initialize logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -50,19 +42,26 @@ func main() {
 	ctx := context.Background()
 	ctx = appctx.WithLogger(ctx, logger)
 
+	// Connect to database
+	pool, err := pgxpool.New(ctx, cfg.Database.URL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer pool.Close()
+
 	// Test database connection
-	if err := database.PingContext(ctx); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
 	// Initialize services
-	svc, err := services.NewService(database, cfg)
+	svc, err := services.NewService(pool, cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 
 	// Fetch all instances
-	queries := db.New(database)
+	queries := db.New(pool)
 	instances, err := queries.ListAllInstances(ctx, db.ListAllInstancesParams{
 		Limit:  1000, // Fetch up to 1000 instances
 		Offset: 0,

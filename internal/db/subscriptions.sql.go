@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSubscription = `-- name: CreateSubscription :one
@@ -25,17 +26,17 @@ INSERT INTO subscriptions (
 `
 
 type CreateSubscriptionParams struct {
-	UserID         string       `json:"user_id"`
-	ProductID      string       `json:"product_id"`
-	CustomerID     string       `json:"customer_id"`
-	SubscriptionID string       `json:"subscription_id"`
-	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
-	Status         string       `json:"status"`
-	Quantity       int32        `json:"quantity"`
+	UserID         string           `json:"user_id"`
+	ProductID      string           `json:"product_id"`
+	CustomerID     string           `json:"customer_id"`
+	SubscriptionID string           `json:"subscription_id"`
+	TrialEndsAt    pgtype.Timestamp `json:"trial_ends_at"`
+	Status         string           `json:"status"`
+	Quantity       int32            `json:"quantity"`
 }
 
 func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, createSubscription,
+	row := q.db.QueryRow(ctx, createSubscription,
 		arg.UserID,
 		arg.ProductID,
 		arg.CustomerID,
@@ -66,7 +67,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteSubscriptionByID(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteSubscriptionByID, id)
+	_, err := q.db.Exec(ctx, deleteSubscriptionByID, id)
 	return err
 }
 
@@ -77,7 +78,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetSubscriptionByProviderID(ctx context.Context, subscriptionID string) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, getSubscriptionByProviderID, subscriptionID)
+	row := q.db.QueryRow(ctx, getSubscriptionByProviderID, subscriptionID)
 	var i Subscription
 	err := row.Scan(
 		&i.ID,
@@ -101,7 +102,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, getSubscriptionByUserID, userID)
+	row := q.db.QueryRow(ctx, getSubscriptionByUserID, userID)
 	var i Subscription
 	err := row.Scan(
 		&i.ID,
@@ -131,17 +132,17 @@ WHERE user_id = $1
 `
 
 type UpdateSubscriptionByUserIDParams struct {
-	UserID         string       `json:"user_id"`
-	ProductID      string       `json:"product_id"`
-	CustomerID     string       `json:"customer_id"`
-	SubscriptionID string       `json:"subscription_id"`
-	Status         string       `json:"status"`
-	TrialEndsAt    sql.NullTime `json:"trial_ends_at"`
-	Quantity       int32        `json:"quantity"`
+	UserID         string           `json:"user_id"`
+	ProductID      string           `json:"product_id"`
+	CustomerID     string           `json:"customer_id"`
+	SubscriptionID string           `json:"subscription_id"`
+	Status         string           `json:"status"`
+	TrialEndsAt    pgtype.Timestamp `json:"trial_ends_at"`
+	Quantity       int32            `json:"quantity"`
 }
 
 func (q *Queries) UpdateSubscriptionByUserID(ctx context.Context, arg UpdateSubscriptionByUserIDParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionByUserID,
+	_, err := q.db.Exec(ctx, updateSubscriptionByUserID,
 		arg.UserID,
 		arg.ProductID,
 		arg.CustomerID,
@@ -166,7 +167,7 @@ type UpdateSubscriptionQuantityParams struct {
 }
 
 func (q *Queries) UpdateSubscriptionQuantity(ctx context.Context, arg UpdateSubscriptionQuantityParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionQuantity, arg.ID, arg.Quantity)
+	_, err := q.db.Exec(ctx, updateSubscriptionQuantity, arg.ID, arg.Quantity)
 	return err
 }
 
@@ -183,7 +184,7 @@ type UpdateSubscriptionStatusByProviderIDParams struct {
 }
 
 func (q *Queries) UpdateSubscriptionStatusByProviderID(ctx context.Context, arg UpdateSubscriptionStatusByProviderIDParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionStatusByProviderID, arg.SubscriptionID, arg.Status)
+	_, err := q.db.Exec(ctx, updateSubscriptionStatusByProviderID, arg.SubscriptionID, arg.Status)
 	return err
 }
 
@@ -196,12 +197,12 @@ RETURNING id, user_id, product_id, customer_id, subscription_id, status, quantit
 `
 
 type UpdateSubscriptionTrialEndsAtParams struct {
-	ID          string       `json:"id"`
-	TrialEndsAt sql.NullTime `json:"trial_ends_at"`
+	ID          string           `json:"id"`
+	TrialEndsAt pgtype.Timestamp `json:"trial_ends_at"`
 }
 
 func (q *Queries) UpdateSubscriptionTrialEndsAt(ctx context.Context, arg UpdateSubscriptionTrialEndsAtParams) (Subscription, error) {
-	row := q.db.QueryRowContext(ctx, updateSubscriptionTrialEndsAt, arg.ID, arg.TrialEndsAt)
+	row := q.db.QueryRow(ctx, updateSubscriptionTrialEndsAt, arg.ID, arg.TrialEndsAt)
 	var i Subscription
 	err := row.Scan(
 		&i.ID,

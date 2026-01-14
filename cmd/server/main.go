@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/gcplog"
 	"github.com/aliuygur/n8n-saas-api/internal/handler"
 	"github.com/aliuygur/n8n-saas-api/internal/services"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -45,18 +44,18 @@ func main() {
 	logger.Info("Configuration loaded successfully", "env", cfg.Server.Env)
 
 	// Connect to database
-	db, err := sql.Open("pgx", cfg.Database.URL)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pool, err := pgxpool.New(ctx, cfg.Database.URL)
 	if err != nil {
 		logger.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer pool.Close()
 
 	// Test database connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		logger.Error("Failed to ping database", "error", err)
 		os.Exit(1)
 	}
@@ -64,7 +63,7 @@ func main() {
 	logger.Info("Database connection established")
 
 	// Initialize services
-	svc, err := services.NewService(db, cfg)
+	svc, err := services.NewService(pool, cfg)
 	if err != nil {
 		logger.Error("Failed to initialize services", "error", err)
 		os.Exit(1)

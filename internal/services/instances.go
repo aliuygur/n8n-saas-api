@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/apperrs"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 	"github.com/aliuygur/n8n-saas-api/internal/provisioning/n8ntemplates"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/samber/lo"
 )
 
@@ -58,7 +58,7 @@ func toDomainInstance(dbInst db.Instance) Instance {
 
 func (s *Service) GetInstancesByUser(ctx context.Context, userID string) ([]Instance, error) {
 
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbInstances, err := queries.ListInstancesByUser(ctx, userID)
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *Service) GetInstancesByUser(ctx context.Context, userID string) ([]Inst
 }
 
 func (s *Service) GetInstanceByID(ctx context.Context, instanceID string) (*Instance, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbInstance, err := queries.GetInstance(ctx, instanceID)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Service) GetInstanceByID(ctx context.Context, instanceID string) (*Inst
 }
 
 func (s *Service) GetInstanceBySubdomain(ctx context.Context, subdomain string) (*Instance, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	dbInstance, err := queries.GetInstanceBySubdomain(ctx, subdomain)
 	if err != nil {
@@ -206,7 +206,7 @@ type UpdateInstanceStatusParams struct {
 }
 
 func (s *Service) UpdateInstanceStatus(ctx context.Context, params UpdateInstanceStatusParams) error {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	_, err := queries.UpdateInstanceStatus(ctx, db.UpdateInstanceStatusParams{
 		ID:     params.InstanceID,
@@ -245,7 +245,7 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 }
 
 func (s *Service) CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error) {
-	queries := db.New(s.db)
+	queries := s.getDB()
 
 	exists, err := queries.CheckSubdomainExists(ctx, subdomain)
 	if err != nil {
@@ -257,7 +257,7 @@ func (s *Service) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 
 func (s *Service) CheckInstanceURLActive(ctx context.Context, id string) (bool, error) {
 
-	queries := s.getDB(ctx)
+	queries := s.getDB()
 
 	instance, err := queries.GetInstance(ctx, id)
 	if err != nil {
@@ -351,7 +351,7 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 			trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
 			_, err = queries.UpdateSubscriptionTrialEndsAt(ctx, db.UpdateSubscriptionTrialEndsAtParams{
 				ID: subscription.ID,
-				TrialEndsAt: sql.NullTime{
+				TrialEndsAt: pgtype.Timestamp{
 					Time:  trialEndsAt,
 					Valid: true,
 				},
