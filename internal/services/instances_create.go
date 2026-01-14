@@ -55,8 +55,19 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	}
 
 	// Start trial if needed (idempotent, no rollback needed)
-	if err := s.startTrialIfNeeded(ctx, queries, params.UserID); err != nil {
-		return nil, err
+	if sub.Status == SubscriptionStatusTrial && !sub.TrialEndsAt.Valid {
+		trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
+		_, err = queries.UpdateSubscriptionTrialEndsAt(ctx, db.UpdateSubscriptionTrialEndsAtParams{
+			ID: sub.ID,
+			TrialEndsAt: pgtype.Timestamp{
+				Time:  trialEndsAt,
+				Valid: true,
+			},
+		})
+		if err != nil {
+			return nil, apperrs.Server("failed to start trial", err)
+		}
+		l.Debug("started trial subscription", "user_id", params.UserID, "subscription_id", sub.ID, "trial_ends_at", trialEndsAt)
 	}
 
 	// Create instance in database
@@ -137,35 +148,6 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 	}
 
 	return "", apperrs.Server(fmt.Sprintf("failed to generate unique namespace after %d attempts", maxAttempts), nil)
-}
-
-func (s *Service) startTrialIfNeeded(ctx context.Context, queries *db.Queries, userID string) error {
-	l := appctx.GetLogger(ctx)
-
-	subscription, err := queries.GetSubscriptionByUserID(ctx, userID)
-	if err != nil {
-		if db.IsNotFoundError(err) {
-			return nil
-		}
-		return apperrs.Server("failed to get subscription", err)
-	}
-
-	if !subscription.TrialEndsAt.Valid {
-		trialEndsAt := time.Now().Add(3 * 24 * time.Hour) // 3 days trial
-		_, err = queries.UpdateSubscriptionTrialEndsAt(ctx, db.UpdateSubscriptionTrialEndsAtParams{
-			ID: subscription.ID,
-			TrialEndsAt: pgtype.Timestamp{
-				Time:  trialEndsAt,
-				Valid: true,
-			},
-		})
-		if err != nil {
-			return apperrs.Server("failed to start trial", err)
-		}
-		l.Debug("started trial subscription", "user_id", userID, "subscription_id", subscription.ID, "trial_ends_at", trialEndsAt)
-	}
-
-	return nil
 }
 
 func (s *Service) increaseSubscriptionQuantity(ctx context.Context, queries *db.Queries, userID string) (bool, error) {
