@@ -80,17 +80,6 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	if err != nil {
 		return nil, apperrs.Server("failed to create instance in database", err)
 	}
-	instanceID := dbInst.ID
-
-	// Increase subscription quantity (skip for trial users)
-	quantityIncreased, err := s.increaseSubscriptionQuantity(ctx, queries, params.UserID)
-	if err != nil {
-		// Rollback: delete instance
-		if delErr := queries.DeleteInstance(ctx, instanceID); delErr != nil {
-			l.Error("failed to rollback instance creation", "instance_id", instanceID, "error", delErr)
-		}
-		return nil, err
-	}
 
 	// Deploy to GKE
 	domain := fmt.Sprintf("https://%s.ranx.cloud", params.Subdomain)
@@ -101,24 +90,16 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	}
 
 	if err := s.gke.Apply(ctx, n8nInstance); err != nil {
-		// Rollback: decrease quantity if it was increased
-		if quantityIncreased {
-			s.decreaseSubscriptionQuantity(ctx, queries, params.UserID)
-		}
-		// Rollback: delete instance
-		if delErr := queries.DeleteInstance(ctx, instanceID); delErr != nil {
-			l.Error("failed to rollback instance creation", "instance_id", instanceID, "error", delErr)
-		}
 		return nil, fmt.Errorf("failed to deploy n8n: %w", err)
 	}
 
-	// Fetch the full instance from the database to return
-	dbInstance, err := queries.GetInstance(ctx, instanceID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get created instance: %w", err)
+	// Sync subscription quantity with LemonSqueezy
+	if err := s.SyncSubscriptionQuantity(ctx, params.UserID); err != nil {
+		// Log error but don't fail the creation
+		l.Error("failed to sync subscription quantity", "user_id", params.UserID, "error", err)
 	}
 
-	instance := toDomainInstance(dbInstance)
+	instance := toDomainInstance(dbInst)
 	return &instance, nil
 }
 
@@ -148,96 +129,4 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 	}
 
 	return "", apperrs.Server(fmt.Sprintf("failed to generate unique namespace after %d attempts", maxAttempts), nil)
-}
-
-func (s *Service) increaseSubscriptionQuantity(ctx context.Context, queries *db.Queries, userID string) (bool, error) {
-	l := appctx.GetLogger(ctx)
-
-	subscription, err := queries.GetSubscriptionByUserID(ctx, userID)
-	if err != nil {
-		if db.IsNotFoundError(err) {
-			return false, nil
-		}
-		return false, apperrs.Server("failed to get subscription", err)
-	}
-
-	// Skip if trial (no subscription_id) or trial not ended yet
-	if subscription.SubscriptionID == "" || (subscription.TrialEndsAt.Valid && time.Now().Before(subscription.TrialEndsAt.Time)) {
-		l.Debug("skipping quantity increase for trial user", "user_id", userID)
-		return false, nil
-	}
-
-	// Fetch subscription from LemonSqueezy to get subscription_item_id
-	lsSubscription, err := s.lemonsqueezy.GetSubscription(ctx, subscription.SubscriptionID)
-	if err != nil {
-		return false, fmt.Errorf("failed to fetch subscription from LemonSqueezy: %w", err)
-	}
-
-	if lsSubscription.Data.Attributes.FirstSubscriptionItem == nil {
-		l.Debug("subscription has no items, skipping quantity update", "user_id", userID)
-		return false, nil
-	}
-
-	newQuantity := subscription.Quantity + 1
-	subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
-
-	if err := s.lemonsqueezy.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
-		return false, fmt.Errorf("failed to update subscription quantity in LemonSqueezy: %w", err)
-	}
-
-	if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
-		ID:       subscription.ID,
-		Quantity: newQuantity,
-	}); err != nil {
-		return true, apperrs.Server("failed to update subscription quantity in database", err)
-	}
-
-	l.Info("increased subscription quantity", "user_id", userID, "new_quantity", newQuantity)
-	return true, nil
-}
-
-func (s *Service) decreaseSubscriptionQuantity(ctx context.Context, queries *db.Queries, userID string) {
-	l := appctx.GetLogger(ctx)
-
-	subscription, err := queries.GetSubscriptionByUserID(ctx, userID)
-	if err != nil {
-		l.Error("failed to get subscription for rollback", "user_id", userID, "error", err)
-		return
-	}
-
-	if subscription.SubscriptionID == "" {
-		return
-	}
-
-	lsSubscription, err := s.lemonsqueezy.GetSubscription(ctx, subscription.SubscriptionID)
-	if err != nil {
-		l.Error("failed to fetch subscription from LemonSqueezy for rollback", "error", err)
-		return
-	}
-
-	if lsSubscription.Data.Attributes.FirstSubscriptionItem == nil {
-		return
-	}
-
-	newQuantity := subscription.Quantity - 1
-	if newQuantity < 1 {
-		newQuantity = 1
-	}
-
-	subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
-
-	if err := s.lemonsqueezy.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
-		l.Error("failed to revert quantity in LemonSqueezy", "error", err)
-		return
-	}
-
-	if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
-		ID:       subscription.ID,
-		Quantity: newQuantity,
-	}); err != nil {
-		l.Error("failed to revert quantity in database", "error", err)
-		return
-	}
-
-	l.Debug("reverted subscription quantity", "user_id", userID, "quantity", newQuantity)
 }

@@ -103,6 +103,21 @@ func (c *Client) GetSubscription(ctx context.Context, subscriptionID string) (*S
 	return &subscription, nil
 }
 
+// UpdateSubscriptionQuantity updates the quantity of a subscription by subscription ID.
+// It fetches the subscription to get the first subscription item ID, then updates its quantity.
+func (c *Client) UpdateSubscriptionQuantity(ctx context.Context, subscriptionID string, quantity int32) error {
+	subscription, err := c.GetSubscription(ctx, subscriptionID)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if subscription.Data.Attributes.FirstSubscriptionItem == nil {
+		return fmt.Errorf("subscription %s has no subscription item", subscriptionID)
+	}
+
+	return c.UpdateSubscriptionItemQuantity(ctx, subscription.Data.Attributes.FirstSubscriptionItem.ID, quantity)
+}
+
 // UpdateSubscriptionItemQuantity updates the quantity of a subscription item
 func (c *Client) UpdateSubscriptionItemQuantity(ctx context.Context, subscriptionItemID int, quantity int32) error {
 	payload := map[string]interface{}{
