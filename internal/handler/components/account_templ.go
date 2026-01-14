@@ -8,7 +8,10 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 var accountPageSEO = SEOMetadata{
 	Title:       "Account - Manage Your Profile & Subscription | ranx.cloud",
@@ -77,7 +80,7 @@ func AccountPage(data AccountData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 44, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 47, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -90,7 +93,7 @@ func AccountPage(data AccountData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.User.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 50, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 53, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -103,7 +106,7 @@ func AccountPage(data AccountData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(data.User.CreatedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 56, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 59, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -141,7 +144,7 @@ func AccountPage(data AccountData) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Title(data.Subscription.Status))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 91, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 94, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -164,7 +167,7 @@ func AccountPage(data AccountData) templ.Component {
 				var templ_7745c5c3_Var7 templ.SafeURL
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(data.UpgradeCheckoutURL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 100, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 103, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -175,66 +178,66 @@ func AccountPage(data AccountData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><!-- Subscription Metadata --><div class=\"grid grid-cols-1 gap-6 pt-6 border-t border-gray-800\"><div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Subscription ID</label><div class=\"flex items-center gap-2\"><code id=\"subscription-id\" class=\"text-xs sm:text-sm text-gray-300 font-mono flex-1 break-all\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(data.Subscription.ID)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 116, Col: 126}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</code> <button onclick=\"navigator.clipboard.writeText(document.getElementById('subscription-id').textContent)\" class=\"p-2 bg-gray-800 hover:bg-gray-700 active:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors flex-shrink-0 touch-manipulation\" title=\"Copy to clipboard\"><svg class=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\"></path></svg></button></div></div><div class=\"grid grid-cols-1 sm:grid-cols-2 gap-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><!-- Subscription Metadata --><div class=\"grid grid-cols-1 gap-6 pt-6 border-t border-gray-800\"><div class=\"grid grid-cols-1 sm:grid-cols-2 gap-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Subscription.TrialEndsAt != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Trial Ends</label><p class=\"text-sm sm:text-base text-white\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Trial Ends</label><p class=\"text-sm sm:text-base text-white\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(data.Subscription.TrialEndsAt))
+				var templ_7745c5c3_Var8 string
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(data.Subscription.TrialEndsAt))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 133, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 121, Col: 54}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Subscription Started</label><p class=\"text-sm sm:text-base text-white\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Instances</label><p class=\"text-sm sm:text-base text-white\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.Subscription.Quantity))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 128, Col: 57}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p></div><div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Subscription Started</label><p class=\"text-sm sm:text-base text-white\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(data.Subscription.CreatedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 140, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/account.templ`, Line: 134, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</p></div></div></div></div><!-- Subscription Features Card --><div class=\"bg-gray-900/50 rounded-2xl p-5 sm:p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-base sm:text-lg font-semibold text-white mb-6\">Subscription Benefits</h3><div class=\"space-y-4 text-sm sm:text-base text-gray-300\"><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Full Access</p><p class=\"text-xs sm:text-sm text-gray-400\">Your subscription gives you access to all features</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Secure Payments</p><p class=\"text-xs sm:text-sm text-gray-400\">Your payment information is securely managed by Polar</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Support</p><p class=\"text-xs sm:text-sm text-gray-400\">Get help when you need it from our support team</p></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</p></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Subscription.Status == "active" || data.Subscription.Status == "trial" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<!-- Manage Subscription Card --> <div class=\"bg-gray-900/50 rounded-2xl p-5 sm:p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6\">Manage Your Subscription</h3><div class=\"space-y-4\"><p class=\"text-sm sm:text-base text-gray-400\">To manage your subscription, update payment methods, or cancel your subscription, please visit the Polar customer portal.</p><a href=\"https://polar.sh\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation\"><svg class=\"w-4 h-4 sm:w-5 sm:h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> Manage on Polar</a></div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<!-- Manage Subscription --> <div class=\"pt-6 mt-6 border-t border-gray-800\"><p class=\"text-sm text-gray-400 mb-4\">To manage your subscription, update payment methods, or cancel your subscription, please visit the Lemon Squeezy customer portal.</p><a href=\"https://app.lemonsqueezy.com/my-orders\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation\"><svg class=\"w-4 h-4 sm:w-5 sm:h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> Manage on Lemon Squeezy</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div></main></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><!-- Subscription Features Card --><div class=\"bg-gray-900/50 rounded-2xl p-5 sm:p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-base sm:text-lg font-semibold text-white mb-6\">Subscription Benefits</h3><div class=\"space-y-4 text-sm sm:text-base text-gray-300\"><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Full Access</p><p class=\"text-xs sm:text-sm text-gray-400\">Your subscription gives you access to all features</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Secure Payments</p><p class=\"text-xs sm:text-sm text-gray-400\">Your payment information is securely managed by Lemon Squeezy</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Support</p><p class=\"text-xs sm:text-sm text-gray-400\">Get help when you need it from our support team</p></div></div></div></div></div></main></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
