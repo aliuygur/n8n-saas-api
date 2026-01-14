@@ -52,6 +52,9 @@ SELECT EXISTS(SELECT 1 FROM instances WHERE namespace = $1 AND deleted_at IS NUL
 -- name: CheckSubdomainExists :one
 SELECT EXISTS(SELECT 1 FROM instances WHERE subdomain = $1 AND deleted_at IS NULL);
 
+-- name: CountActiveInstancesByUserID :one
+SELECT COUNT(*) FROM instances WHERE user_id = $1 AND deleted_at IS NULL;
+
 -- name: DeleteInstance :exec
 UPDATE instances 
 SET deleted_at = NOW(), updated_at = NOW()

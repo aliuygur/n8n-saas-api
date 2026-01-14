@@ -31,6 +31,17 @@ func (q *Queries) CheckSubdomainExists(ctx context.Context, subdomain string) (b
 	return exists, err
 }
 
+const countActiveInstancesByUserID = `-- name: CountActiveInstancesByUserID :one
+SELECT COUNT(*) FROM instances WHERE user_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountActiveInstancesByUserID(ctx context.Context, userID string) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveInstancesByUserID, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
     user_id, namespace, subdomain, status

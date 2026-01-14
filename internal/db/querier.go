@@ -12,6 +12,7 @@ type Querier interface {
 	AcquireLock(ctx context.Context, hashtext string) error
 	CheckNamespaceExists(ctx context.Context, namespace string) (bool, error)
 	CheckSubdomainExists(ctx context.Context, subdomain string) (bool, error)
+	CountActiveInstancesByUserID(ctx context.Context, userID string) (int64, error)
 	CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error)
 	CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
