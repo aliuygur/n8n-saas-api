@@ -27,6 +27,15 @@ func (s *Service) getDB() *db.Queries {
 	return db.New(s.pool)
 }
 
+func (s *Service) getDBWithTx(ctx context.Context) (*db.Queries, pgx.Tx) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		panic(err)
+	}
+	queries := db.New(tx)
+	return queries, tx
+}
+
 func (s *Service) getDBWithLock(ctx context.Context, lockKey string) (*db.Queries, func()) {
 	conn, err := s.pool.Acquire(ctx)
 	if err != nil {

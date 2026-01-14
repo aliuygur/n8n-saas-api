@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aliuygur/n8n-saas-api/internal/appctx"
 	"github.com/aliuygur/n8n-saas-api/internal/db"
 )
 
@@ -26,10 +27,31 @@ func (s *Subscription) IsTrial() bool {
 	return s.Status == SubscriptionStatusTrial || s.Status == SubscriptionStatusTrialing
 }
 
+// toDomainSubscription maps a db.Subscription to a Subscription (domain layer)
+func toDomainSubscription(sub db.Subscription) *Subscription {
+	var trialEndsAt *time.Time
+	if sub.TrialEndsAt.Valid {
+		trialEndsAt = &sub.TrialEndsAt.Time
+	}
+	return &Subscription{
+		ID:             sub.ID,
+		UserID:         sub.UserID,
+		ProductID:      sub.ProductID,
+		CustomerID:     sub.CustomerID,
+		SubscriptionID: sub.SubscriptionID,
+		Status:         sub.Status,
+		TrialEndsAt:    trialEndsAt,
+		CreatedAt:      sub.CreatedAt.Time,
+		UpdatedAt:      sub.UpdatedAt.Time,
+		Quantity:       sub.Quantity,
+	}
+}
+
 // GetUserSubscription returns the subscription for a user (one subscription per user)
 // SyncSubscriptionQuantity syncs the instance count from our DB to LemonSqueezy subscription quantity.
 // It counts active instances (where deleted_at IS NULL) and updates LemonSqueezy if quantities differ.
 func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) error {
+	l := appctx.GetLogger(ctx)
 	queries := s.getDB()
 
 	// Get subscription
@@ -40,6 +62,7 @@ func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) e
 
 	// Skip if no LemonSqueezy subscription ID (e.g., trial users)
 	if sub.SubscriptionID == "" {
+		l.Debug("subscription has no LemonSqueezy subscription ID, skipping sync", "user_id", userID)
 		return nil
 	}
 
@@ -48,6 +71,8 @@ func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) e
 	if err != nil {
 		return fmt.Errorf("failed to count instances: %w", err)
 	}
+
+	l.Debug("syncing subscription quantity", "user_id", userID, "db_instance_count", instanceCount)
 
 	// Fetch subscription from LemonSqueezy
 	lsSub, err := s.lemonsqueezy.GetSubscription(ctx, sub.SubscriptionID)
@@ -61,8 +86,11 @@ func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) e
 		lsQuantity = lsSub.Data.Attributes.FirstSubscriptionItem.Quantity
 	}
 
+	l.Debug("fetched LemonSqueezy subscription", "user_id", userID, "ls_quantity", lsQuantity)
+
 	// If quantities match, nothing to do
 	if int64(lsQuantity) == instanceCount {
+		l.Debug("subscription quantities match, no update needed", "user_id", userID)
 		return nil
 	}
 
@@ -70,6 +98,16 @@ func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) e
 	if err := s.lemonsqueezy.UpdateSubscriptionQuantity(ctx, sub.SubscriptionID, int32(instanceCount)); err != nil {
 		return fmt.Errorf("failed to update LemonSqueezy quantity: %w", err)
 	}
+
+	// Update our DB subscription quantity
+	if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
+		ID:       sub.ID,
+		Quantity: int32(instanceCount),
+	}); err != nil {
+		return fmt.Errorf("failed to update subscription quantity in DB: %w", err)
+	}
+
+	l.Debug("updated LemonSqueezy subscription quantity", "user_id", userID, "new_quantity", instanceCount)
 
 	return nil
 }
@@ -85,21 +123,5 @@ func (s *Service) GetUserSubscription(ctx context.Context, userID string) (*Subs
 		return nil, err
 	}
 
-	var trialEndsAt *time.Time
-	if sub.TrialEndsAt.Valid {
-		trialEndsAt = &sub.TrialEndsAt.Time
-	}
-
-	return &Subscription{
-		ID:             sub.ID,
-		UserID:         sub.UserID,
-		ProductID:      sub.ProductID,
-		CustomerID:     sub.CustomerID,
-		SubscriptionID: sub.SubscriptionID,
-		Status:         sub.Status,
-		TrialEndsAt:    trialEndsAt,
-		CreatedAt:      sub.CreatedAt.Time,
-		UpdatedAt:      sub.UpdatedAt.Time,
-		Quantity:       sub.Quantity,
-	}, nil
+	return toDomainSubscription(sub), nil
 }

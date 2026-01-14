@@ -22,8 +22,8 @@ type CreateInstanceParams struct {
 func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParams) (*Instance, error) {
 	l := appctx.GetLogger(ctx)
 
-	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_create_%s", params.UserID))
-	defer releaseLock()
+	queries, tx := s.getDBWithTx(ctx)
+	defer tx.Rollback(ctx)
 
 	// Check if subdomain already exists
 	exists, err := queries.CheckSubdomainExists(ctx, params.Subdomain)
@@ -92,6 +92,12 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 	if err := s.gke.Apply(ctx, n8nInstance); err != nil {
 		return nil, fmt.Errorf("failed to deploy n8n: %w", err)
 	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, apperrs.Server("failed to commit transaction", err)
+	}
+
+	l.Debug("deployed n8n instance to GKE", "namespace", namespace, "domain", domain)
 
 	// Sync subscription quantity with LemonSqueezy
 	if err := s.SyncSubscriptionQuantity(ctx, params.UserID); err != nil {
