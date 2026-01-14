@@ -1,12 +1,16 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/aliuygur/n8n-saas-api/internal/appctx"
@@ -224,7 +228,7 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	// Update existing subscription with provider details
 	err = queries.UpdateSubscriptionByUserID(ctx, db.UpdateSubscriptionByUserIDParams{
 		UserID:         userID,
-		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.ProductID),
+		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.VariantID),
 		CustomerID:     fmt.Sprintf("%d", payload.Data.Attributes.CustomerID),
 		SubscriptionID: payload.Data.ID,
 		Status:         status,
@@ -444,4 +448,123 @@ func (s *Service) CreateUpgradeCheckoutURL(ctx context.Context, userID string) (
 		user.Email,
 		user.ID,
 	), nil
+}
+
+// LemonSqueezySubscriptionResponse represents the API response when fetching a subscription
+type LemonSqueezySubscriptionResponse struct {
+	Data struct {
+		Attributes struct {
+			FirstSubscriptionItem *SubscriptionItem `json:"first_subscription_item"`
+		} `json:"attributes"`
+	} `json:"data"`
+}
+
+// GetSubscription fetches a subscription from LemonSqueezy by subscription ID
+func (s *Service) GetSubscription(ctx context.Context, subscriptionID string) (*LemonSqueezySubscriptionResponse, error) {
+	log := appctx.GetLogger(ctx)
+
+	// Create HTTP request
+	url := fmt.Sprintf("https://api.lemonsqueezy.com/v1/subscriptions/%s", subscriptionID)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.config.LemonSqueezy.APIKey))
+	req.Header.Set("Accept", "application/vnd.api+json")
+
+	// Make the request
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check for successful response
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		log.Error("Failed to fetch subscription from LemonSqueezy",
+			"status_code", resp.StatusCode,
+			"response_body", string(body),
+			"subscription_id", subscriptionID)
+		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var subscription LemonSqueezySubscriptionResponse
+	if err := json.Unmarshal(body, &subscription); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &subscription, nil
+}
+
+// UpdateSubscriptionItemQuantity updates the quantity of a subscription item in LemonSqueezy
+func (s *Service) UpdateSubscriptionItemQuantity(ctx context.Context, subscriptionItemID int, quantity int32) error {
+	log := appctx.GetLogger(ctx)
+
+	// Prepare the request payload
+	payload := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "subscription-items",
+			"id":   fmt.Sprintf("%d", subscriptionItemID),
+			"attributes": map[string]interface{}{
+				"quantity": quantity,
+			},
+		},
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request payload: %w", err)
+	}
+
+	// Create HTTP request
+	url := fmt.Sprintf("https://api.lemonsqueezy.com/v1/subscription-items/%d", subscriptionItemID)
+	req, err := http.NewRequestWithContext(ctx, "PATCH", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.config.LemonSqueezy.APIKey))
+	req.Header.Set("Content-Type", "application/vnd.api+json")
+	req.Header.Set("Accept", "application/vnd.api+json")
+
+	// Make the request
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check for successful response
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		log.Error("Failed to update subscription item quantity",
+			"status_code", resp.StatusCode,
+			"response_body", string(body),
+			"subscription_item_id", subscriptionItemID,
+			"quantity", quantity)
+		return fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	log.Info("Successfully updated subscription item quantity",
+		"subscription_item_id", subscriptionItemID,
+		"quantity", quantity)
+
+	return nil
 }

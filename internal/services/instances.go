@@ -133,6 +133,70 @@ func (s *Service) DeleteInstance(ctx context.Context, params DeleteInstanceParam
 	}
 	l.Debug("deleted instance from database", "instance_id", params.InstanceID)
 
+	// Decrease subscription quantity if user is not on trial
+	if err := s.decreaseSubscriptionQuantityForUser(ctx, queries, params.UserID); err != nil {
+		// Log error but don't fail the deletion
+		l.Error("failed to decrease subscription quantity", "user_id", params.UserID, "error", err)
+	}
+
+	return nil
+}
+
+// decreaseSubscriptionQuantityForUser decreases the subscription quantity when an instance is deleted
+func (s *Service) decreaseSubscriptionQuantityForUser(ctx context.Context, queries *db.Queries, userID string) error {
+	l := appctx.GetLogger(ctx)
+
+	// Get subscription from local database
+	subscription, err := queries.GetSubscriptionByUserID(ctx, userID)
+	if err != nil {
+		if db.IsNotFoundError(err) {
+			// No subscription, skip quantity update
+			return nil
+		}
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	// Skip if trial (no subscription_id) or still in trial period
+	if subscription.SubscriptionID == "" || (subscription.TrialEndsAt.Valid && time.Now().Before(subscription.TrialEndsAt.Time)) {
+		l.Debug("skipping quantity decrease for trial user", "user_id", userID)
+		return nil
+	}
+
+	// Don't decrease below 1
+	if subscription.Quantity <= 1 {
+		l.Debug("subscription quantity already at minimum", "user_id", userID, "quantity", subscription.Quantity)
+		return nil
+	}
+
+	// Fetch subscription from LemonSqueezy to get subscription_item_id
+	lsSubscription, err := s.GetSubscription(ctx, subscription.SubscriptionID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch subscription from LemonSqueezy: %w", err)
+	}
+
+	// Check if subscription has an item
+	if lsSubscription.Data.Attributes.FirstSubscriptionItem == nil {
+		l.Debug("subscription has no items, skipping quantity update", "user_id", userID)
+		return nil
+	}
+
+	// Decrease quantity in LemonSqueezy
+	newQuantity := subscription.Quantity - 1
+	subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
+
+	if err := s.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
+		return fmt.Errorf("failed to update subscription quantity in LemonSqueezy: %w", err)
+	}
+
+	// Update quantity in local database
+	if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
+		ID:       subscription.ID,
+		Quantity: newQuantity,
+	}); err != nil {
+		return fmt.Errorf("failed to update subscription quantity in database: %w", err)
+	}
+
+	l.Info("decreased subscription quantity", "user_id", userID, "new_quantity", newQuantity)
 	return nil
 }
 
@@ -301,6 +365,105 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		return state, nil
 	}
 
+	increaseQuantity := func(state *instanceCreationState) (*instanceCreationState, error) {
+		// Get subscription from local database
+		subscription, err := queries.GetSubscriptionByUserID(ctx, state.userID)
+		if err != nil {
+			if db.IsNotFoundError(err) {
+				// No subscription, skip quantity update
+				return state, nil
+			}
+			return state, apperrs.Server("failed to get subscription", err)
+		}
+
+		// Skip if trial (no subscription_id) or trial not ended yet
+		if subscription.SubscriptionID == "" || (subscription.TrialEndsAt.Valid && time.Now().Before(subscription.TrialEndsAt.Time)) {
+			l.Debug("skipping quantity increase for trial user", "user_id", state.userID)
+			return state, nil
+		}
+
+		// Fetch subscription from LemonSqueezy to get subscription_item_id
+		lsSubscription, err := s.GetSubscription(ctx, subscription.SubscriptionID)
+		if err != nil {
+			return state, fmt.Errorf("failed to fetch subscription from LemonSqueezy: %w", err)
+		}
+
+		// Check if subscription has an item
+		if lsSubscription.Data.Attributes.FirstSubscriptionItem == nil {
+			l.Debug("subscription has no items, skipping quantity update", "user_id", state.userID)
+			return state, nil
+		}
+
+		// Increase quantity in LemonSqueezy
+		newQuantity := subscription.Quantity + 1
+		subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
+
+		if err := s.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
+			return state, fmt.Errorf("failed to update subscription quantity in LemonSqueezy: %w", err)
+		}
+
+		// Update quantity in local database
+		if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
+			ID:       subscription.ID,
+			Quantity: newQuantity,
+		}); err != nil {
+			return state, apperrs.Server("failed to update subscription quantity in database", err)
+		}
+
+		l.Info("increased subscription quantity", "user_id", state.userID, "new_quantity", newQuantity)
+		return state, nil
+	}
+
+	decreaseQuantity := func(state *instanceCreationState) *instanceCreationState {
+		// Get subscription from local database
+		subscription, err := queries.GetSubscriptionByUserID(ctx, state.userID)
+		if err != nil {
+			l.Error("failed to revert quantity increase", "user_id", state.userID, "error", err)
+			return state
+		}
+
+		// Skip if trial (no subscription_id)
+		if subscription.SubscriptionID == "" {
+			return state
+		}
+
+		// Fetch subscription from LemonSqueezy
+		lsSubscription, err := s.GetSubscription(ctx, subscription.SubscriptionID)
+		if err != nil {
+			l.Error("failed to fetch subscription from LemonSqueezy for rollback", "error", err)
+			return state
+		}
+
+		// Check if subscription has an item
+		if lsSubscription.Data.Attributes.FirstSubscriptionItem == nil {
+			return state
+		}
+
+		// Decrease quantity back
+		newQuantity := subscription.Quantity - 1
+		if newQuantity < 1 {
+			newQuantity = 1
+		}
+
+		subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
+
+		if err := s.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
+			l.Error("failed to revert quantity in LemonSqueezy", "error", err)
+		} else {
+			// Update quantity in local database
+			if err := queries.UpdateSubscriptionQuantity(ctx, db.UpdateSubscriptionQuantityParams{
+				ID:       subscription.ID,
+				Quantity: newQuantity,
+			}); err != nil {
+				l.Error("failed to revert quantity in database", "error", err)
+			} else {
+				l.Debug("reverted subscription quantity", "user_id", state.userID, "quantity", newQuantity)
+			}
+		}
+
+		return state
+	}
+
 	createInstance := func(state *instanceCreationState) (*instanceCreationState, error) {
 		dbInst, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
 			UserID:    state.userID,
@@ -361,9 +524,10 @@ func (s *Service) createInstanceInternal(ctx context.Context, queries *db.Querie
 		namespace: namespace,
 	}
 	saga := lo.NewTransaction[*instanceCreationState]().
-		Then(startTrial, nil). // Start trial first (no rollback needed, idempotent)
-		Then(createInstance, deleteInstance).
-		Then(deployGke, revertGke)
+		Then(startTrial, nil).                    // Start trial first (no rollback needed, idempotent)
+		Then(createInstance, deleteInstance).     // Create instance in database
+		Then(increaseQuantity, decreaseQuantity). // Update subscription quantity (skip for trial users)
+		Then(deployGke, revertGke)                // Deploy to GKE
 
 	finalState, err := saga.Process(initialState)
 	if err != nil {
