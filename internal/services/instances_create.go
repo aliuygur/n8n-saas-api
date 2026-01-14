@@ -186,7 +186,7 @@ func (s *Service) increaseSubscriptionQuantity(ctx context.Context, queries *db.
 	}
 
 	// Fetch subscription from LemonSqueezy to get subscription_item_id
-	lsSubscription, err := s.GetSubscription(ctx, subscription.SubscriptionID)
+	lsSubscription, err := s.lemonsqueezy.GetSubscription(ctx, subscription.SubscriptionID)
 	if err != nil {
 		return false, fmt.Errorf("failed to fetch subscription from LemonSqueezy: %w", err)
 	}
@@ -199,7 +199,7 @@ func (s *Service) increaseSubscriptionQuantity(ctx context.Context, queries *db.
 	newQuantity := subscription.Quantity + 1
 	subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
 
-	if err := s.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
+	if err := s.lemonsqueezy.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
 		return false, fmt.Errorf("failed to update subscription quantity in LemonSqueezy: %w", err)
 	}
 
@@ -227,7 +227,7 @@ func (s *Service) decreaseSubscriptionQuantity(ctx context.Context, queries *db.
 		return
 	}
 
-	lsSubscription, err := s.GetSubscription(ctx, subscription.SubscriptionID)
+	lsSubscription, err := s.lemonsqueezy.GetSubscription(ctx, subscription.SubscriptionID)
 	if err != nil {
 		l.Error("failed to fetch subscription from LemonSqueezy for rollback", "error", err)
 		return
@@ -244,7 +244,7 @@ func (s *Service) decreaseSubscriptionQuantity(ctx context.Context, queries *db.
 
 	subscriptionItemID := lsSubscription.Data.Attributes.FirstSubscriptionItem.ID
 
-	if err := s.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
+	if err := s.lemonsqueezy.UpdateSubscriptionItemQuantity(ctx, subscriptionItemID, newQuantity); err != nil {
 		l.Error("failed to revert quantity in LemonSqueezy", "error", err)
 		return
 	}

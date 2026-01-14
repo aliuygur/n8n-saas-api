@@ -30,7 +30,7 @@ func (h *Handler) LemonSqueezyWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.services.VerifyLemonSqueezySignature(body, signature, h.config.LemonSqueezy.WebhookSecret) {
+	if !h.services.VerifyLemonSqueezySignature(body, signature) {
 		log.Error("Invalid webhook signature")
 		http.Error(w, "Invalid signature", http.StatusUnauthorized)
 		return

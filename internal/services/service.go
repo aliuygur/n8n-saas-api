@@ -4,14 +4,16 @@ import (
 	"github.com/aliuygur/n8n-saas-api/internal/cloudflare"
 	"github.com/aliuygur/n8n-saas-api/internal/config"
 	"github.com/aliuygur/n8n-saas-api/internal/provisioning"
+	"github.com/aliuygur/n8n-saas-api/pkg/lemonsqueezy"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
-	pool       *pgxpool.Pool
-	cloudflare *cloudflare.Client
-	gke        *provisioning.Client
-	config     *config.Config
+	pool         *pgxpool.Pool
+	cloudflare   *cloudflare.Client
+	gke          *provisioning.Client
+	lemonsqueezy *lemonsqueezy.Client
+	config       *config.Config
 }
 
 func NewService(pool *pgxpool.Pool, config *config.Config) (*Service, error) {
@@ -27,5 +29,16 @@ func NewService(pool *pgxpool.Pool, config *config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	return &Service{pool: pool, cloudflare: cfClient, gke: gke, config: config}, nil
+	lsClient := lemonsqueezy.NewClient(lemonsqueezy.Config{
+		APIKey:        config.LemonSqueezy.APIKey,
+		WebhookSecret: config.LemonSqueezy.WebhookSecret,
+	})
+
+	return &Service{
+		pool:         pool,
+		cloudflare:   cfClient,
+		gke:          gke,
+		lemonsqueezy: lsClient,
+		config:       config,
+	}, nil
 }
