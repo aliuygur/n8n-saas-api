@@ -88,6 +88,12 @@ func (s *Service) SyncSubscriptionQuantity(ctx context.Context, userID string) e
 
 	l.Debug("fetched LemonSqueezy subscription", "user_id", userID, "ls_quantity", lsQuantity)
 
+	// If our DB count is zero, we might want to handle cancellation or alerts here.
+	// For now, we just log it.
+	if instanceCount == 0 && lsQuantity == 1 {
+		l.Info("user has zero active instances, consider handling cancellation", "user_id", userID)
+	}
+
 	// If quantities match, nothing to do
 	if int64(lsQuantity) == instanceCount {
 		l.Debug("subscription quantities match, no update needed", "user_id", userID)
