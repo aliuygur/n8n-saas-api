@@ -30,12 +30,12 @@ Each hosted application instance is billed independently on a monthly basis.
 
 * **Paid Subscription:**
 
-  * **$9.99 USD per month, per application instance**
+  * **$9 USD per month, per application instance**
   * Each additional instance is billed separately
   * Pricing is recurring and charged monthly
 
 Example:
-If a customer hosts 3 application instances, they are billed 3 × $9.99 per month.
+If a customer hosts 3 application instances, they are billed 3 × $9 per month.
 
 ---
 
@@ -121,7 +121,7 @@ Each deployed application is provided as an independent hosted instance.
 
 ## 4. Pricing & Billing
 
-* Pricing is **$9.99 USD per month, per application instance**.
+* Pricing is **$9 USD per month, per application instance**.
 * Each hosted instance is billed separately.
 * Subscriptions are billed on a recurring monthly basis.
 * Prices do not include applicable taxes unless stated otherwise.

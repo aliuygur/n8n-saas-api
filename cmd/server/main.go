@@ -82,9 +82,10 @@ func main() {
 	// Register routes
 	h.RegisterRoutes(mux)
 
-	// Create HTTP server with logger middleware
+	// Create HTTP server with host router and logger middleware
+	// HostRouter must be applied before logger to properly route subdomain requests
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
-	handler := appctx.Handler(mux, logger)
+	handler := appctx.Handler(h.HostRouter(mux), logger)
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      handler,

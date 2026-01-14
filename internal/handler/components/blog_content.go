@@ -72,7 +72,7 @@ func GetBlogContent(slug string) string {
 	<h3>Pricing</h3>
 	<p><strong>Zapier:</strong> Starts at $29.99/month for 750 tasks. Premium plans can cost $103.50/month or more.</p>
 	<p><strong>n8n Cloud:</strong> Starts at €20/month for 2,500 executions.</p>
-	<p><strong>Self-Hosted n8n (via ranx.cloud):</strong> Just $9.99/month with unlimited executions.</p>
+	<p><strong>Self-Hosted n8n (via ranx.cloud):</strong> Just $9/month with unlimited executions.</p>
 
 	<h3>Integrations</h3>
 	<p><strong>Zapier:</strong> 6,000+ app integrations</p>
@@ -108,7 +108,7 @@ func GetBlogContent(slug string) string {
 	<ul>
 		<li><strong>Zapier:</strong> ~$103.50/month (Professional plan)</li>
 		<li><strong>n8n Cloud:</strong> ~€50/month</li>
-		<li><strong>ranx.cloud:</strong> $9.99/month (unlimited executions)</li>
+		<li><strong>ranx.cloud:</strong> $9/month (unlimited executions)</li>
 	</ul>
 
 	<h2>Migration from Zapier to n8n</h2>
@@ -116,7 +116,7 @@ func GetBlogContent(slug string) string {
 
 	<div class="bg-green-900/30 border border-green-500/30 rounded-lg p-6 my-8">
 		<h3 class="text-white mt-0">Save Money with n8n on ranx.cloud</h3>
-		<p class="mb-4">Run unlimited workflows for just $9.99/month. Perfect for businesses looking to reduce automation costs.</p>
+		<p class="mb-4">Run unlimited workflows for just $9/month. Perfect for businesses looking to reduce automation costs.</p>
 		<a href="/create-instance" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-500 transition-colors font-semibold">Deploy n8n Now</a>
 	</div>
 </article>
@@ -293,7 +293,7 @@ func GetBlogContent(slug string) string {
 				</tr>
 				<tr>
 					<td>Monthly Cost</td>
-					<td>$9.99 (ranx.cloud)</td>
+					<td>$9 (ranx.cloud)</td>
 					<td>€20+</td>
 				</tr>
 				<tr>
@@ -328,7 +328,7 @@ func GetBlogContent(slug string) string {
 	<h2>Benefits of Self-Hosted n8n</h2>
 
 	<h3>1. Cost Efficiency</h3>
-	<p>With self-hosting via ranx.cloud, you pay a flat $9.99/month with unlimited executions. As your automation grows, you save significantly compared to execution-based pricing.</p>
+	<p>With self-hosting via ranx.cloud, you pay a flat $9/month with unlimited executions. As your automation grows, you save significantly compared to execution-based pricing.</p>
 
 	<h3>2. Data Privacy & Security</h3>
 	<p>Your data stays in your infrastructure. Perfect for healthcare, finance, or any industry with strict compliance requirements.</p>
@@ -358,7 +358,7 @@ func GetBlogContent(slug string) string {
 		<li>✅ SSL certificates included</li>
 		<li>✅ Your own cloud infrastructure</li>
 		<li>✅ Full data control</li>
-		<li>✅ Fixed cost ($9.99/month)</li>
+		<li>✅ Fixed cost ($9/month)</li>
 		<li>✅ Unlimited executions</li>
 	</ul>
 
@@ -433,7 +433,7 @@ func GetBlogContent(slug string) string {
 	<p>Every instance comes with automatic SSL certificate generation and renewal. Your workflows are always encrypted and secure.</p>
 
 	<h3>5. Unlimited Executions</h3>
-	<p>Unlike cloud-based solutions that charge per execution, you pay one flat rate of $9.99/month. Run as many workflows as you need without worrying about overage charges.</p>
+	<p>Unlike cloud-based solutions that charge per execution, you pay one flat rate of $9/month. Run as many workflows as you need without worrying about overage charges.</p>
 
 	<h2>Cost Comparison</h2>
 	<p>Let's compare costs for 50,000 workflow executions per month:</p>
@@ -441,7 +441,7 @@ func GetBlogContent(slug string) string {
 		<li><strong>n8n Cloud:</strong> ~€150/month</li>
 		<li><strong>Zapier:</strong> ~$250/month</li>
 		<li><strong>DIY Self-Hosting:</strong> ~$30/month (plus 10+ hours of setup/maintenance)</li>
-		<li><strong>ranx.cloud:</strong> $9.99/month (2-minute setup, zero maintenance)</li>
+		<li><strong>ranx.cloud:</strong> $9/month (2-minute setup, zero maintenance)</li>
 	</ul>
 
 	<h2>Perfect for Teams</h2>

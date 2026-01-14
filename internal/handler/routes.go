@@ -8,10 +8,13 @@ import (
 //go:embed static/*
 var staticFiles embed.FS
 
-// RegisterRoutes registers all HTTP routes
+// RegisterRoutes registers all HTTP routes for www.ranx.cloud and ranx.cloud
+// Note: Subdomain routes (*.ranx.cloud) are handled by HostRouter middleware
+// in middleware.go which proxies all subdomain requests to n8n instances
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
-	// Register static files route first to avoid pattern conflicts
+	// Register static files route for main domain only
+	// Subdomain static requests are proxied to their respective n8n instances
 	mux.Handle("GET /static/", http.FileServer(http.FS(staticFiles)))
 
 	// Public routes (no auth required)

@@ -3,7 +3,30 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strings"
 )
+
+// HostRouter middleware routes requests based on the Host header
+// *.ranx.cloud (except www and apex) -> proxy handler
+// www.ranx.cloud, ranx.cloud -> mux routes
+func (h *Handler) HostRouter(mux http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		host := r.Host
+		// Remove port if present
+		if idx := strings.Index(host, ":"); idx != -1 {
+			host = host[:idx]
+		}
+
+		// If it's a subdomain (not www or apex), proxy to n8n instance
+		if host != "www.ranx.cloud" && host != "ranx.cloud" && strings.HasSuffix(host, ".ranx.cloud") {
+			h.ProxyHandler(w, r)
+			return
+		}
+
+		// Otherwise, use the normal mux
+		mux.ServeHTTP(w, r)
+	})
+}
 
 // contextKey is a custom type for context keys to avoid collisions
 type contextKey string
