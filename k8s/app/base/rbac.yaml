@@ -1,2 +1,0 @@
-# Note: ClusterRole and ClusterRoleBinding moved to cluster-rbac.yaml
-# to avoid namePrefix being applied (they should be cluster-wide, not per-environment)
