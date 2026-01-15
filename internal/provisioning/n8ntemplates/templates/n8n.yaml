@@ -6,12 +6,11 @@ metadata:
     name: PLACEHOLDER_NAMESPACE
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: n8n-main
   namespace: PLACEHOLDER_NAMESPACE
 spec:
-  serviceName: n8n-main
   replicas: 1
   selector:
     matchLabels:
@@ -134,16 +133,9 @@ spec:
           limits:
             cpu: 256m
             memory: 512Mi
-  volumeClaimTemplates:
-  - metadata:
-      name: n8n-data
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      storageClassName: premium-rwo
-      resources:
-        requests:
-          storage: 5Gi
+      volumes:
+      - name: n8n-data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
