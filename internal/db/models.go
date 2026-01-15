@@ -35,14 +35,6 @@ type Instance struct {
 	DeletedAt  pgtype.Timestamp `json:"deleted_at"`
 }
 
-type Session struct {
-	ID        string           `json:"id"`
-	UserID    string           `json:"user_id"`
-	Token     string           `json:"token"`
-	ExpiresAt pgtype.Timestamp `json:"expires_at"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-}
-
 type Subscription struct {
 	ID             string           `json:"id"`
 	UserID         string           `json:"user_id"`

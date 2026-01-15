@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS checkout_sessions;
 DROP TABLE IF EXISTS subscriptions;
 DROP TABLE IF EXISTS instances;
-DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS users;
-DROP EXTENSION IF EXISTS "uuid-ossp";
+DROP EXTENSION IF EXISTS pg_uuidv7;

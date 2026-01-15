@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const acquireLock = `-- name: AcquireLock :exec
@@ -18,33 +16,6 @@ SELECT pg_advisory_lock(hashtext($1))
 func (q *Queries) AcquireLock(ctx context.Context, hashtext string) error {
 	_, err := q.db.Exec(ctx, acquireLock, hashtext)
 	return err
-}
-
-const createSession = `-- name: CreateSession :one
-INSERT INTO sessions (
-    user_id, token, expires_at
-) VALUES (
-    $1, $2, $3
-) RETURNING id, user_id, token, expires_at, created_at
-`
-
-type CreateSessionParams struct {
-	UserID    string           `json:"user_id"`
-	Token     string           `json:"token"`
-	ExpiresAt pgtype.Timestamp `json:"expires_at"`
-}
-
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
-	row := q.db.QueryRow(ctx, createSession, arg.UserID, arg.Token, arg.ExpiresAt)
-	var i Session
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Token,
-		&i.ExpiresAt,
-		&i.CreatedAt,
-	)
-	return i, err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -70,64 +41,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.LastLoginAt,
 		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const deleteExpiredSessions = `-- name: DeleteExpiredSessions :exec
-DELETE FROM sessions WHERE expires_at <= NOW()
-`
-
-func (q *Queries) DeleteExpiredSessions(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, deleteExpiredSessions)
-	return err
-}
-
-const deleteSession = `-- name: DeleteSession :exec
-DELETE FROM sessions WHERE token = $1
-`
-
-func (q *Queries) DeleteSession(ctx context.Context, token string) error {
-	_, err := q.db.Exec(ctx, deleteSession, token)
-	return err
-}
-
-const deleteUserSessions = `-- name: DeleteUserSessions :exec
-DELETE FROM sessions WHERE user_id = $1
-`
-
-func (q *Queries) DeleteUserSessions(ctx context.Context, userID string) error {
-	_, err := q.db.Exec(ctx, deleteUserSessions, userID)
-	return err
-}
-
-const getSessionByToken = `-- name: GetSessionByToken :one
-SELECT s.id, s.user_id, s.token, s.expires_at, s.created_at, u.id, u.email, u.name, u.created_at, u.last_login_at, u.updated_at
-FROM sessions s
-JOIN users u ON s.user_id = u.id
-WHERE s.token = $1 AND s.expires_at > NOW()
-`
-
-type GetSessionByTokenRow struct {
-	Session Session `json:"session"`
-	User    User    `json:"user"`
-}
-
-func (q *Queries) GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error) {
-	row := q.db.QueryRow(ctx, getSessionByToken, token)
-	var i GetSessionByTokenRow
-	err := row.Scan(
-		&i.Session.ID,
-		&i.Session.UserID,
-		&i.Session.Token,
-		&i.Session.ExpiresAt,
-		&i.Session.CreatedAt,
-		&i.User.ID,
-		&i.User.Email,
-		&i.User.Name,
-		&i.User.CreatedAt,
-		&i.User.LastLoginAt,
-		&i.User.UpdatedAt,
 	)
 	return i, err
 }

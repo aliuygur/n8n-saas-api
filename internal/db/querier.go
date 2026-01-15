@@ -15,21 +15,16 @@ type Querier interface {
 	CountActiveInstancesByUserID(ctx context.Context, userID string) (int64, error)
 	CreateCheckoutSession(ctx context.Context, arg CreateCheckoutSessionParams) (CheckoutSession, error)
 	CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error)
-	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteExpiredSessions(ctx context.Context) error
 	DeleteInstance(ctx context.Context, id string) error
-	DeleteSession(ctx context.Context, token string) error
 	DeleteSubscriptionByID(ctx context.Context, id string) error
-	DeleteUserSessions(ctx context.Context, userID string) error
 	GetCheckoutSessionByID(ctx context.Context, id string) (CheckoutSession, error)
 	GetCheckoutSessionByProviderID(ctx context.Context, checkoutID string) (CheckoutSession, error)
 	GetInstance(ctx context.Context, id string) (Instance, error)
 	GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error)
 	GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error)
 	GetInstanceForUpdate(ctx context.Context, id string) (Instance, error)
-	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
 	GetSubscriptionByProviderID(ctx context.Context, subscriptionID string) (Subscription, error)
 	GetSubscriptionByUserID(ctx context.Context, userID string) (Subscription, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)

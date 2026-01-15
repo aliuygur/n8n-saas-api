@@ -1,9 +1,9 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID v7 extension (sortable UUIDs)
+CREATE EXTENSION IF NOT EXISTS pg_uuidv7;
 
 -- Create users table
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     email VARCHAR UNIQUE NOT NULL,
     name VARCHAR NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -11,23 +11,9 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create sessions table
-CREATE TABLE sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token VARCHAR UNIQUE NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create indexes for sessions
-CREATE INDEX idx_sessions_token ON sessions(token);
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
-
 -- Create instances table to track n8n deployments
 CREATE TABLE instances (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id UUID NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'pending',
     namespace VARCHAR NOT NULL DEFAULT '',
@@ -48,7 +34,7 @@ CREATE UNIQUE INDEX instances_subdomain_active_key ON instances(subdomain) WHERE
 
 -- Create subscriptions table (one subscription per user with quantity field for instance limits)
 CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id UUID NOT NULL,
     product_id VARCHAR NOT NULL DEFAULT '',
     customer_id VARCHAR NOT NULL DEFAULT '',
@@ -70,9 +56,9 @@ CREATE UNIQUE INDEX idx_subscriptions_user_product ON subscriptions(user_id, pro
 
 -- Create checkout_sessions table
 CREATE TABLE checkout_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id UUID NOT NULL,
-    instance_id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+    instance_id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v7(),
     subdomain VARCHAR NOT NULL,
     user_email VARCHAR NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'pending',
