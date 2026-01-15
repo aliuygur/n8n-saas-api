@@ -13,6 +13,10 @@ type N8N_V1 struct {
 	Namespace     string
 	EncryptionKey string
 	BaseURL       string
+	DBHost        string
+	DBName        string
+	DBUser        string
+	DBPassword    string
 }
 
 func (t *N8N_V1) Template() string {
@@ -24,6 +28,10 @@ func (t *N8N_V1) Content() ([]byte, error) {
 		"PLACEHOLDER_NAMESPACE":      t.Namespace,
 		"PLACEHOLDER_ENCRYPTION_KEY": t.EncryptionKey,
 		"PLACEHOLDER_BASE_URL":       t.BaseURL,
+		"PLACEHOLDER_DB_HOST":        t.DBHost,
+		"PLACEHOLDER_DB_NAME":        t.DBName,
+		"PLACEHOLDER_DB_USER":        t.DBUser,
+		"PLACEHOLDER_DB_PASSWORD":    t.DBPassword,
 	})
 }
 

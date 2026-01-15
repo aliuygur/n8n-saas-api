@@ -45,9 +45,17 @@ spec:
 
         # Database Configuration
         - name: DB_TYPE
-          value: "sqlite"
-        - name: DB_SQLITE_DATABASE
-          value: "/data/database.sqlite"
+          value: "postgresdb"
+        - name: DB_POSTGRESDB_HOST
+          value: "PLACEHOLDER_DB_HOST"
+        - name: DB_POSTGRESDB_PORT
+          value: "5432"
+        - name: DB_POSTGRESDB_DATABASE
+          value: "PLACEHOLDER_DB_NAME"
+        - name: DB_POSTGRESDB_USER
+          value: "PLACEHOLDER_DB_USER"
+        - name: DB_POSTGRESDB_PASSWORD
+          value: "PLACEHOLDER_DB_PASSWORD"
 
         # Executions & Logging
         - name: EXECUTIONS_DATA_MAX_AGE

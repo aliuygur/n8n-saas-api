@@ -81,12 +81,28 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 		return nil, apperrs.Server("failed to create instance in database", err)
 	}
 
+	// Create PostgreSQL database and user for the n8n instance
+	dbName := strings.ReplaceAll(namespace, "-", "_") // PostgreSQL doesn't like hyphens in identifiers
+	dbUser := dbName
+	dbPassword := lo.RandomString(32, lo.AlphanumericCharset)
+
+	if err := s.createInstanceDatabase(ctx, dbName, dbUser, dbPassword); err != nil {
+		return nil, apperrs.Server("failed to create instance database", err)
+	}
+
+	// Get DB host from pool config
+	dbHost := s.getDBHost()
+
 	// Deploy to GKE
 	domain := fmt.Sprintf("https://%s.ranx.cloud", params.Subdomain)
 	n8nInstance := &n8ntemplates.N8N_V1{
 		Namespace:     namespace,
 		EncryptionKey: lo.RandomString(32, lo.AlphanumericCharset),
 		BaseURL:       domain,
+		DBHost:        dbHost,
+		DBName:        dbName,
+		DBUser:        dbUser,
+		DBPassword:    dbPassword,
 	}
 
 	if err := s.gke.Apply(ctx, n8nInstance); err != nil {
@@ -135,4 +151,39 @@ func (s *Service) generateUniqueNamespace(ctx context.Context, queries *db.Queri
 	}
 
 	return "", apperrs.Server(fmt.Sprintf("failed to generate unique namespace after %d attempts", maxAttempts), nil)
+}
+
+// createInstanceDatabase creates a PostgreSQL database and user for an n8n instance
+func (s *Service) createInstanceDatabase(ctx context.Context, dbName, dbUser, dbPassword string) error {
+	conn, err := s.pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
+	// Create user
+	_, err = conn.Exec(ctx, fmt.Sprintf("CREATE USER %s WITH PASSWORD '%s'", dbUser, dbPassword))
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Create database
+	_, err = conn.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s OWNER %s", dbName, dbUser))
+	if err != nil {
+		return fmt.Errorf("failed to create database: %w", err)
+	}
+
+	// Grant all privileges
+	_, err = conn.Exec(ctx, fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %s TO %s", dbName, dbUser))
+	if err != nil {
+		return fmt.Errorf("failed to grant privileges: %w", err)
+	}
+
+	return nil
+}
+
+// getDBHost extracts the host from the pool's connection config
+func (s *Service) getDBHost() string {
+	connConfig := s.pool.Config().ConnConfig
+	return connConfig.Host
 }
