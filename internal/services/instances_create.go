@@ -167,6 +167,13 @@ func (s *Service) createInstanceDatabase(ctx context.Context, dbName, dbUser, db
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
+	// Grant membership so we can set the new user as database owner
+	// This is required in Neon PostgreSQL to use SET ROLE
+	_, err = conn.Exec(ctx, fmt.Sprintf("GRANT %s TO CURRENT_USER", dbUser))
+	if err != nil {
+		return fmt.Errorf("failed to grant role membership: %w", err)
+	}
+
 	// Create database
 	_, err = conn.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s OWNER %s", dbName, dbUser))
 	if err != nil {
