@@ -189,6 +189,32 @@ func (s *Service) createInstanceDatabase(ctx context.Context, dbName, dbUser, db
 	return nil
 }
 
+// deleteInstanceDatabase drops the PostgreSQL database and user for an n8n instance
+func (s *Service) deleteInstanceDatabase(ctx context.Context, dbName string) error {
+	conn, err := s.pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire connection: %w", err)
+	}
+	defer conn.Release()
+
+	// dbUser is the same as dbName
+	dbUser := dbName
+
+	// Drop database first (must be done before dropping the owner)
+	_, err = conn.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s", dbName))
+	if err != nil {
+		return fmt.Errorf("failed to drop database: %w", err)
+	}
+
+	// Drop user
+	_, err = conn.Exec(ctx, fmt.Sprintf("DROP USER IF EXISTS %s", dbUser))
+	if err != nil {
+		return fmt.Errorf("failed to drop user: %w", err)
+	}
+
+	return nil
+}
+
 // getDBHost extracts the host from the pool's connection config
 func (s *Service) getDBHost() string {
 	connConfig := s.pool.Config().ConnConfig
