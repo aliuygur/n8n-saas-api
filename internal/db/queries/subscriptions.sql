@@ -2,13 +2,14 @@
 INSERT INTO subscriptions (
     user_id,
     product_id,
+    variant_id,
     customer_id,
     subscription_id,
     trial_ends_at,
     status,
     quantity
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 -- name: GetSubscriptionByProviderID :one
@@ -30,11 +31,12 @@ WHERE subscription_id = $1;
 -- name: UpdateSubscriptionByUserID :exec
 UPDATE subscriptions
 SET product_id = $2,
-    customer_id = $3,
-    subscription_id = $4,
-    status = $5,
-    trial_ends_at = $6,
-    quantity = $7,
+    variant_id = $3,
+    customer_id = $4,
+    subscription_id = $5,
+    status = $6,
+    trial_ends_at = $7,
+    quantity = $8,
     updated_at = NOW()
 WHERE user_id = $1;
 

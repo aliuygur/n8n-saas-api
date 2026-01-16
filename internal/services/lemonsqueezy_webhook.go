@@ -202,7 +202,8 @@ func (s *Service) handleSubscriptionCreated(ctx context.Context, payload *LemonS
 	// Update existing subscription with provider details
 	err = queries.UpdateSubscriptionByUserID(ctx, db.UpdateSubscriptionByUserIDParams{
 		UserID:         userID,
-		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.VariantID),
+		ProductID:      fmt.Sprintf("%d", payload.Data.Attributes.ProductID),
+		VariantID:      fmt.Sprintf("%d", payload.Data.Attributes.VariantID),
 		CustomerID:     fmt.Sprintf("%d", payload.Data.Attributes.CustomerID),
 		SubscriptionID: payload.Data.ID,
 		Status:         status,

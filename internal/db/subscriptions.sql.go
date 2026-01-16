@@ -15,19 +15,21 @@ const createSubscription = `-- name: CreateSubscription :one
 INSERT INTO subscriptions (
     user_id,
     product_id,
+    variant_id,
     customer_id,
     subscription_id,
     trial_ends_at,
     status,
     quantity
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, user_id, product_id, variant_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
 `
 
 type CreateSubscriptionParams struct {
 	UserID         string           `json:"user_id"`
 	ProductID      string           `json:"product_id"`
+	VariantID      string           `json:"variant_id"`
 	CustomerID     string           `json:"customer_id"`
 	SubscriptionID string           `json:"subscription_id"`
 	TrialEndsAt    pgtype.Timestamp `json:"trial_ends_at"`
@@ -39,6 +41,7 @@ func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscription
 	row := q.db.QueryRow(ctx, createSubscription,
 		arg.UserID,
 		arg.ProductID,
+		arg.VariantID,
 		arg.CustomerID,
 		arg.SubscriptionID,
 		arg.TrialEndsAt,
@@ -50,6 +53,7 @@ func (q *Queries) CreateSubscription(ctx context.Context, arg CreateSubscription
 		&i.ID,
 		&i.UserID,
 		&i.ProductID,
+		&i.VariantID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
@@ -72,7 +76,7 @@ func (q *Queries) DeleteSubscriptionByID(ctx context.Context, id string) error {
 }
 
 const getSubscriptionByProviderID = `-- name: GetSubscriptionByProviderID :one
-SELECT id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
+SELECT id, user_id, product_id, variant_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
 WHERE subscription_id = $1
 LIMIT 1
 `
@@ -84,6 +88,7 @@ func (q *Queries) GetSubscriptionByProviderID(ctx context.Context, subscriptionI
 		&i.ID,
 		&i.UserID,
 		&i.ProductID,
+		&i.VariantID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
@@ -96,7 +101,7 @@ func (q *Queries) GetSubscriptionByProviderID(ctx context.Context, subscriptionI
 }
 
 const getSubscriptionByUserID = `-- name: GetSubscriptionByUserID :one
-SELECT id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
+SELECT id, user_id, product_id, variant_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at FROM subscriptions
 WHERE user_id = $1
 LIMIT 1
 `
@@ -108,6 +113,7 @@ func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (S
 		&i.ID,
 		&i.UserID,
 		&i.ProductID,
+		&i.VariantID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,
@@ -122,11 +128,12 @@ func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (S
 const updateSubscriptionByUserID = `-- name: UpdateSubscriptionByUserID :exec
 UPDATE subscriptions
 SET product_id = $2,
-    customer_id = $3,
-    subscription_id = $4,
-    status = $5,
-    trial_ends_at = $6,
-    quantity = $7,
+    variant_id = $3,
+    customer_id = $4,
+    subscription_id = $5,
+    status = $6,
+    trial_ends_at = $7,
+    quantity = $8,
     updated_at = NOW()
 WHERE user_id = $1
 `
@@ -134,6 +141,7 @@ WHERE user_id = $1
 type UpdateSubscriptionByUserIDParams struct {
 	UserID         string           `json:"user_id"`
 	ProductID      string           `json:"product_id"`
+	VariantID      string           `json:"variant_id"`
 	CustomerID     string           `json:"customer_id"`
 	SubscriptionID string           `json:"subscription_id"`
 	Status         string           `json:"status"`
@@ -145,6 +153,7 @@ func (q *Queries) UpdateSubscriptionByUserID(ctx context.Context, arg UpdateSubs
 	_, err := q.db.Exec(ctx, updateSubscriptionByUserID,
 		arg.UserID,
 		arg.ProductID,
+		arg.VariantID,
 		arg.CustomerID,
 		arg.SubscriptionID,
 		arg.Status,
@@ -193,7 +202,7 @@ UPDATE subscriptions
 SET trial_ends_at = $2,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, product_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
+RETURNING id, user_id, product_id, variant_id, customer_id, subscription_id, status, quantity, trial_ends_at, created_at, updated_at
 `
 
 type UpdateSubscriptionTrialEndsAtParams struct {
@@ -208,6 +217,7 @@ func (q *Queries) UpdateSubscriptionTrialEndsAt(ctx context.Context, arg UpdateS
 		&i.ID,
 		&i.UserID,
 		&i.ProductID,
+		&i.VariantID,
 		&i.CustomerID,
 		&i.SubscriptionID,
 		&i.Status,

@@ -127,6 +127,7 @@ func (s *Service) GetOrCreateUser(ctx context.Context, params CreateUserParams) 
 			_, err = queries.CreateSubscription(ctx, db.CreateSubscriptionParams{
 				UserID:         dbUser.ID,
 				ProductID:      "", // Empty for trial
+				VariantID:      "", // Empty for trial
 				CustomerID:     "", // Empty for trial
 				SubscriptionID: "", // Empty for trial
 				TrialEndsAt: pgtype.Timestamp{

@@ -39,6 +39,7 @@ type Subscription struct {
 	ID             string           `json:"id"`
 	UserID         string           `json:"user_id"`
 	ProductID      string           `json:"product_id"`
+	VariantID      string           `json:"variant_id"`
 	CustomerID     string           `json:"customer_id"`
 	SubscriptionID string           `json:"subscription_id"`
 	Status         string           `json:"status"`

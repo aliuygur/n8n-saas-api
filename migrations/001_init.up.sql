@@ -37,6 +37,7 @@ CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id UUID NOT NULL,
     product_id VARCHAR NOT NULL DEFAULT '',
+    variant_id VARCHAR NOT NULL DEFAULT '',
     customer_id VARCHAR NOT NULL DEFAULT '',
     subscription_id VARCHAR NOT NULL DEFAULT '',
     status VARCHAR NOT NULL DEFAULT 'trial',
