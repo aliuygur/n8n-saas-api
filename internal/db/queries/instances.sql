@@ -1,8 +1,8 @@
 -- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, namespace, subdomain, status
+    user_id, namespace, subdomain, status, app_version
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 ) RETURNING *;
 
 -- name: GetInstance :one

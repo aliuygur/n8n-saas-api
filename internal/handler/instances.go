@@ -194,6 +194,7 @@ func (h *Handler) InstanceDetail(w http.ResponseWriter, r *http.Request) {
 		InstanceURL: instance.GetInstanceURL(),
 		Status:      instance.Status,
 		Subdomain:   instance.Subdomain,
+		AppVersion:  instance.AppVersion,
 		CreatedAt:   instance.CreatedAt.Format(time.RFC3339),
 	}
 

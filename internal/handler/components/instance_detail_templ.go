@@ -161,46 +161,59 @@ func InstanceDetailPage(instance Instance) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div></div></div><!-- Quick Actions Card --><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-xl font-semibold text-white mb-6\">Quick Actions</h3><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><div><label class=\"text-sm font-medium text-gray-400 mb-2 block\">Version</label><p class=\"text-white text-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var10 templ.SafeURL
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.InstanceURL))
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(instance.AppVersion)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 121, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 117, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"flex items-center gap-4 p-4 bg-gray-950 hover:bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl transition-all group\"><div class=\"flex-shrink-0 w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-500/20 transition-colors\"><svg class=\"w-6 h-6 text-indigo-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg></div><div><div class=\"font-medium text-white group-hover:text-indigo-400 transition-colors\">Open Instance</div><div class=\"text-sm text-gray-400\">Access your n8n instance</div></div></a> <button type=\"button\" hx-delete=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div></div></div><!-- Quick Actions Card --><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-xl font-semibold text-white mb-6\">Quick Actions</h3><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("/instances/" + instance.ID)
+			var templ_7745c5c3_Var11 templ.SafeURL
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(instance.InstanceURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 138, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 127, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" hx-confirm=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"flex items-center gap-4 p-4 bg-gray-950 hover:bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl transition-all group\"><div class=\"flex-shrink-0 w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 group-hover:bg-indigo-500/20 transition-colors\"><svg class=\"w-6 h-6 text-indigo-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg></div><div><div class=\"font-medium text-white group-hover:text-indigo-400 transition-colors\">Open Instance</div><div class=\"text-sm text-gray-400\">Access your n8n instance</div></div></a> <button type=\"button\" hx-delete=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("Are you sure you want to delete " + instance.Subdomain + ".ranx.cloud? This action cannot be undone.")
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("/instances/" + instance.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 139, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 144, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" hx-on::after-request=\"if(event.detail.successful) window.location.href = '/dashboard'\" class=\"flex items-center gap-4 p-4 bg-gray-950 hover:bg-red-500/5 border border-gray-800 hover:border-red-500/20 rounded-xl transition-all group text-left\"><div class=\"flex-shrink-0 w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:bg-red-500/20 transition-colors\"><svg class=\"w-6 h-6 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16\"></path></svg></div><div><div class=\"font-medium text-white group-hover:text-red-400 transition-colors\">Delete Instance</div><div class=\"text-sm text-gray-400\">Permanently remove this instance</div></div></button></div></div><!-- Information Card --><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-xl font-semibold text-white mb-6\">About this Instance</h3><div class=\"space-y-4 text-gray-300\"><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Automated Workflows</p><p class=\"text-sm text-gray-400\">Build powerful automation workflows with n8n's visual editor</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Secure by Default</p><p class=\"text-sm text-gray-400\">Your instance is protected with automatic SSL/TLS encryption</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Cloud Powered</p><p class=\"text-sm text-gray-400\">Running on reliable cloud infrastructure with automatic backups</p></div></div></div></div></div></main></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" hx-confirm=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("Are you sure you want to delete " + instance.Subdomain + ".ranx.cloud? This action cannot be undone.")
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/handler/components/instance_detail.templ`, Line: 145, Col: 123}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" hx-on::after-request=\"if(event.detail.successful) window.location.href = '/dashboard'\" class=\"flex items-center gap-4 p-4 bg-gray-950 hover:bg-red-500/5 border border-gray-800 hover:border-red-500/20 rounded-xl transition-all group text-left\"><div class=\"flex-shrink-0 w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20 group-hover:bg-red-500/20 transition-colors\"><svg class=\"w-6 h-6 text-red-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16\"></path></svg></div><div><div class=\"font-medium text-white group-hover:text-red-400 transition-colors\">Delete Instance</div><div class=\"text-sm text-gray-400\">Permanently remove this instance</div></div></button></div></div><!-- Information Card --><div class=\"bg-gray-900/50 rounded-2xl p-8 border border-gray-800 backdrop-blur-sm\"><h3 class=\"text-xl font-semibold text-white mb-6\">About this Instance</h3><div class=\"space-y-4 text-gray-300\"><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Automated Workflows</p><p class=\"text-sm text-gray-400\">Build powerful automation workflows with n8n's visual editor</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Secure by Default</p><p class=\"text-sm text-gray-400\">Your instance is protected with automatic SSL/TLS encryption</p></div></div><div class=\"flex gap-3\"><svg class=\"w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z\"></path></svg><div><p class=\"font-medium text-white mb-1\">Cloud Powered</p><p class=\"text-sm text-gray-400\">Running on reliable cloud infrastructure with automatic backups</p></div></div></div></div></div></main></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

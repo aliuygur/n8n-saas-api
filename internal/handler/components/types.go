@@ -6,6 +6,7 @@ type Instance struct {
 	InstanceURL string
 	Status      string
 	Subdomain   string
+	AppVersion  string
 	CreatedAt   string
 }
 

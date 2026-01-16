@@ -1,0 +1,1 @@
+ALTER TABLE instances ADD COLUMN app_version VARCHAR NOT NULL DEFAULT '';

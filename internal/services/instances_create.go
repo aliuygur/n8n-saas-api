@@ -14,6 +14,9 @@ import (
 	"github.com/samber/lo"
 )
 
+// N8NVersion is the current n8n version being deployed
+const N8NVersion = "2.1.4"
+
 type CreateInstanceParams struct {
 	UserID    string
 	Subdomain string
@@ -72,10 +75,11 @@ func (s *Service) CreateInstance(ctx context.Context, params CreateInstanceParam
 
 	// Create instance in database
 	dbInst, err := queries.CreateInstance(ctx, db.CreateInstanceParams{
-		UserID:    params.UserID,
-		Namespace: namespace,
-		Subdomain: params.Subdomain,
-		Status:    InstanceStatusDeployed,
+		UserID:     params.UserID,
+		Namespace:  namespace,
+		Subdomain:  params.Subdomain,
+		Status:     InstanceStatusDeployed,
+		AppVersion: N8NVersion,
 	})
 	if err != nil {
 		return nil, apperrs.Server("failed to create instance in database", err)

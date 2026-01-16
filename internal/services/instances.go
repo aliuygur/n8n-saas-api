@@ -18,6 +18,7 @@ type Instance struct {
 	Status     string
 	Namespace  string
 	Subdomain  string
+	AppVersion string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeployedAt *time.Time
@@ -35,13 +36,14 @@ func InstanceURL(subdomain string) string {
 // toDomainInstance maps a db.Instance to a types.Instance (domain layer)
 func toDomainInstance(dbInst db.Instance) Instance {
 	i := Instance{
-		ID:        dbInst.ID,
-		UserID:    dbInst.UserID,
-		Status:    dbInst.Status,
-		Namespace: dbInst.Namespace,
-		Subdomain: dbInst.Subdomain,
-		CreatedAt: dbInst.CreatedAt.Time,
-		UpdatedAt: dbInst.UpdatedAt.Time,
+		ID:         dbInst.ID,
+		UserID:     dbInst.UserID,
+		Status:     dbInst.Status,
+		Namespace:  dbInst.Namespace,
+		Subdomain:  dbInst.Subdomain,
+		AppVersion: dbInst.AppVersion,
+		CreatedAt:  dbInst.CreatedAt.Time,
+		UpdatedAt:  dbInst.UpdatedAt.Time,
 	}
 	if dbInst.DeployedAt.Valid {
 		i.DeployedAt = &dbInst.DeployedAt.Time

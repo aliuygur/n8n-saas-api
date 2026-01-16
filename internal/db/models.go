@@ -33,6 +33,7 @@ type Instance struct {
 	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
 	DeployedAt pgtype.Timestamp `json:"deployed_at"`
 	DeletedAt  pgtype.Timestamp `json:"deleted_at"`
+	AppVersion string           `json:"app_version"`
 }
 
 type Subscription struct {

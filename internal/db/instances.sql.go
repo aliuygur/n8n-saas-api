@@ -44,17 +44,18 @@ func (q *Queries) CountActiveInstancesByUserID(ctx context.Context, userID strin
 
 const createInstance = `-- name: CreateInstance :one
 INSERT INTO instances (
-    user_id, namespace, subdomain, status
+    user_id, namespace, subdomain, status, app_version
 ) VALUES (
-    $1, $2, $3, $4
-) RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+    $1, $2, $3, $4, $5
+) RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version
 `
 
 type CreateInstanceParams struct {
-	UserID    string `json:"user_id"`
-	Namespace string `json:"namespace"`
-	Subdomain string `json:"subdomain"`
-	Status    string `json:"status"`
+	UserID     string `json:"user_id"`
+	Namespace  string `json:"namespace"`
+	Subdomain  string `json:"subdomain"`
+	Status     string `json:"status"`
+	AppVersion string `json:"app_version"`
 }
 
 func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) (Instance, error) {
@@ -63,6 +64,7 @@ func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) 
 		arg.Namespace,
 		arg.Subdomain,
 		arg.Status,
+		arg.AppVersion,
 	)
 	var i Instance
 	err := row.Scan(
@@ -75,6 +77,7 @@ func (q *Queries) CreateInstance(ctx context.Context, arg CreateInstanceParams) 
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
@@ -83,7 +86,7 @@ const deleteInstance = `-- name: DeleteInstance :exec
 UPDATE instances 
 SET deleted_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version
 `
 
 func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
@@ -92,7 +95,7 @@ func (q *Queries) DeleteInstance(ctx context.Context, id string) error {
 }
 
 const getInstance = `-- name: GetInstance :one
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) {
@@ -108,12 +111,13 @@ func (q *Queries) GetInstance(ctx context.Context, id string) (Instance, error) 
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
 
 const getInstanceByNamespace = `-- name: GetInstanceByNamespace :one
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE namespace = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances WHERE namespace = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) (Instance, error) {
@@ -129,12 +133,13 @@ func (q *Queries) GetInstanceByNamespace(ctx context.Context, namespace string) 
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
 
 const getInstanceBySubdomain = `-- name: GetInstanceBySubdomain :one
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE subdomain = $1 AND deleted_at IS NULL
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances WHERE subdomain = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) (Instance, error) {
@@ -150,12 +155,13 @@ func (q *Queries) GetInstanceBySubdomain(ctx context.Context, subdomain string) 
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
 
 const getInstanceForUpdate = `-- name: GetInstanceForUpdate :one
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances WHERE id = $1 AND deleted_at IS NULL FOR UPDATE
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances WHERE id = $1 AND deleted_at IS NULL FOR UPDATE
 `
 
 func (q *Queries) GetInstanceForUpdate(ctx context.Context, id string) (Instance, error) {
@@ -171,12 +177,13 @@ func (q *Queries) GetInstanceForUpdate(ctx context.Context, id string) (Instance
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
 
 const listAllInstances = `-- name: ListAllInstances :many
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances 
 WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -206,6 +213,7 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 			&i.UpdatedAt,
 			&i.DeployedAt,
 			&i.DeletedAt,
+			&i.AppVersion,
 		); err != nil {
 			return nil, err
 		}
@@ -218,7 +226,7 @@ func (q *Queries) ListAllInstances(ctx context.Context, arg ListAllInstancesPara
 }
 
 const listInstancesByUser = `-- name: ListInstancesByUser :many
-SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at FROM instances 
+SELECT id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version FROM instances 
 WHERE user_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 `
@@ -242,6 +250,7 @@ func (q *Queries) ListInstancesByUser(ctx context.Context, userID string) ([]Ins
 			&i.UpdatedAt,
 			&i.DeployedAt,
 			&i.DeletedAt,
+			&i.AppVersion,
 		); err != nil {
 			return nil, err
 		}
@@ -257,7 +266,7 @@ const updateInstanceDeployed = `-- name: UpdateInstanceDeployed :one
 UPDATE instances 
 SET status = $2, deployed_at = NOW(), updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version
 `
 
 type UpdateInstanceDeployedParams struct {
@@ -278,6 +287,7 @@ func (q *Queries) UpdateInstanceDeployed(ctx context.Context, arg UpdateInstance
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
@@ -286,7 +296,7 @@ const updateInstanceNamespace = `-- name: UpdateInstanceNamespace :one
 UPDATE instances 
 SET namespace = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version
 `
 
 type UpdateInstanceNamespaceParams struct {
@@ -307,6 +317,7 @@ func (q *Queries) UpdateInstanceNamespace(ctx context.Context, arg UpdateInstanc
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
@@ -315,7 +326,7 @@ const updateInstanceStatus = `-- name: UpdateInstanceStatus :one
 UPDATE instances 
 SET status = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at
+RETURNING id, user_id, status, namespace, subdomain, created_at, updated_at, deployed_at, deleted_at, app_version
 `
 
 type UpdateInstanceStatusParams struct {
@@ -336,6 +347,7 @@ func (q *Queries) UpdateInstanceStatus(ctx context.Context, arg UpdateInstanceSt
 		&i.UpdatedAt,
 		&i.DeployedAt,
 		&i.DeletedAt,
+		&i.AppVersion,
 	)
 	return i, err
 }
