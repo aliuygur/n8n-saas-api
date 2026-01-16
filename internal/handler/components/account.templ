@@ -101,7 +101,7 @@ templ AccountPage(data AccountData) {
 								<div class="mt-4">
 									<a
 										href={ templ.URL(data.UpgradeCheckoutURL) }
-										class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation"
+										class="lemonsqueezy-button inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation"
 									>
 										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -136,7 +136,7 @@ templ AccountPage(data AccountData) {
 								</div>
 							</div>
 						</div>
-						if data.Subscription.Status == "active" || data.Subscription.Status == "trial" {
+						if data.Subscription.CustomerID != "" {
 							<!-- Manage Subscription -->
 							<div class="pt-6 mt-6 border-t border-gray-800">
 								<p class="text-sm text-gray-400 mb-4">

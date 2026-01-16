@@ -173,7 +173,7 @@ func AccountPage(data AccountData) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> Upgrade to Paid Plan</a></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"lemonsqueezy-button inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M13 10V3L4 14h7v7l9-11h-7z\"></path></svg> Upgrade to Paid Plan</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -231,7 +231,7 @@ func AccountPage(data AccountData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if data.Subscription.Status == "active" || data.Subscription.Status == "trial" {
+			if data.Subscription.CustomerID != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<!-- Manage Subscription --> <div class=\"pt-6 mt-6 border-t border-gray-800\"><p class=\"text-sm text-gray-400 mb-4\">To manage your subscription, update payment methods, or cancel your subscription, please visit the Lemon Squeezy customer portal.</p><a href=\"https://app.lemonsqueezy.com/my-orders\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all font-medium shadow-lg shadow-indigo-500/20 text-sm sm:text-base touch-manipulation\"><svg class=\"w-4 h-4 sm:w-5 sm:h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\"></path></svg> Manage on Lemon Squeezy</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

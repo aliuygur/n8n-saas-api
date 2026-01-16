@@ -435,7 +435,7 @@ func (s *Service) CreateUpgradeCheckoutURL(ctx context.Context, userID string) (
 	}
 
 	return fmt.Sprintf(
-		"https://ranx.lemonsqueezy.com/buy/%s?checkout[email]=%s&checkout[custom][user_id]=%s",
+		"https://ranx.lemonsqueezy.com/buy/%s?checkout[email]=%s&checkout[custom][user_id]=%s&embed=1&media=0&desc=0",
 		s.config.LemonSqueezy.VariantID,
 		user.Email,
 		user.ID,
