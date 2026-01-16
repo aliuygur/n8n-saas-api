@@ -13,8 +13,6 @@ type Config struct {
 	Database     DatabaseConfig
 	Google       GoogleConfig
 	JWT          JWTConfig
-	GCP          GCPConfig
-	Cloudflare   CloudflareConfig
 	Polar        PolarConfig
 	LemonSqueezy LemonSqueezyConfig
 }
@@ -66,22 +64,6 @@ type JWTConfig struct {
 	Secret string
 }
 
-// GCPConfig holds GCP/GKE configuration
-type GCPConfig struct {
-	ProjectID   string
-	Zone        string
-	ClusterName string
-	Credentials string
-}
-
-// CloudflareConfig holds Cloudflare configuration
-type CloudflareConfig struct {
-	APIToken  string
-	TunnelID  string
-	AccountID string
-	ZoneID    string
-}
-
 // PolarConfig holds Polar payment configuration
 type PolarConfig struct {
 	AccessToken   string
@@ -119,18 +101,6 @@ func Load() (*Config, error) {
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", ""),
-		},
-		GCP: GCPConfig{
-			ProjectID:   getEnv("GCP_PROJECT_ID", ""),
-			Zone:        getEnv("GCP_ZONE", ""),
-			ClusterName: getEnv("GCP_CLUSTER_NAME", ""),
-			Credentials: getEnv("GCP_GKE_CREDENTIALS", ""),
-		},
-		Cloudflare: CloudflareConfig{
-			APIToken:  getEnv("CLOUDFLARE_API_TOKEN", ""),
-			TunnelID:  getEnv("CLOUDFLARE_TUNNEL_ID", ""),
-			AccountID: getEnv("CLOUDFLARE_ACCOUNT_ID", ""),
-			ZoneID:    getEnv("CLOUDFLARE_ZONE_ID", ""),
 		},
 		Polar: PolarConfig{
 			AccessToken:   getEnv("POLAR_ACCESS_TOKEN", ""),
