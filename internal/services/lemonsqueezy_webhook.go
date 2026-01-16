@@ -286,22 +286,39 @@ func (s *Service) handleSubscriptionResumed(ctx context.Context, payload *LemonS
 	return nil
 }
 
-// handleSubscriptionExpired handles subscription expiration
+// handleSubscriptionExpired handles subscription expiration.
+// When a subscription expires (e.g., after cancellation period ends),
+// all user instances are deleted and the subscription status is updated.
 func (s *Service) handleSubscriptionExpired(ctx context.Context, payload *LemonSqueezyWebhookPayload) error {
 	log := appctx.GetLogger(ctx)
 	queries := s.getDB()
 
-	err := queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
+	// Get subscription to find the user
+	sub, err := queries.GetSubscriptionByProviderID(ctx, payload.Data.ID)
+	if err != nil {
+		log.Error("failed to get subscription", "error", err)
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	// Delete all instances for this user
+	if err := s.DeleteAllUserInstances(ctx, sub.UserID); err != nil {
+		log.Error("failed to delete user instances", "user_id", sub.UserID, "error", err)
+		// Continue to update status even if deletion partially failed
+	}
+
+	// Update subscription status
+	err = queries.UpdateSubscriptionStatusByProviderID(ctx, db.UpdateSubscriptionStatusByProviderIDParams{
 		SubscriptionID: payload.Data.ID,
 		Status:         SubscriptionStatusExpired,
 	})
-
 	if err != nil {
-		log.Error("Failed to expire subscription", "error", err)
+		log.Error("failed to expire subscription", "error", err)
 		return fmt.Errorf("failed to expire subscription: %w", err)
 	}
 
-	log.Info("Subscription expired", "subscription_id", payload.Data.ID)
+	log.Info("subscription expired and instances deleted",
+		"subscription_id", payload.Data.ID,
+		"user_id", sub.UserID)
 	return nil
 }
 

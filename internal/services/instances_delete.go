@@ -15,6 +15,41 @@ type DeleteInstanceParams struct {
 	InstanceID string
 }
 
+// DeleteAllUserInstances deletes all instances for a given user.
+// This is called when a subscription expires to clean up all user resources.
+func (s *Service) DeleteAllUserInstances(ctx context.Context, userID string) error {
+	log := appctx.GetLogger(ctx)
+	queries := s.getDB()
+
+	instances, err := queries.ListInstancesByUser(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to list user instances: %w", err)
+	}
+
+	if len(instances) == 0 {
+		log.Info("no instances to delete for user", "user_id", userID)
+		return nil
+	}
+
+	var deleteErrors []error
+	for _, inst := range instances {
+		if err := s.DeleteInstance(ctx, DeleteInstanceParams{
+			UserID:     userID,
+			InstanceID: inst.ID,
+		}); err != nil {
+			log.Error("failed to delete instance", "instance_id", inst.ID, "error", err)
+			deleteErrors = append(deleteErrors, err)
+		} else {
+			log.Info("deleted instance", "instance_id", inst.ID)
+		}
+	}
+
+	if len(deleteErrors) > 0 {
+		return fmt.Errorf("failed to delete %d of %d instances", len(deleteErrors), len(instances))
+	}
+	return nil
+}
+
 func (s *Service) DeleteInstance(ctx context.Context, params DeleteInstanceParams) error {
 	queries, releaseLock := s.getDBWithLock(ctx, fmt.Sprintf("user_instance_delete_%s", params.UserID))
 	defer releaseLock()
